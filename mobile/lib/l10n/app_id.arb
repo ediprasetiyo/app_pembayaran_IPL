@@ -1,0 +1,55 @@
+{
+  "@@locale": "id",
+  "appName": "IPL Griya Pesona Madani",
+  "welcome": "Selamat Datang!",
+  "loginSubtitle": "Masuk untuk melanjutkan",
+  "phoneNumber": "Nomor Telepon",
+  "password": "Password",
+  "phoneRequired": "Nomor telepon wajib diisi",
+  "passwordRequired": "Password wajib diisi",
+  "login": "Masuk",
+  "forgotPassword": "Lupa Password?",
+  "contactAdmin": "Belum punya akun? Hubungi admin perumahan",
+  "home": "Beranda",
+  "payment": "Pembayaran",
+  "complaint": "Pengaduan",
+  "settings": "Pengaturan",
+  "notifications": "Notifikasi",
+  "greeting": "Halo, {name}!",
+  "@greeting": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "iplTagihanBulanIni": "Tagihan IPL Bulan Ini",
+  "lunas": "Lunas",
+  "belumBayar": "Belum Bayar",
+  "terlambat": "Terlambat",
+  "bayarSekarang": "Bayar Sekarang",
+  "noTagihan": "Tidak ada tagihan bulan ini",
+  "tunggakan": "{count} Tunggakan",
+  "@tunggakan": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "bayar": "Bayar",
+  "riwayatPembayaran": "Riwayat Pembayaran",
+  "dataKeluarga": "Data Keluarga",
+  "pengaduan": "Pengaduan",
+  "informasi": "Informasi",
+  "tagihan": "Tagihan",
+  "riwayat": "Riwayat",
+  "noTunggakan": "Tidak ada tunggakan",
+  "semuaLunas": "Semua tagihan telah dibayar",
+  "noPengaduan": "Belum ada pengaduan",
+  "buatPengaduan": "Buat Pengaduan",
+  "language": "Bahasa",
+  "account": "Akun",
+  "editProfile": "Edit Profil",
+  "changePassword": "Ganti Password",
+  "about": "Tentang",
+  "logout": "Keluar",
+  "readAll": "Baca Semua",
+  "noNotifications": "Tidak ada notifikasi"
+}
