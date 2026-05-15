@@ -22,12 +22,16 @@ class Warga extends Model
         'nik',
         'alamat_asal',
         'is_active',
+        'uang_kedukaan_dibayar',
+        'tanggal_bayar_kedukaan',
         'catatan',
     ];
 
     protected $casts = [
         'tanggal_pindah' => 'date',
+        'tanggal_bayar_kedukaan' => 'date',
         'is_active' => 'boolean',
+        'uang_kedukaan_dibayar' => 'boolean',
     ];
 
     public function user()

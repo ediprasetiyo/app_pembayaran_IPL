@@ -9,14 +9,15 @@ class Kernel extends ConsoleKernel
 {
     protected function schedule(Schedule $schedule): void
     {
-        // Generate tagihan IPL setiap awal bulan (tanggal 1, jam 08:00)
+        // Tanggal 1 jam 08:00 → Generate tagihan IPL bulanan + kedukaan (warga baru)
         $schedule->command('ipl:generate-tagihan')->monthlyOn(1, '08:00');
 
-        // Cek tagihan terlambat setiap hari jam 09:00
-        $schedule->command('ipl:check-terlambat')->dailyAt('09:00');
+        // Setiap hari jam 08:00 → kirim reminder ke warga yg belum bayar
+        // (logikanya ada di command: hanya jalan di tgl 10, 12, 14, 16, dst)
+        $schedule->command('ipl:reminder-tagihan')->dailyAt('08:00');
 
-        // Reminder tagihan 3 hari sebelum jatuh tempo (tanggal 28 setiap bulan)
-        $schedule->command('ipl:reminder-tagihan')->monthlyOn(28, '08:00');
+        // Tiap hari jam 09:00 → tandai tagihan terlambat (lewat jatuh tempo)
+        $schedule->command('ipl:check-terlambat')->dailyAt('09:00');
     }
 
     protected function commands(): void

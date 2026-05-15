@@ -3,24 +3,17 @@
 namespace App\Console\Commands;
 
 use App\Models\IplTagihan;
-use App\Services\NotifikasiService;
 use Illuminate\Console\Command;
 
 class CheckTagihanTerlambat extends Command
 {
     protected $signature = 'ipl:check-terlambat';
-    protected $description = 'Cek tagihan IPL yang terlambat dan kirim notifikasi';
-
-    public function __construct(private NotifikasiService $notifikasiService)
-    {
-        parent::__construct();
-    }
+    protected $description = 'Tandai tagihan IPL yang sudah lewat jatuh tempo sebagai terlambat';
 
     public function handle(): int
     {
         $terlambat = IplTagihan::where('status', 'belum_bayar')
-            ->where('jatuh_tempo', '<', now())
-            ->with(['warga.user'])
+            ->whereDate('jatuh_tempo', '<', now())
             ->get();
 
         if ($terlambat->isEmpty()) {
@@ -29,16 +22,10 @@ class CheckTagihanTerlambat extends Command
         }
 
         foreach ($terlambat as $tagihan) {
-            $denda = $tagihan->nominal * 0.05;
-            $tagihan->update([
-                'status' => 'terlambat',
-                'denda' => $denda,
-            ]);
+            $tagihan->update(['status' => 'terlambat']);
         }
 
-        $this->notifikasiService->kirimNotifikasiTerlambat($terlambat);
-
-        $this->info("Ditemukan {$terlambat->count()} tagihan terlambat. Notifikasi dikirim.");
+        $this->info("Ditemukan {$terlambat->count()} tagihan ditandai terlambat.");
 
         return Command::SUCCESS;
     }

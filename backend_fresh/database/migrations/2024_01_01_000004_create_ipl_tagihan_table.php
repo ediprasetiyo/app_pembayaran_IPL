@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('ipl_tagihan', function (Blueprint $table) {
             $table->id();
             $table->foreignId('warga_id')->constrained('warga')->onDelete('cascade');
+            $table->enum('jenis', ['ipl_bulanan', 'kedukaan'])->default('ipl_bulanan');
             $table->unsignedTinyInteger('bulan');
             $table->unsignedSmallInteger('tahun');
             $table->decimal('nominal', 12, 2);
@@ -18,10 +19,11 @@ return new class extends Migration
             $table->enum('status', ['belum_bayar', 'sudah_bayar', 'terlambat'])->default('belum_bayar');
             $table->date('jatuh_tempo');
             $table->date('tanggal_bayar')->nullable();
+            $table->date('reminder_terakhir')->nullable();
             $table->text('keterangan')->nullable();
             $table->timestamps();
 
-            $table->unique(['warga_id', 'bulan', 'tahun']);
+            $table->unique(['warga_id', 'jenis', 'bulan', 'tahun']);
         });
     }
 

@@ -20,6 +20,8 @@ return new class extends Migration
             $table->string('nik', 20)->nullable()->unique();
             $table->text('alamat_asal')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->boolean('uang_kedukaan_dibayar')->default(false);
+            $table->date('tanggal_bayar_kedukaan')->nullable();
             $table->text('catatan')->nullable();
             $table->timestamps();
         });

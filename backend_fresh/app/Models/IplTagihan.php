@@ -13,6 +13,7 @@ class IplTagihan extends Model
 
     protected $fillable = [
         'warga_id',
+        'jenis',
         'bulan',
         'tahun',
         'nominal',
@@ -20,12 +21,14 @@ class IplTagihan extends Model
         'status',
         'jatuh_tempo',
         'tanggal_bayar',
+        'reminder_terakhir',
         'keterangan',
     ];
 
     protected $casts = [
         'jatuh_tempo' => 'date',
         'tanggal_bayar' => 'date',
+        'reminder_terakhir' => 'date',
         'nominal' => 'decimal:2',
         'denda' => 'decimal:2',
     ];
