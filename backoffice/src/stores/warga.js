@@ -40,6 +40,12 @@ export const useWargaStore = defineStore('warga', () => {
     return res.data
   }
 
+  async function destroy(id) {
+    const res = await api.delete(`/warga/${id}`)
+    wargaList.value = wargaList.value.filter((w) => w.id !== id)
+    return res.data
+  }
+
   async function addAnggotaKeluarga(wargaId, data) {
     const res = await api.post(`/warga/${wargaId}/keluarga`, data)
     return res.data
@@ -60,7 +66,7 @@ export const useWargaStore = defineStore('warga', () => {
 
   return {
     wargaList, currentWarga, pagination, isLoading,
-    fetchAll, fetchOne, create, update,
+    fetchAll, fetchOne, create, update, destroy,
     addAnggotaKeluarga, updateAnggotaKeluarga, deleteAnggotaKeluarga,
   }
 })

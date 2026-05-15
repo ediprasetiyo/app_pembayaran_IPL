@@ -88,13 +88,19 @@
               </td>
               <td>
                 <div class="flex items-center gap-2 justify-center">
-                  <RouterLink :to="`/warga/${warga.id}`" class="btn-secondary btn-sm">
+                  <RouterLink :to="`/warga/${warga.id}`" class="btn-secondary btn-sm" title="Detail">
                     <EyeIcon class="w-3.5 h-3.5" />
-                    Detail
                   </RouterLink>
-                  <RouterLink :to="`/warga/${warga.id}/edit`" class="btn-secondary btn-sm">
+                  <RouterLink :to="`/warga/${warga.id}/edit`" class="btn-secondary btn-sm" title="Edit">
                     <PencilIcon class="w-3.5 h-3.5" />
                   </RouterLink>
+                  <button
+                    @click="handleDelete(warga)"
+                    class="btn-sm bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-lg"
+                    title="Hapus"
+                  >
+                    <TrashIcon class="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </td>
             </tr>
@@ -134,15 +140,29 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import {
-  PlusIcon, MagnifyingGlassIcon, EyeIcon, PencilIcon,
+  PlusIcon, MagnifyingGlassIcon, EyeIcon, PencilIcon, TrashIcon,
   UsersIcon, ChevronLeftIcon, ChevronRightIcon,
 } from '@heroicons/vue/24/outline'
+import { useToast } from 'vue-toastification'
 import { useWargaStore } from '@/stores/warga'
 
 const store = useWargaStore()
+const toast = useToast()
 const search = ref('')
 const statusFilter = ref('')
 let searchTimer = null
+
+async function handleDelete(warga) {
+  const nama = warga.user?.name ?? 'warga ini'
+  if (!confirm(`Hapus data "${nama}" beserta semua tagihan dan anggota keluarganya?\n\nTindakan ini tidak bisa dibatalkan.`)) return
+  try {
+    await store.destroy(warga.id)
+    toast.success('Data warga berhasil dihapus.')
+    fetchData(store.pagination.currentPage)
+  } catch (e) {
+    toast.error(e.response?.data?.message ?? 'Gagal menghapus data.')
+  }
+}
 
 function debouncedSearch() {
   clearTimeout(searchTimer)

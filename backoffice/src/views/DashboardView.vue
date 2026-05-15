@@ -56,6 +56,45 @@
       </div>
     </div>
 
+    <!-- Uang Kedukaan Card -->
+    <div class="card overflow-hidden">
+      <div class="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-4 text-white">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">🕊️</span>
+          <div>
+            <h3 class="font-semibold">Dana Uang Kedukaan</h3>
+            <p class="text-xs text-purple-100">Dana yang terkumpul untuk membantu warga yang berduka cita</p>
+          </div>
+        </div>
+      </div>
+      <div class="p-6">
+        <div v-if="stats?.kedukaan" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="md:col-span-2 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-5 border border-purple-100">
+            <p class="text-xs text-gray-600 mb-1">Total Dana Terkumpul</p>
+            <p class="text-3xl font-bold text-purple-700">
+              {{ formatCurrency(stats.kedukaan.total_dana) }}
+            </p>
+            <p class="text-xs text-gray-500 mt-2">
+              Tarif: {{ formatCurrency(stats.kedukaan.tarif_per_warga) }} / warga (sekali bayar)
+            </p>
+          </div>
+          <div class="bg-green-50 rounded-xl p-5 border border-green-100">
+            <p class="text-xs text-gray-600 mb-1">Sudah Bayar</p>
+            <p class="text-2xl font-bold text-green-700">{{ stats.kedukaan.warga_sudah_bayar }}</p>
+            <p class="text-xs text-gray-500 mt-1">warga</p>
+          </div>
+          <div class="bg-amber-50 rounded-xl p-5 border border-amber-100">
+            <p class="text-xs text-gray-600 mb-1">Belum Bayar</p>
+            <p class="text-2xl font-bold text-amber-700">{{ stats.kedukaan.warga_belum_bayar }}</p>
+            <p class="text-xs text-gray-500 mt-1">warga</p>
+          </div>
+        </div>
+        <div v-else class="space-y-3">
+          <div class="h-20 bg-gray-100 rounded-xl animate-pulse" />
+        </div>
+      </div>
+    </div>
+
     <!-- Quick Actions -->
     <div class="card p-6">
       <h3 class="font-semibold text-gray-800 mb-4">Aksi Cepat</h3>

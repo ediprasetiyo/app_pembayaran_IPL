@@ -21,7 +21,7 @@
       <!-- Navigation -->
       <nav class="flex-1 overflow-y-auto py-4 space-y-1 px-2">
         <RouterLink
-          v-for="item in navItems"
+          v-for="item in visibleNavItems"
           :key="item.to"
           :to="item.to"
           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-primary-200 hover:bg-primary-800 hover:text-white transition-colors group"
@@ -89,6 +89,7 @@ import {
   ChartBarIcon,
   Bars3Icon,
   ArrowRightOnRectangleIcon,
+  ShieldCheckIcon,
 } from '@heroicons/vue/24/outline'
 import dayjs from 'dayjs'
 import 'dayjs/locale/id'
@@ -106,7 +107,12 @@ const navItems = [
   { to: '/pembayaran', label: 'Pembayaran', icon: CreditCardIcon },
   { to: '/pengaduan', label: 'Pengaduan', icon: ExclamationTriangleIcon },
   { to: '/laporan', label: 'Laporan', icon: ChartBarIcon },
+  { to: '/users', label: 'Manajemen User', icon: ShieldCheckIcon, superAdminOnly: true },
 ]
+
+const visibleNavItems = computed(() =>
+  navItems.filter(item => !item.superAdminOnly || auth.user?.role === 'super_admin')
+)
 
 const pageTitles = {
   'Dashboard': 'Dashboard',
@@ -118,6 +124,8 @@ const pageTitles = {
   'Tagihan': 'Tagihan IPL',
   'Pengaduan': 'Pengaduan Warga',
   'Laporan': 'Laporan',
+  'Users': 'Manajemen User',
+  'UserForm': 'Form User',
 }
 
 const pageTitle = computed(() => pageTitles[route.name] ?? 'Back Office')

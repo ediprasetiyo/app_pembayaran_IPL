@@ -13,6 +13,7 @@ class Warga extends Model
 
     protected $fillable = [
         'user_id',
+        'nomor_kk',
         'nomor_rumah',
         'blok',
         'rt',
@@ -20,7 +21,6 @@ class Warga extends Model
         'status_hunian',
         'tanggal_pindah',
         'nik',
-        'alamat_asal',
         'is_active',
         'uang_kedukaan_dibayar',
         'tanggal_bayar_kedukaan',

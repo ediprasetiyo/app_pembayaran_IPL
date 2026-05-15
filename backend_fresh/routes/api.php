@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\IplController;
 use App\Http\Controllers\Api\NotifikasiController;
 use App\Http\Controllers\Api\PengaduanController;
+use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\WargaController;
 use Illuminate\Support\Facades\Route;
 
@@ -51,6 +52,12 @@ Route::prefix('v1')->group(function () {
             Route::post('/warga/{warga}/keluarga', [WargaController::class, 'addAnggotaKeluarga']);
             Route::put('/warga/{warga}/keluarga/{anggota}', [WargaController::class, 'updateAnggotaKeluarga']);
             Route::delete('/warga/{warga}/keluarga/{anggota}', [WargaController::class, 'deleteAnggotaKeluarga']);
+        });
+
+        // Super Admin only — User & Role Management
+        Route::middleware('super_admin')->prefix('admin')->group(function () {
+            Route::apiResource('/users', UserController::class);
+            Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword']);
         });
     });
 });

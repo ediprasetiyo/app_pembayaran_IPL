@@ -58,6 +58,24 @@ const routes = [
         name: 'Laporan',
         component: () => import('@/views/LaporanView.vue'),
       },
+      {
+        path: 'users',
+        name: 'Users',
+        component: () => import('@/views/users/UserList.vue'),
+        meta: { superAdminOnly: true },
+      },
+      {
+        path: 'users/baru',
+        name: 'UserBaru',
+        component: () => import('@/views/users/UserForm.vue'),
+        meta: { superAdminOnly: true },
+      },
+      {
+        path: 'users/:id/edit',
+        name: 'UserEdit',
+        component: () => import('@/views/users/UserForm.vue'),
+        meta: { superAdminOnly: true },
+      },
     ],
   },
 ]
@@ -67,10 +85,20 @@ const router = createRouter({
   routes,
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const auth = useAuthStore()
   if (!to.meta.public && !auth.token) return '/login'
   if (to.path === '/login' && auth.token) return '/'
+
+  // Load user info kalau belum ada (utk cek role)
+  if (auth.token && !auth.user) {
+    await auth.fetchMe()
+  }
+
+  // Guard halaman super admin only
+  if (to.meta.superAdminOnly && auth.user?.role !== 'super_admin') {
+    return '/'
+  }
 })
 
 export default router

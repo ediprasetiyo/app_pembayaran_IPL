@@ -84,7 +84,7 @@ async function handleLogin() {
   isLoading.value = true
   try {
     const data = await auth.login(form.value.phone, form.value.password)
-    if (data.user?.role !== 'admin') {
+    if (!['admin', 'super_admin'].includes(data.user?.role)) {
       auth.logout()
       error.value = 'Akun ini tidak memiliki akses admin.'
       return

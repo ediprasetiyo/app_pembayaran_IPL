@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('warga', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('nomor_kk', 20)->nullable()->unique();
             $table->string('nomor_rumah', 10);
             $table->string('blok', 5)->default('E');
             $table->string('rt', 5)->nullable();
@@ -18,7 +19,6 @@ return new class extends Migration
             $table->enum('status_hunian', ['milik', 'sewa', 'kontrak'])->default('milik');
             $table->date('tanggal_pindah')->nullable();
             $table->string('nik', 20)->nullable()->unique();
-            $table->text('alamat_asal')->nullable();
             $table->boolean('is_active')->default(true);
             $table->boolean('uang_kedukaan_dibayar')->default(false);
             $table->date('tanggal_bayar_kedukaan')->nullable();

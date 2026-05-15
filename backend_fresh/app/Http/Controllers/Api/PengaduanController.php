@@ -15,10 +15,16 @@ class PengaduanController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $warga = $request->user()->warga;
+        $user = $request->user();
+        $query = Pengaduan::with('warga.user')->orderByDesc('created_at');
 
-        $query = Pengaduan::where('warga_id', $warga->id)
-            ->orderByDesc('created_at');
+        // Admin lihat semua, warga hanya pengaduan sendiri
+        if ($user->role !== 'admin') {
+            if (!$user->warga) {
+                return response()->json(['data' => [], 'total' => 0]);
+            }
+            $query->where('warga_id', $user->warga->id);
+        }
 
         if ($request->status) {
             $query->where('status', $request->status);

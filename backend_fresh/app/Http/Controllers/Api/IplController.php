@@ -22,18 +22,31 @@ class IplController extends Controller
 
     public function tagihan(Request $request): JsonResponse
     {
-        $warga = $request->user()->warga;
+        $user = $request->user();
+        $query = IplTagihan::with('warga.user')
+            ->orderByDesc('tahun')
+            ->orderByDesc('bulan');
 
-        if (! $warga) {
-            return response()->json(['message' => 'Data warga tidak ditemukan.'], 404);
+        // Admin lihat semua, warga hanya tagihan sendiri
+        if ($user->role !== 'admin') {
+            if (!$user->warga) {
+                return response()->json(['message' => 'Data warga tidak ditemukan.'], 404);
+            }
+            $query->where('warga_id', $user->warga->id);
         }
 
-        $tagihan = IplTagihan::where('warga_id', $warga->id)
-            ->orderByDesc('tahun')
-            ->orderByDesc('bulan')
-            ->paginate(12);
+        // Filter optional dari query string
+        if ($request->bulan) {
+            $query->where('bulan', $request->bulan);
+        }
+        if ($request->tahun) {
+            $query->where('tahun', $request->tahun);
+        }
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
 
-        return response()->json($tagihan);
+        return response()->json($query->paginate(20));
     }
 
     public function tagihanBulanIni(Request $request): JsonResponse
@@ -169,14 +182,22 @@ class IplController extends Controller
 
     public function riwayatPembayaran(Request $request): JsonResponse
     {
-        $warga = $request->user()->warga;
+        $user = $request->user();
+        $query = Pembayaran::with(['tagihan', 'warga.user'])->orderByDesc('created_at');
 
-        $riwayat = Pembayaran::where('warga_id', $warga->id)
-            ->with('tagihan')
-            ->orderByDesc('created_at')
-            ->paginate(10);
+        // Admin lihat semua, warga hanya pembayaran sendiri
+        if ($user->role !== 'admin') {
+            if (!$user->warga) {
+                return response()->json(['data' => [], 'total' => 0]);
+            }
+            $query->where('warga_id', $user->warga->id);
+        }
 
-        return response()->json($riwayat);
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+
+        return response()->json($query->paginate(10));
     }
 
     public function statusPembayaran(Request $request, Pembayaran $pembayaran): JsonResponse
