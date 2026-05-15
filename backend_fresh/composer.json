@@ -1,18 +1,15 @@
 {
-    "name": "griya-pesona/ipl-backend",
-    "description": "Backend API for IPL Payment App - Perumahan Griya Pesona Madani",
-    "keywords": ["laravel", "ipl", "payment"],
-    "license": "MIT",
+    "name": "laravel/laravel",
     "type": "project",
+    "description": "The skeleton application for the Laravel framework.",
+    "keywords": ["laravel", "framework"],
+    "license": "MIT",
     "require": {
         "php": "^8.1",
         "guzzlehttp/guzzle": "^7.2",
-        "laravel/framework": "^10.0",
-        "laravel/sanctum": "^3.2",
-        "laravel/tinker": "^2.8",
-        "midtrans/midtrans-php": "^2.5",
-        "kreait/laravel-firebase": "^5.0",
-        "laravel/telescope": "^4.14"
+        "laravel/framework": "^10.10",
+        "laravel/sanctum": "^3.3",
+        "laravel/tinker": "^2.8"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",

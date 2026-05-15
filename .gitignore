@@ -1,0 +1,33 @@
+# Laravel Backend
+backend/vendor/
+backend/.env
+backend/storage/*.key
+backend/.phpunit.cache
+backend/.phpunit.result.cache
+
+# Laravel Backend Fresh
+backend_fresh/vendor/
+backend_fresh/.env
+backend_fresh/storage/*.key
+backend_fresh/.phpunit.cache
+backend_fresh/.phpunit.result.cache
+
+# Vue Back Office
+backoffice/node_modules/
+backoffice/dist/
+backoffice/.env
+
+# Flutter Mobile
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/build/
+mobile/.packages
+
+# Claude internal
+.claude/
+.claire/
+
+# OS
+.DS_Store
+Thumbs.db
