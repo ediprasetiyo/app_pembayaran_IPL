@@ -11,6 +11,31 @@ use App\Http\Controllers\Api\WargaController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
+    // Health check (debug)
+    Route::get('/health', function () {
+        try {
+            $dbStatus = \DB::connection()->getPdo() ? 'connected' : 'failed';
+            $userCount = \App\Models\User::count();
+            return response()->json([
+                'status' => 'ok',
+                'database' => $dbStatus,
+                'database_name' => \DB::connection()->getDatabaseName(),
+                'user_count' => $userCount,
+                'php_version' => PHP_VERSION,
+                'laravel_version' => app()->version(),
+                'app_env' => config('app.env'),
+                'app_debug' => config('app.debug'),
+                'timezone' => config('app.timezone'),
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'class' => get_class($e),
+            ], 500);
+        }
+    });
+
     // Auth public
     Route::post('/auth/login', [AuthController::class, 'login']);
     Route::post('/auth/register', [AuthController::class, 'register']);
