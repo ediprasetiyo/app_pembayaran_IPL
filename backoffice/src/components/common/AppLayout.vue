@@ -6,14 +6,14 @@
         sidebarOpen ? 'w-64' : 'w-16']"
     >
       <!-- Logo -->
-      <div class="flex items-center gap-3 px-4 py-5 border-b border-primary-800">
-        <div class="flex-shrink-0 w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-          <span class="text-primary-900 font-bold text-sm">G</span>
+      <div class="flex items-center gap-3 px-4 py-4 border-b border-primary-800 bg-white">
+        <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center">
+          <img src="/logo.png" alt="Griya Pesona Madani" class="w-10 h-10 object-contain" />
         </div>
         <transition name="fade">
           <div v-if="sidebarOpen" class="overflow-hidden">
-            <p class="font-bold text-sm leading-tight">Griya Pesona</p>
-            <p class="text-primary-300 text-xs">Back Office</p>
+            <p class="font-bold text-sm leading-tight text-red-600">Griya Pesona</p>
+            <p class="text-gray-500 text-xs">Madani Tenjo</p>
           </div>
         </transition>
       </div>

@@ -17,12 +17,32 @@ backoffice/node_modules/
 backoffice/dist/
 backoffice/.env
 
-# Flutter Mobile
+# Flutter Mobile (lama)
 mobile/.dart_tool/
 mobile/.flutter-plugins
 mobile/.flutter-plugins-dependencies
 mobile/build/
 mobile/.packages
+
+# Flutter Mobile Fresh
+mobile_fresh/.dart_tool/
+mobile_fresh/.flutter-plugins
+mobile_fresh/.flutter-plugins-dependencies
+mobile_fresh/build/
+mobile_fresh/.packages
+mobile_fresh/.idea/
+mobile_fresh/.gradle/
+mobile_fresh/android/.gradle/
+mobile_fresh/android/.kotlin/
+mobile_fresh/android/build/
+mobile_fresh/android/app/build/
+mobile_fresh/android/local.properties
+mobile_fresh/ios/Pods/
+mobile_fresh/ios/.symlinks/
+mobile_fresh/ios/Flutter/Flutter.framework
+mobile_fresh/ios/Flutter/Flutter.podspec
+mobile_fresh/ios/Flutter/Generated.xcconfig
+mobile_fresh/ios/Flutter/flutter_export_environment.sh
 
 # Claude internal
 .claude/

@@ -1,18 +1,20 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-primary-900 to-primary-700 flex items-center justify-center p-4">
+  <div class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-emerald-50 flex items-center justify-center p-4">
     <div class="w-full max-w-md">
       <!-- Logo -->
-      <div class="text-center mb-8">
-        <div class="w-16 h-16 bg-white rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-lg">
-          <span class="text-primary-900 font-bold text-2xl">G</span>
+      <div class="text-center mb-6">
+        <div class="bg-white rounded-2xl shadow-md p-5 inline-block">
+          <img src="/logo.png" alt="Griya Pesona Madani" class="h-24 mx-auto" />
         </div>
-        <h1 class="text-white text-2xl font-bold">Griya Pesona Madani</h1>
-        <p class="text-primary-200 text-sm mt-1">Back Office Admin Panel</p>
+        <p class="text-gray-500 text-xs mt-3 tracking-widest uppercase">
+          Back Office Admin Panel
+        </p>
       </div>
 
       <!-- Card -->
-      <div class="bg-white rounded-2xl shadow-2xl p-8">
-        <h2 class="text-xl font-bold text-gray-800 mb-6">Masuk ke Sistem</h2>
+      <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+        <h2 class="text-xl font-bold text-gray-800 mb-2">Masuk ke Sistem</h2>
+        <p class="text-sm text-gray-500 mb-6">Silakan login dengan akun admin Anda</p>
 
         <form @submit.prevent="handleLogin" class="space-y-4">
           <div>

@@ -1,0 +1,55 @@
+{
+  "@@locale": "en",
+  "appName": "IPL Griya Pesona Madani",
+  "welcome": "Welcome Back!",
+  "loginSubtitle": "Sign in to continue",
+  "phoneNumber": "Phone Number",
+  "password": "Password",
+  "phoneRequired": "Phone number is required",
+  "passwordRequired": "Password is required",
+  "login": "Sign In",
+  "forgotPassword": "Forgot Password?",
+  "contactAdmin": "Don't have an account? Contact the housing admin",
+  "home": "Home",
+  "payment": "Payment",
+  "complaint": "Complaints",
+  "settings": "Settings",
+  "notifications": "Notifications",
+  "greeting": "Hello, {name}!",
+  "@greeting": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "iplTagihanBulanIni": "This Month's IPL Bill",
+  "lunas": "Paid",
+  "belumBayar": "Unpaid",
+  "terlambat": "Overdue",
+  "bayarSekarang": "Pay Now",
+  "noTagihan": "No bill this month",
+  "tunggakan": "{count} Outstanding",
+  "@tunggakan": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "bayar": "Pay",
+  "riwayatPembayaran": "Payment History",
+  "dataKeluarga": "Family Data",
+  "pengaduan": "Complaints",
+  "informasi": "Information",
+  "tagihan": "Bills",
+  "riwayat": "History",
+  "noTunggakan": "No outstanding bills",
+  "semuaLunas": "All bills have been paid",
+  "noPengaduan": "No complaints yet",
+  "buatPengaduan": "Create Complaint",
+  "language": "Language",
+  "account": "Account",
+  "editProfile": "Edit Profile",
+  "changePassword": "Change Password",
+  "about": "About",
+  "logout": "Sign Out",
+  "readAll": "Mark All Read",
+  "noNotifications": "No notifications"
+}
