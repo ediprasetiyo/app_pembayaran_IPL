@@ -67,10 +67,16 @@ flutter:
     - assets/images/
 
 flutter_launcher_icons:
-  android: true
+  android: "launcher_icon"
   ios: false
   image_path: "assets/images/logo.png"
   min_sdk_android: 21
+  # Background warna putih agar icon tampil bersih (logo punya area transparan)
   background_color_android: "#FFFFFF"
+  # Adaptive icon untuk Android 8+ (logo dengan padding biar tidak ke-crop)
   adaptive_icon_background: "#FFFFFF"
   adaptive_icon_foreground: "assets/images/logo.png"
+  adaptive_icon_foreground_inset: 16
+  # Web icon (opsional)
+  web:
+    generate: false

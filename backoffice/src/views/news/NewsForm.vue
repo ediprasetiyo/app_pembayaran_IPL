@@ -178,7 +178,15 @@ async function loadNews() {
       is_published: n.is_published,
       is_pinned: n.is_pinned,
       gambar: null,
-      existing_image: n.gambar ? (n.gambar.startsWith('http') ? n.gambar : `http://localhost:8000${n.gambar}`) : '',
+      existing_image: n.gambar
+        ? (n.gambar.startsWith('http')
+            ? n.gambar
+            : (() => {
+                const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
+                const host = apiBase.replace(/\/api\/v\d+\/?$/, '')
+                return `${host}${n.gambar}`
+              })())
+        : '',
     }
   } catch {
     toast.error('Berita tidak ditemukan.')

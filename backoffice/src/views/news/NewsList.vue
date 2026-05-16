@@ -129,7 +129,11 @@ async function hapus(n) {
 function getImageUrl(path) {
   if (!path) return null
   if (path.startsWith('http')) return path
-  return `http://localhost:8000${path}`
+  // Ambil base URL dari env atau fallback ke localhost dev
+  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
+  // Strip /api/v1 dari URL untuk mendapatkan host saja
+  const host = apiBase.replace(/\/api\/v\d+\/?$/, '')
+  return `${host}${path}`
 }
 
 function stripHtml(html) {

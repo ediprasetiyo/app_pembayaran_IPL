@@ -1,8 +1,11 @@
 import axios from 'axios'
 import router from '@/router'
 
+// Production: pakai URL Railway. Development: pakai proxy Vite "/api/v1"
+const baseURL = import.meta.env.VITE_API_URL || '/api/v1'
+
 const api = axios.create({
-  baseURL: '/api/v1',
+  baseURL,
   headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
 })
 

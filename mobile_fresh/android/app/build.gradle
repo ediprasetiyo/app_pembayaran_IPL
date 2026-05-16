@@ -37,6 +37,13 @@ android {
             signingConfig = signingConfigs.debug
         }
     }
+
+    // Custom APK output filename
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "IPL_Griya_Pesona_Madani.apk"
+        }
+    }
 }
 
 flutter {
