@@ -22,9 +22,9 @@ cmds = [
 [phases.build]
 cmds = [
   'mkdir -p storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache',
-  'chmod -R 775 storage bootstrap/cache',
+  'chmod -R 777 storage bootstrap/cache',
   'touch .env',
 ]
 
 [start]
-cmd = 'php artisan config:clear && php artisan cache:clear && php artisan migrate --force && php -S 0.0.0.0:$PORT -t public'
+cmd = 'php artisan migrate --force --no-interaction || true && php artisan serve --host=0.0.0.0 --port=$PORT'
