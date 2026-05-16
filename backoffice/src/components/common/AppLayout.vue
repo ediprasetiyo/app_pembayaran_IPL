@@ -6,14 +6,14 @@
         sidebarOpen ? 'w-64' : 'w-16']"
     >
       <!-- Logo -->
-      <div class="flex items-center gap-3 px-4 py-4 border-b border-primary-800 bg-white">
-        <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center">
-          <img src="/logo.png" alt="Griya Pesona Madani" class="w-10 h-10 object-contain" />
+      <div class="flex items-center gap-3 px-4 py-4 border-b border-primary-800">
+        <div class="flex-shrink-0 w-10 h-10 bg-white rounded-lg flex items-center justify-center p-1">
+          <img :src="settings.logo_url" :alt="settings.app_name" class="w-full h-full object-contain" />
         </div>
         <transition name="fade">
           <div v-if="sidebarOpen" class="overflow-hidden">
-            <p class="font-bold text-sm leading-tight text-red-600">Griya Pesona</p>
-            <p class="text-gray-500 text-xs">Madani Tenjo</p>
+            <p class="font-bold text-sm leading-tight text-white">{{ settings.brand_title }}</p>
+            <p class="text-primary-200 text-xs">{{ settings.brand_subtitle }}</p>
           </div>
         </transition>
       </div>
@@ -94,14 +94,18 @@ import {
   ArrowRightOnRectangleIcon,
   ShieldCheckIcon,
   MegaphoneIcon,
+  Cog6ToothIcon,
 } from '@heroicons/vue/24/outline'
 import dayjs from 'dayjs'
 import 'dayjs/locale/id'
 import AiAssistant from './AiAssistant.vue'
+import { useSettingsStore } from '@/stores/settings'
 dayjs.locale('id')
 
 const sidebarOpen = ref(true)
 const auth = useAuthStore()
+const settingsStore = useSettingsStore()
+const settings = computed(() => settingsStore.settings)
 const route = useRoute()
 const router = useRouter()
 
@@ -122,6 +126,8 @@ const navItems = [
   { to: '/laporan', label: 'Laporan', icon: ChartBarIcon,
     roles: ['super_admin', 'admin', 'bendahara'] },
   { to: '/users', label: 'Manajemen User', icon: ShieldCheckIcon,
+    roles: ['super_admin'] },
+  { to: '/settings', label: 'Pengaturan', icon: Cog6ToothIcon,
     roles: ['super_admin'] },
 ]
 

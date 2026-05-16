@@ -6,11 +6,15 @@ use App\Http\Controllers\Api\IplController;
 use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\NotifikasiController;
 use App\Http\Controllers\Api\PengaduanController;
+use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\WargaController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
+    // Public settings (untuk branding/theme — tanpa auth)
+    Route::get('/settings/public', [SettingsController::class, 'publicSettings']);
+
     // Health check
     Route::get('/health', function () {
         try {
@@ -88,10 +92,16 @@ Route::prefix('v1')->group(function () {
             Route::delete('/news/{news}', [NewsController::class, 'destroy']);
         });
 
-        // Super Admin only — User & Role Management
+        // Super Admin only — User & Role Management + Settings
         Route::middleware('super_admin')->prefix('admin')->group(function () {
             Route::apiResource('/users', UserController::class);
             Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword']);
+
+            // Settings management
+            Route::get('/settings', [SettingsController::class, 'index']);
+            Route::put('/settings/{key}', [SettingsController::class, 'update']);
+            Route::post('/settings/bulk', [SettingsController::class, 'updateBulk']);
+            Route::post('/settings/logo', [SettingsController::class, 'uploadLogo']);
         });
     });
 });

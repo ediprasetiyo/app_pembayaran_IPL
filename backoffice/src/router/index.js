@@ -18,6 +18,7 @@ const routeAccess = {
   Users: ['super_admin'],
   UserBaru: ['super_admin'],
   UserEdit: ['super_admin'],
+  Settings: ['super_admin'],
 }
 
 // Mendapatkan default route berdasarkan role
@@ -54,6 +55,7 @@ const routes = [
       { path: 'users', name: 'Users', component: () => import('@/views/users/UserList.vue') },
       { path: 'users/baru', name: 'UserBaru', component: () => import('@/views/users/UserForm.vue') },
       { path: 'users/:id/edit', name: 'UserEdit', component: () => import('@/views/users/UserForm.vue') },
+      { path: 'settings', name: 'Settings', component: () => import('@/views/SettingsView.vue') },
     ],
   },
 ]

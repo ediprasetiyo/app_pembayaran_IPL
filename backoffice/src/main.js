@@ -5,11 +5,13 @@ import 'vue-toastification/dist/index.css'
 
 import App from './App.vue'
 import router from './router'
+import { useSettingsStore } from './stores/settings'
 import './style.css'
 
 const app = createApp(App)
+const pinia = createPinia()
 
-app.use(createPinia())
+app.use(pinia)
 app.use(router)
 app.use(Toast, {
   timeout: 3000,
@@ -17,4 +19,8 @@ app.use(Toast, {
   closeOnClick: true,
 })
 
-app.mount('#app')
+// Load public settings (branding, theme) di awal — sebelum mount
+const settings = useSettingsStore()
+settings.loadPublicSettings().finally(() => {
+  app.mount('#app')
+})
