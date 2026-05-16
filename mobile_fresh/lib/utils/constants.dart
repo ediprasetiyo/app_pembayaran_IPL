@@ -1,7 +1,8 @@
 class AppConstants {
-  // IP komputer di jaringan WiFi (HP & komputer harus 1 WiFi yang sama)
-  // Untuk Android Emulator: pakai 'http://10.0.2.2:8000/api/v1'
-  static const baseUrl = 'http://192.168.1.5:8000/api/v1';
+  // Production: Railway public URL (bisa diakses dari mana saja)
+  static const baseUrl = 'https://apppembayaranipl-production.up.railway.app/api/v1';
+  // Local development: ganti dengan IP komputer + port
+  // static const baseUrl = 'http://192.168.1.5:8000/api/v1';
   static const appName = 'IPL Griya Pesona Madani';
   static const perumahan = 'Perumahan Griya Pesona Madani Tenjo';
   static const blok = 'E';

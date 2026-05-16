@@ -11,44 +11,13 @@ use App\Http\Controllers\Api\WargaController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
-    // Health check (debug)
+    // Health check
     Route::get('/health', function () {
         try {
-            $dbStatus = \DB::connection()->getPdo() ? 'connected' : 'failed';
-            $userCount = \App\Models\User::count();
-            return response()->json([
-                'status' => 'ok',
-                'database' => $dbStatus,
-                'database_name' => \DB::connection()->getDatabaseName(),
-                'user_count' => $userCount,
-                'php_version' => PHP_VERSION,
-                'laravel_version' => app()->version(),
-                'app_env' => config('app.env'),
-                'app_debug' => config('app.debug'),
-                'timezone' => config('app.timezone'),
-            ]);
+            \DB::connection()->getPdo();
+            return response()->json(['status' => 'ok', 'timestamp' => now()->toIso8601String()]);
         } catch (\Throwable $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage(),
-                'class' => get_class($e),
-                // Debug env values yang dibaca PHP
-                'db_config' => [
-                    'driver' => config('database.connections.mysql.driver'),
-                    'host' => config('database.connections.mysql.host'),
-                    'port' => config('database.connections.mysql.port'),
-                    'database' => config('database.connections.mysql.database'),
-                    'username' => config('database.connections.mysql.username'),
-                    'password_set' => !empty(config('database.connections.mysql.password')),
-                ],
-                'env_values' => [
-                    'DB_HOST' => env('DB_HOST'),
-                    'DB_PORT' => env('DB_PORT'),
-                    'DB_DATABASE' => env('DB_DATABASE'),
-                    'DB_USERNAME' => env('DB_USERNAME'),
-                    'DB_PASSWORD_SET' => !empty(env('DB_PASSWORD')),
-                ],
-            ], 500);
+            return response()->json(['status' => 'error'], 500);
         }
     });
 

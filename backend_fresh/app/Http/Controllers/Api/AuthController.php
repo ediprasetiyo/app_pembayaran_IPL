@@ -14,49 +14,35 @@ class AuthController extends Controller
 {
     public function login(Request $request): JsonResponse
     {
-        try {
-            $request->validate([
-                'phone' => 'required|string',
-                'password' => 'required|string',
+        $request->validate([
+            'phone' => 'required|string',
+            'password' => 'required|string',
+        ]);
+
+        $user = User::where('phone', $request->phone)->first();
+
+        if (! $user || ! Hash::check($request->password, $user->password)) {
+            throw ValidationException::withMessages([
+                'phone' => ['Nomor telepon atau password salah.'],
             ]);
-
-            $user = User::where('phone', $request->phone)->first();
-
-            if (! $user || ! Hash::check($request->password, $user->password)) {
-                throw ValidationException::withMessages([
-                    'phone' => ['Nomor telepon atau password salah.'],
-                ]);
-            }
-
-            if (! $user->is_active) {
-                return response()->json([
-                    'message' => 'Akun Anda tidak aktif. Hubungi admin.',
-                ], 403);
-            }
-
-            if ($request->fcm_token) {
-                $user->update(['fcm_token' => $request->fcm_token]);
-            }
-
-            $token = $user->createToken('mobile-app')->plainTextToken;
-
-            return response()->json([
-                'token' => $token,
-                'user' => $this->formatUser($user),
-            ]);
-        } catch (ValidationException $e) {
-            throw $e;
-        } catch (\Throwable $e) {
-            // DEBUG: tampilkan exception detail di response (hapus saat production!)
-            return response()->json([
-                'debug' => true,
-                'message' => $e->getMessage(),
-                'class' => get_class($e),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => collect(explode("\n", $e->getTraceAsString()))->take(10)->all(),
-            ], 500);
         }
+
+        if (! $user->is_active) {
+            return response()->json([
+                'message' => 'Akun Anda tidak aktif. Hubungi admin.',
+            ], 403);
+        }
+
+        if ($request->fcm_token) {
+            $user->update(['fcm_token' => $request->fcm_token]);
+        }
+
+        $token = $user->createToken('mobile-app')->plainTextToken;
+
+        return response()->json([
+            'token' => $token,
+            'user' => $this->formatUser($user),
+        ]);
     }
 
     public function register(Request $request): JsonResponse
