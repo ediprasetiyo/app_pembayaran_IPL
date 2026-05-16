@@ -4,16 +4,13 @@ nixPkgs = ['php84', 'php84Packages.composer', 'nodejs_20']
 [phases.install]
 cmds = [
   'composer install --no-dev --optimize-autoloader --ignore-platform-reqs',
-  'cp .env.example .env',
-  'php artisan key:generate --force',
-  'php artisan storage:link || true',
 ]
 
 [phases.build]
 cmds = [
-  'php artisan config:cache',
-  'php artisan route:cache',
+  'touch .env',
+  'php artisan storage:link || true',
 ]
 
 [start]
-cmd = 'php artisan migrate --force && php -S 0.0.0.0:$PORT -t public'
+cmd = 'php artisan config:clear && php artisan cache:clear && (test -n "$APP_KEY" || php artisan key:generate --force) && php artisan migrate --force && php -S 0.0.0.0:$PORT -t public'
