@@ -32,6 +32,22 @@ Route::prefix('v1')->group(function () {
                 'status' => 'error',
                 'message' => $e->getMessage(),
                 'class' => get_class($e),
+                // Debug env values yang dibaca PHP
+                'db_config' => [
+                    'driver' => config('database.connections.mysql.driver'),
+                    'host' => config('database.connections.mysql.host'),
+                    'port' => config('database.connections.mysql.port'),
+                    'database' => config('database.connections.mysql.database'),
+                    'username' => config('database.connections.mysql.username'),
+                    'password_set' => !empty(config('database.connections.mysql.password')),
+                ],
+                'env_values' => [
+                    'DB_HOST' => env('DB_HOST'),
+                    'DB_PORT' => env('DB_PORT'),
+                    'DB_DATABASE' => env('DB_DATABASE'),
+                    'DB_USERNAME' => env('DB_USERNAME'),
+                    'DB_PASSWORD_SET' => !empty(env('DB_PASSWORD')),
+                ],
             ], 500);
         }
     });
