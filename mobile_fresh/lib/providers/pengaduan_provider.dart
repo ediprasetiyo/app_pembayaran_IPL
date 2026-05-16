@@ -7,7 +7,8 @@ class PengaduanModel {
   final String judul;
   final String deskripsi;
   final String kategori;
-  final List<String> foto;
+  final List<String>? foto;
+  final List<String>? fotoUrls;
   final String status;
   final String prioritas;
   final String? keteranganAdmin;
@@ -18,7 +19,8 @@ class PengaduanModel {
     required this.judul,
     required this.deskripsi,
     required this.kategori,
-    required this.foto,
+    this.foto,
+    this.fotoUrls,
     required this.status,
     required this.prioritas,
     this.keteranganAdmin,
@@ -28,14 +30,17 @@ class PengaduanModel {
   factory PengaduanModel.fromJson(Map<String, dynamic> json) {
     return PengaduanModel(
       id: json['id'],
-      judul: json['judul'],
-      deskripsi: json['deskripsi'],
-      kategori: json['kategori'],
-      foto: json['foto'] != null ? List<String>.from(json['foto']) : [],
-      status: json['status'],
-      prioritas: json['prioritas'],
+      judul: json['judul'] ?? '',
+      deskripsi: json['deskripsi'] ?? '',
+      kategori: json['kategori'] ?? 'lainnya',
+      foto: json['foto'] != null ? List<String>.from(json['foto']) : null,
+      fotoUrls: json['foto_urls'] != null
+          ? List<String>.from((json['foto_urls'] as List).where((e) => e != null))
+          : null,
+      status: json['status'] ?? 'baru',
+      prioritas: json['prioritas'] ?? 'sedang',
       keteranganAdmin: json['keterangan_admin'],
-      createdAt: json['created_at'],
+      createdAt: json['created_at'] ?? '',
     );
   }
 }

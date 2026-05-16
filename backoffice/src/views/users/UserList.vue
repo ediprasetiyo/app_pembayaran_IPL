@@ -17,6 +17,8 @@
         <option value="">Semua Role</option>
         <option value="super_admin">Super Admin</option>
         <option value="admin">Admin</option>
+        <option value="bendahara">Bendahara</option>
+        <option value="humas">Humas</option>
         <option value="warga">Warga</option>
       </select>
       <select v-model="status" @change="loadUsers" class="input w-32">
@@ -115,11 +117,23 @@ async function hapus(u) {
 }
 
 function roleLabel(r) {
-  return { super_admin: 'Super Admin', admin: 'Admin', warga: 'Warga' }[r] ?? r
+  return {
+    super_admin: '👑 Super Admin',
+    admin: '⚙️ Admin',
+    bendahara: '💰 Bendahara',
+    humas: '📣 Humas',
+    warga: '👥 Warga',
+  }[r] ?? r
 }
 
 function roleClass(r) {
-  return { super_admin: 'badge-red', admin: 'badge-blue', warga: 'badge-gray' }[r] ?? 'badge-gray'
+  return {
+    super_admin: 'badge-red',
+    admin: 'badge-blue',
+    bendahara: 'badge-green',
+    humas: 'badge-yellow',
+    warga: 'badge-gray',
+  }[r] ?? 'badge-gray'
 }
 
 function formatDate(d) {

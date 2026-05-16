@@ -15,9 +15,19 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401) {
+    const status = err.response?.status
+    const url = err.config?.url ?? ''
+
+    // Logout endpoint — abaikan semua error
+    if (url.includes('/auth/logout')) {
+      return Promise.reject(err)
+    }
+
+    if (status === 401) {
       localStorage.removeItem('token')
-      router.push('/login')
+      if (router.currentRoute.value.path !== '/login') {
+        router.push('/login')
+      }
     }
     return Promise.reject(err)
   }

@@ -132,11 +132,15 @@ class WargaController extends Controller
         $request->validate([
             'name' => 'sometimes|string|max:100',
             'phone' => 'sometimes|string|unique:users,phone,' . $warga->user_id,
+            'nomor_kk' => 'nullable|string|size:16|unique:warga,nomor_kk,' . $warga->id,
             'nomor_rumah' => 'sometimes|string|max:10',
             'status_hunian' => 'sometimes|in:milik,sewa,kontrak',
             'rt' => 'nullable|string',
             'rw' => 'nullable|string',
+            'tanggal_pindah' => 'nullable|date',
+            'nik' => 'nullable|string|size:16|unique:warga,nik,' . $warga->id,
             'is_active' => 'sometimes|boolean',
+            'uang_kedukaan_dibayar' => 'sometimes|boolean',
             'catatan' => 'nullable|string',
         ]);
 
@@ -146,11 +150,55 @@ class WargaController extends Controller
                 $warga->user->update($request->only(['name', 'phone']));
             }
 
-            $warga->update($request->only([
-                'nomor_rumah', 'blok', 'rt', 'rw',
+            $statusKedukaanLama = $warga->uang_kedukaan_dibayar;
+
+            $updateData = $request->only([
+                'nomor_kk', 'nomor_rumah', 'blok', 'rt', 'rw',
                 'status_hunian', 'tanggal_pindah', 'nik',
-                'alamat_asal', 'is_active', 'catatan',
-            ]));
+                'is_active', 'catatan',
+            ]);
+
+            // Khusus uang_kedukaan_dibayar
+            if ($request->has('uang_kedukaan_dibayar')) {
+                $sudahBayar = $request->boolean('uang_kedukaan_dibayar');
+                $updateData['uang_kedukaan_dibayar'] = $sudahBayar;
+                $updateData['tanggal_bayar_kedukaan'] = $sudahBayar
+                    ? ($warga->tanggal_bayar_kedukaan ?? now())
+                    : null;
+            }
+
+            $warga->update($updateData);
+
+            if ($request->has('uang_kedukaan_dibayar')) {
+                $sudahBayar = $request->boolean('uang_kedukaan_dibayar');
+
+                if ($sudahBayar) {
+                    // CENTANG (warga lama) → hapus tagihan kedukaan yang belum bayar
+                    IplTagihan::where('warga_id', $warga->id)
+                        ->where('jenis', 'kedukaan')
+                        ->where('status', 'belum_bayar')
+                        ->delete();
+                } else if ($statusKedukaanLama) {
+                    // UNCENTANG (warga harus bayar lagi) → buatkan tagihan kedukaan
+                    $existsKedukaan = IplTagihan::where('warga_id', $warga->id)
+                        ->where('jenis', 'kedukaan')
+                        ->where('status', 'belum_bayar')
+                        ->exists();
+
+                    if (!$existsKedukaan) {
+                        IplTagihan::create([
+                            'warga_id' => $warga->id,
+                            'jenis' => 'kedukaan',
+                            'bulan' => now()->month,
+                            'tahun' => now()->year,
+                            'nominal' => (int) env('IPL_KEDUKAAN_AMOUNT', 20000),
+                            'jatuh_tempo' => now()->setDay(10),
+                            'status' => 'belum_bayar',
+                            'keterangan' => 'Uang kedukaan (sekali bayar untuk warga baru)',
+                        ]);
+                    }
+                }
+            }
 
             DB::commit();
 
@@ -160,7 +208,7 @@ class WargaController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Gagal memperbarui data.'], 500);
+            return response()->json(['message' => 'Gagal memperbarui data: ' . $e->getMessage()], 500);
         }
     }
 

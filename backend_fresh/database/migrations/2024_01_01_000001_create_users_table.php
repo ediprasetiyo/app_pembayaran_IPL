@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('email')->nullable()->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('role', ['super_admin', 'admin', 'warga'])->default('warga');
+            $table->enum('role', ['super_admin', 'admin', 'bendahara', 'warga'])->default('warga');
             $table->string('fcm_token')->nullable();
             $table->enum('language', ['id', 'en'])->default('id');
             $table->string('avatar')->nullable();

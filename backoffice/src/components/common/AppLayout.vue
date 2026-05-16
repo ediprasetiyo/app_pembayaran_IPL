@@ -73,6 +73,9 @@
         <RouterView />
       </main>
     </div>
+
+    <!-- AI Assistant floating chat -->
+    <AiAssistant />
   </div>
 </template>
 
@@ -90,9 +93,11 @@ import {
   Bars3Icon,
   ArrowRightOnRectangleIcon,
   ShieldCheckIcon,
+  MegaphoneIcon,
 } from '@heroicons/vue/24/outline'
 import dayjs from 'dayjs'
 import 'dayjs/locale/id'
+import AiAssistant from './AiAssistant.vue'
 dayjs.locale('id')
 
 const sidebarOpen = ref(true)
@@ -100,19 +105,31 @@ const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
 
+// Setiap menu punya daftar role yang boleh akses
 const navItems = [
-  { to: '/', label: 'Dashboard', icon: HomeIcon },
-  { to: '/warga', label: 'Data Warga', icon: UsersIcon },
-  { to: '/tagihan', label: 'Tagihan IPL', icon: DocumentTextIcon },
-  { to: '/pembayaran', label: 'Pembayaran', icon: CreditCardIcon },
-  { to: '/pengaduan', label: 'Pengaduan', icon: ExclamationTriangleIcon },
-  { to: '/laporan', label: 'Laporan', icon: ChartBarIcon },
-  { to: '/users', label: 'Manajemen User', icon: ShieldCheckIcon, superAdminOnly: true },
+  { to: '/', label: 'Dashboard', icon: HomeIcon,
+    roles: ['super_admin', 'admin', 'bendahara', 'humas'] },
+  { to: '/warga', label: 'Data Warga', icon: UsersIcon,
+    roles: ['super_admin', 'admin'] },
+  { to: '/tagihan', label: 'Tagihan IPL', icon: DocumentTextIcon,
+    roles: ['super_admin', 'admin', 'bendahara'] },
+  { to: '/pembayaran', label: 'Pembayaran', icon: CreditCardIcon,
+    roles: ['super_admin', 'admin', 'bendahara'] },
+  { to: '/pengaduan', label: 'Pengaduan', icon: ExclamationTriangleIcon,
+    roles: ['super_admin', 'admin', 'humas'] },
+  { to: '/news', label: 'Berita', icon: MegaphoneIcon,
+    roles: ['super_admin', 'admin', 'humas'] },
+  { to: '/laporan', label: 'Laporan', icon: ChartBarIcon,
+    roles: ['super_admin', 'admin', 'bendahara'] },
+  { to: '/users', label: 'Manajemen User', icon: ShieldCheckIcon,
+    roles: ['super_admin'] },
 ]
 
-const visibleNavItems = computed(() =>
-  navItems.filter(item => !item.superAdminOnly || auth.user?.role === 'super_admin')
-)
+const visibleNavItems = computed(() => {
+  const role = auth.user?.role
+  if (!role) return []
+  return navItems.filter(item => item.roles.includes(role))
+})
 
 const pageTitles = {
   'Dashboard': 'Dashboard',
@@ -124,6 +141,8 @@ const pageTitles = {
   'Tagihan': 'Tagihan IPL',
   'Pengaduan': 'Pengaduan Warga',
   'Laporan': 'Laporan',
+  'News': 'Berita & Pengumuman',
+  'NewsForm': 'Form Berita',
   'Users': 'Manajemen User',
   'UserForm': 'Form User',
 }
@@ -132,7 +151,7 @@ const pageTitle = computed(() => pageTitles[route.name] ?? 'Back Office')
 const currentDate = computed(() => dayjs().format('dddd, D MMMM YYYY'))
 
 async function logout() {
-  auth.logout()
+  await auth.logout()
   await router.push('/login')
 }
 </script>

@@ -6,7 +6,9 @@ class AppConstants {
   static const perumahan = 'Perumahan Griya Pesona Madani Tenjo';
   static const blok = 'E';
 
-  static const midtransClientKey = 'SB-Mid-client-xxxxxxxxxxxx';
+  // Midtrans Sandbox - ganti dengan Client Key dari dashboard.sandbox.midtrans.com
+  // GANTI nilai di bawah dengan Client Key Anda (yang dimulai dengan SB-Mid-client-...)
+  static const midtransClientKey = 'SB-Mid-client-9zVHbj2Pprmymtrr';
   static const midtransIsProduction = false;
 
   static const Map<String, String> namaBulan = {

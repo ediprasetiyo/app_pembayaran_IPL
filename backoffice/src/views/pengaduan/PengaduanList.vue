@@ -66,6 +66,19 @@
       </div>
     </div>
 
+    <!-- Foto Preview Lightbox -->
+    <div
+      v-if="previewFoto"
+      @click="previewFoto = null"
+      class="fixed inset-0 bg-black/85 z-[60] flex items-center justify-center p-4 cursor-zoom-out"
+    >
+      <img :src="previewFoto" class="max-w-full max-h-full rounded-lg" @click.stop />
+      <button
+        @click="previewFoto = null"
+        class="absolute top-4 right-4 bg-white/20 hover:bg-white/40 text-white rounded-full p-2"
+      >✕</button>
+    </div>
+
     <!-- Detail Modal -->
     <div v-if="selectedPengaduan" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
       <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl my-4">
@@ -80,9 +93,25 @@
           </div>
         </div>
 
-        <div class="p-6 space-y-4">
+        <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
           <div class="bg-gray-50 rounded-lg p-4">
-            <p class="text-sm text-gray-600">{{ selectedPengaduan.deskripsi }}</p>
+            <p class="text-sm text-gray-600 whitespace-pre-wrap">{{ selectedPengaduan.deskripsi }}</p>
+          </div>
+
+          <!-- Foto pengaduan -->
+          <div v-if="getFotos(selectedPengaduan).length > 0">
+            <p class="label">Foto Pendukung ({{ getFotos(selectedPengaduan).length }})</p>
+            <div class="grid grid-cols-3 gap-3 mt-2">
+              <div
+                v-for="(foto, idx) in getFotos(selectedPengaduan)"
+                :key="idx"
+                @click="previewFoto = foto"
+                class="aspect-square rounded-lg overflow-hidden border border-gray-200 cursor-pointer hover:ring-2 hover:ring-primary-500 hover:ring-offset-1 transition-all"
+              >
+                <img :src="foto" :alt="`Foto ${idx + 1}`" class="w-full h-full object-cover" />
+              </div>
+            </div>
+            <p class="text-xs text-gray-400 mt-2">Klik foto untuk preview lebih besar</p>
           </div>
 
           <div class="grid grid-cols-2 gap-4 text-sm">
@@ -97,6 +126,10 @@
             <div>
               <p class="text-gray-400">Tanggal Lapor</p>
               <p class="font-medium">{{ formatDate(selectedPengaduan.created_at) }}</p>
+            </div>
+            <div v-if="selectedPengaduan.warga?.user?.phone">
+              <p class="text-gray-400">Nomor HP</p>
+              <p class="font-medium">{{ selectedPengaduan.warga.user.phone }}</p>
             </div>
           </div>
 
@@ -153,7 +186,16 @@ const pengaduans = ref([])
 const isLoading = ref(false)
 const activeStatus = ref('')
 const selectedPengaduan = ref(null)
+const previewFoto = ref(null)
 const updating = ref(false)
+
+function getFotos(p) {
+  if (!p) return []
+  // Backend mengirim foto_urls (full URL) atau foto (path saja)
+  const urls = p.foto_urls ?? p.foto ?? []
+  if (!Array.isArray(urls)) return []
+  return urls.filter(Boolean)
+}
 
 const updateForm = ref({ status: 'diproses', prioritas: 'sedang', keterangan_admin: '' })
 

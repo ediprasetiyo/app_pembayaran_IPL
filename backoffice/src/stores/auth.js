@@ -22,12 +22,24 @@ export const useAuthStore = defineStore('auth', () => {
       const res = await api.get('/auth/me')
       user.value = res.data.user
     } catch {
-      logout()
+      // Token invalid → clear lokal saja, jangan call logout (yang malah error lagi)
+      _clearLocal()
     }
   }
 
-  function logout() {
-    api.post('/auth/logout').catch(() => {})
+  async function logout() {
+    // Kalau ada token, panggil API logout (silent — abaikan error)
+    if (token.value) {
+      try {
+        await api.post('/auth/logout')
+      } catch (_) {
+        // abaikan 401/403/500 — yang penting clear lokal
+      }
+    }
+    _clearLocal()
+  }
+
+  function _clearLocal() {
     token.value = null
     user.value = null
     localStorage.removeItem('token')

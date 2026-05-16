@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'providers/auth_provider.dart';
 import 'providers/ipl_provider.dart';
+import 'providers/news_provider.dart';
 import 'providers/notifikasi_provider.dart';
 import 'providers/pengaduan_provider.dart';
 import 'providers/locale_provider.dart';
@@ -43,6 +44,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LocaleProvider(initialLanguage)),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => IplProvider()),
+        ChangeNotifierProvider(create: (_) => NewsProvider()),
         ChangeNotifierProvider(create: (_) => NotifikasiProvider()),
         ChangeNotifierProvider(create: (_) => PengaduanProvider()),
       ],

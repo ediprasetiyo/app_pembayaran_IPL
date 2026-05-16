@@ -28,21 +28,25 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  late final List<Widget> _screens = const [
-    DashboardTab(),
-    PaymentScreen(),
-    ComplaintScreen(),
-    SettingsScreen(),
-  ];
+  void _changeTab(int index) {
+    setState(() => _currentIndex = index);
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
+    final screens = [
+      DashboardTab(onChangeTab: _changeTab),
+      const PaymentScreen(),
+      const ComplaintScreen(),
+      const SettingsScreen(),
+    ];
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _screens,
+        children: screens,
       ),
       bottomNavigationBar: Consumer<NotifikasiProvider>(
         builder: (context, notifProvider, _) {

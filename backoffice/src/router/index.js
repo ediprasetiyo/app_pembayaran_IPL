@@ -1,6 +1,32 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
+// Mapping route name → role yang boleh akses
+const routeAccess = {
+  Dashboard: ['super_admin', 'admin', 'bendahara', 'humas'],
+  Warga: ['super_admin', 'admin'],
+  TambahWarga: ['super_admin', 'admin'],
+  DetailWarga: ['super_admin', 'admin'],
+  EditWarga: ['super_admin', 'admin'],
+  Pembayaran: ['super_admin', 'admin', 'bendahara'],
+  Tagihan: ['super_admin', 'admin', 'bendahara'],
+  Pengaduan: ['super_admin', 'admin', 'humas'],
+  News: ['super_admin', 'admin', 'humas'],
+  NewsBaru: ['super_admin', 'admin', 'humas'],
+  NewsEdit: ['super_admin', 'admin', 'humas'],
+  Laporan: ['super_admin', 'admin', 'bendahara'],
+  Users: ['super_admin'],
+  UserBaru: ['super_admin'],
+  UserEdit: ['super_admin'],
+}
+
+// Mendapatkan default route berdasarkan role
+function getDefaultRoute(role) {
+  // Semua role kecuali warga punya akses Dashboard
+  if (['super_admin', 'admin', 'bendahara', 'humas'].includes(role)) return '/'
+  return '/login'
+}
+
 const routes = [
   {
     path: '/login',
@@ -13,69 +39,21 @@ const routes = [
     component: () => import('@/components/common/AppLayout.vue'),
     meta: { requiresAuth: true },
     children: [
-      {
-        path: '',
-        name: 'Dashboard',
-        component: () => import('@/views/DashboardView.vue'),
-      },
-      {
-        path: 'warga',
-        name: 'Warga',
-        component: () => import('@/views/warga/WargaList.vue'),
-      },
-      {
-        path: 'warga/tambah',
-        name: 'TambahWarga',
-        component: () => import('@/views/warga/WargaForm.vue'),
-      },
-      {
-        path: 'warga/:id',
-        name: 'DetailWarga',
-        component: () => import('@/views/warga/WargaDetail.vue'),
-      },
-      {
-        path: 'warga/:id/edit',
-        name: 'EditWarga',
-        component: () => import('@/views/warga/WargaForm.vue'),
-      },
-      {
-        path: 'pembayaran',
-        name: 'Pembayaran',
-        component: () => import('@/views/pembayaran/PembayaranList.vue'),
-      },
-      {
-        path: 'tagihan',
-        name: 'Tagihan',
-        component: () => import('@/views/pembayaran/TagihanList.vue'),
-      },
-      {
-        path: 'pengaduan',
-        name: 'Pengaduan',
-        component: () => import('@/views/pengaduan/PengaduanList.vue'),
-      },
-      {
-        path: 'laporan',
-        name: 'Laporan',
-        component: () => import('@/views/LaporanView.vue'),
-      },
-      {
-        path: 'users',
-        name: 'Users',
-        component: () => import('@/views/users/UserList.vue'),
-        meta: { superAdminOnly: true },
-      },
-      {
-        path: 'users/baru',
-        name: 'UserBaru',
-        component: () => import('@/views/users/UserForm.vue'),
-        meta: { superAdminOnly: true },
-      },
-      {
-        path: 'users/:id/edit',
-        name: 'UserEdit',
-        component: () => import('@/views/users/UserForm.vue'),
-        meta: { superAdminOnly: true },
-      },
+      { path: '', name: 'Dashboard', component: () => import('@/views/DashboardView.vue') },
+      { path: 'warga', name: 'Warga', component: () => import('@/views/warga/WargaList.vue') },
+      { path: 'warga/tambah', name: 'TambahWarga', component: () => import('@/views/warga/WargaForm.vue') },
+      { path: 'warga/:id', name: 'DetailWarga', component: () => import('@/views/warga/WargaDetail.vue') },
+      { path: 'warga/:id/edit', name: 'EditWarga', component: () => import('@/views/warga/WargaForm.vue') },
+      { path: 'pembayaran', name: 'Pembayaran', component: () => import('@/views/pembayaran/PembayaranList.vue') },
+      { path: 'tagihan', name: 'Tagihan', component: () => import('@/views/pembayaran/TagihanList.vue') },
+      { path: 'pengaduan', name: 'Pengaduan', component: () => import('@/views/pengaduan/PengaduanList.vue') },
+      { path: 'laporan', name: 'Laporan', component: () => import('@/views/LaporanView.vue') },
+      { path: 'news', name: 'News', component: () => import('@/views/news/NewsList.vue') },
+      { path: 'news/baru', name: 'NewsBaru', component: () => import('@/views/news/NewsForm.vue') },
+      { path: 'news/:id/edit', name: 'NewsEdit', component: () => import('@/views/news/NewsForm.vue') },
+      { path: 'users', name: 'Users', component: () => import('@/views/users/UserList.vue') },
+      { path: 'users/baru', name: 'UserBaru', component: () => import('@/views/users/UserForm.vue') },
+      { path: 'users/:id/edit', name: 'UserEdit', component: () => import('@/views/users/UserForm.vue') },
     ],
   },
 ]
@@ -95,9 +73,18 @@ router.beforeEach(async (to) => {
     await auth.fetchMe()
   }
 
-  // Guard halaman super admin only
-  if (to.meta.superAdminOnly && auth.user?.role !== 'super_admin') {
-    return '/'
+  // Block warga login backoffice
+  if (auth.user?.role === 'warga') {
+    auth.logout()
+    return '/login'
+  }
+
+  // Cek akses berdasarkan role
+  if (to.name && routeAccess[to.name]) {
+    const allowedRoles = routeAccess[to.name]
+    if (!allowedRoles.includes(auth.user?.role)) {
+      return getDefaultRoute(auth.user?.role)
+    }
   }
 })
 

@@ -12,9 +12,9 @@ class AdminMiddleware
     {
         $user = $request->user();
 
-        if (!$user || !in_array($user->role, ['admin', 'super_admin'])) {
+        if (!$user || !in_array($user->role, ['admin', 'super_admin', 'bendahara', 'humas'])) {
             return response()->json([
-                'message' => 'Akses ditolak. Hanya admin yang diizinkan.',
+                'message' => 'Akses ditolak. Hanya staff backoffice yang diizinkan.',
             ], 403);
         }
 

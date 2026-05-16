@@ -46,6 +46,24 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return in_array($this->role, ['admin', 'super_admin', 'bendahara', 'humas']);
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
+    }
+
+    public function isBendahara(): bool
+    {
+        return $this->role === 'bendahara';
+    }
+
+    /**
+     * Boleh ubah status pembayaran manual (super_admin & bendahara)
+     */
+    public function canManageTagihan(): bool
+    {
+        return in_array($this->role, ['super_admin', 'bendahara']);
     }
 }

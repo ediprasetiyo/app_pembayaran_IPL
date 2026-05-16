@@ -25,10 +25,19 @@
       <div>
         <label class="label">Role *</label>
         <select v-model="form.role" class="input" required :disabled="isEdit && form.id === auth.user.id">
-          <option value="super_admin">Super Admin</option>
-          <option value="admin">Admin</option>
-          <option value="warga">Warga</option>
+          <option value="super_admin">👑 Super Admin</option>
+          <option value="admin">⚙️ Admin</option>
+          <option value="bendahara">💰 Bendahara</option>
+          <option value="humas">📣 Humas</option>
+          <option value="warga">👥 Warga</option>
         </select>
+        <div class="text-xs text-gray-500 mt-1 space-y-0.5">
+          <div><strong>👑 Super Admin:</strong> semua menu + manajemen user</div>
+          <div><strong>⚙️ Admin:</strong> semua menu kecuali manajemen user</div>
+          <div><strong>💰 Bendahara:</strong> Dashboard, Tagihan IPL, Pembayaran, Laporan</div>
+          <div><strong>📣 Humas:</strong> Dashboard, Pengaduan, Berita</div>
+          <div><strong>👥 Warga:</strong> akses mobile app saja (tidak bisa login backoffice)</div>
+        </div>
         <p v-if="isEdit && form.id === auth.user.id" class="text-xs text-gray-500 mt-1">
           Tidak bisa mengubah role akun sendiri.
         </p>

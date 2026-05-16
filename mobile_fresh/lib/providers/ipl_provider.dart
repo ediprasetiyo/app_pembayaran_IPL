@@ -7,6 +7,9 @@ class IplProvider extends ChangeNotifier {
 
   List<TagihanModel> _tagihans = [];
   TagihanModel? _tagihanBulanIni;
+  List<TagihanModel> _tagihanBulanIniList = [];
+  double _totalBulanIni = 0;
+  double _totalBelumBayar = 0;
   List<TagihanModel> _tunggakan = [];
   List<PembayaranModel> _riwayat = [];
   bool _isLoading = false;
@@ -14,6 +17,9 @@ class IplProvider extends ChangeNotifier {
 
   List<TagihanModel> get tagihans => _tagihans;
   TagihanModel? get tagihanBulanIni => _tagihanBulanIni;
+  List<TagihanModel> get tagihanBulanIniList => _tagihanBulanIniList;
+  double get totalBulanIni => _totalBulanIni;
+  double get totalBelumBayar => _totalBelumBayar;
   List<TagihanModel> get tunggakan => _tunggakan;
   List<PembayaranModel> get riwayat => _riwayat;
   bool get isLoading => _isLoading;
@@ -26,6 +32,11 @@ class IplProvider extends ChangeNotifier {
       final response = await _api.get('/ipl/tagihan/bulan-ini');
       final data = response.data['tagihan'];
       _tagihanBulanIni = data != null ? TagihanModel.fromJson(data) : null;
+
+      final List list = response.data['tagihans'] ?? [];
+      _tagihanBulanIniList = list.map((e) => TagihanModel.fromJson(e)).toList();
+      _totalBulanIni = (response.data['total_keseluruhan'] ?? 0).toDouble();
+      _totalBelumBayar = (response.data['total_belum_bayar'] ?? 0).toDouble();
     } catch (e) {
       _error = e.toString();
     }

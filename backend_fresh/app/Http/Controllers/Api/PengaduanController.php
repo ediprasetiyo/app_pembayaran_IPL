@@ -18,8 +18,8 @@ class PengaduanController extends Controller
         $user = $request->user();
         $query = Pengaduan::with('warga.user')->orderByDesc('created_at');
 
-        // Admin lihat semua, warga hanya pengaduan sendiri
-        if ($user->role !== 'admin') {
+        // Admin & Super Admin lihat semua, warga hanya pengaduan sendiri
+        if (!in_array($user->role, ['admin', 'super_admin'])) {
             if (!$user->warga) {
                 return response()->json(['data' => [], 'total' => 0]);
             }

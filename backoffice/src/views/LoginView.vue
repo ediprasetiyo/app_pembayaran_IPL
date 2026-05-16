@@ -86,9 +86,10 @@ async function handleLogin() {
   isLoading.value = true
   try {
     const data = await auth.login(form.value.phone, form.value.password)
-    if (!['admin', 'super_admin'].includes(data.user?.role)) {
+    const allowedRoles = ['super_admin', 'admin', 'bendahara', 'humas']
+    if (!allowedRoles.includes(data.user?.role)) {
       auth.logout()
-      error.value = 'Akun ini tidak memiliki akses admin.'
+      error.value = 'Akun warga tidak dapat login ke Back Office. Silakan gunakan aplikasi mobile.'
       return
     }
     await router.push('/')

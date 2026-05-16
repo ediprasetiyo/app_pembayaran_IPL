@@ -29,6 +29,8 @@ class Pengaduan extends Model
         'tanggal_selesai' => 'datetime',
     ];
 
+    protected $appends = ['foto_urls'];
+
     public function warga()
     {
         return $this->belongsTo(Warga::class);
@@ -37,5 +39,20 @@ class Pengaduan extends Model
     public function handler()
     {
         return $this->belongsTo(User::class, 'ditangani_oleh');
+    }
+
+    /**
+     * Convert foto paths to full URLs for mobile/web access
+     */
+    public function getFotoUrlsAttribute(): array
+    {
+        $foto = $this->foto;
+        if (empty($foto) || !is_array($foto)) return [];
+
+        return array_map(function ($path) {
+            if (empty($path)) return null;
+            if (str_starts_with($path, 'http')) return $path;
+            return \Illuminate\Support\Facades\URL::to($path);
+        }, $foto);
     }
 }

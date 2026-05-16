@@ -40,7 +40,7 @@ class UserController extends Controller
             'phone' => 'required|string|unique:users,phone',
             'email' => 'nullable|email|unique:users,email',
             'password' => 'required|string|min:6',
-            'role' => 'required|in:super_admin,admin,warga',
+            'role' => 'required|in:super_admin,admin,bendahara,humas,warga',
         ]);
 
         $user = User::create([
@@ -69,7 +69,7 @@ class UserController extends Controller
             'name' => 'sometimes|string|max:100',
             'phone' => 'sometimes|string|unique:users,phone,' . $user->id,
             'email' => 'nullable|email|unique:users,email,' . $user->id,
-            'role' => 'sometimes|in:super_admin,admin,warga',
+            'role' => 'sometimes|in:super_admin,admin,bendahara,humas,warga',
             'is_active' => 'sometimes|boolean',
             'password' => 'nullable|string|min:6',
         ]);

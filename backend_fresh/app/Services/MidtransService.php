@@ -36,9 +36,14 @@ class MidtransService
 
         $snapToken = Snap::getSnapToken($payload);
 
+        // URL Snap berbeda untuk sandbox vs production
+        $snapHost = config('midtrans.is_production')
+            ? 'https://app.midtrans.com'
+            : 'https://app.sandbox.midtrans.com';
+
         return [
             'token' => $snapToken,
-            'redirect_url' => 'https://app.midtrans.com/snap/v2/vtweb/' . $snapToken,
+            'redirect_url' => "{$snapHost}/snap/v2/vtweb/{$snapToken}",
         ];
     }
 

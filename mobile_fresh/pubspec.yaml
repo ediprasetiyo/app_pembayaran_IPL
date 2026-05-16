@@ -48,6 +48,12 @@ dependencies:
   # Icons
   font_awesome_flutter: ^10.7.0
 
+  # Share
+  share_plus: ^7.2.2
+
+  # HTML rendering (untuk konten berita dengan format)
+  flutter_html: ^3.0.0-beta.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

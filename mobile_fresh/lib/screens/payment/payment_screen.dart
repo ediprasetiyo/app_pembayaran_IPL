@@ -23,6 +23,15 @@ class _PaymentScreenState extends State<PaymentScreen> with SingleTickerProvider
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      // Refresh data saat ganti tab
+      if (_tabController.indexIsChanging) return;
+      if (_tabController.index == 0) {
+        context.read<IplProvider>().loadTunggakan();
+      } else {
+        context.read<IplProvider>().loadRiwayat();
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<IplProvider>().loadTunggakan();
       context.read<IplProvider>().loadRiwayat();
@@ -203,16 +212,43 @@ class _TagihanItem extends StatelessWidget {
   }
 
   Future<void> _bayar(BuildContext context, TagihanModel tagihan) async {
+    // Loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
     final result = await context.read<IplProvider>().bayarTagihan(tagihan.id);
-    if (!context.mounted || result == null) return;
+    if (!context.mounted) return;
+    Navigator.pop(context); // close loading
+
+    if (result == null) {
+      final err = context.read<IplProvider>().error ?? 'Gagal memproses pembayaran';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(err), backgroundColor: AppTheme.errorColor),
+      );
+      return;
+    }
 
     final redirectUrl = result['redirect_url'] as String?;
-    if (redirectUrl == null) return;
+    if (redirectUrl == null || redirectUrl.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Pembayaran tidak dapat diproses (URL kosong). Hubungi admin.'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+      return;
+    }
 
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => _MidtransWebView(url: redirectUrl, orderId: result['pembayaran']['order_id']),
+        builder: (_) => _MidtransWebView(
+          url: redirectUrl,
+          orderId: result['pembayaran']?['order_id'] ?? '',
+        ),
       ),
     );
   }
@@ -249,12 +285,17 @@ class _MidtransWebViewState extends State<_MidtransWebView> {
   }
 
   void _onPaymentComplete(bool success) {
-    context.read<IplProvider>().loadTagihanBulanIni();
-    context.read<IplProvider>().loadTunggakan();
+    final provider = context.read<IplProvider>();
+    provider.loadTagihanBulanIni();
+    provider.loadTunggakan();
+    provider.loadRiwayat();
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(success ? 'Pembayaran berhasil!' : 'Pembayaran gagal.'),
+      content: Text(success
+          ? 'Pembayaran sedang diproses, cek tab Riwayat untuk status terbaru.'
+          : 'Pembayaran gagal.'),
       backgroundColor: success ? AppTheme.successColor : AppTheme.errorColor,
+      duration: const Duration(seconds: 4),
     ));
   }
 
@@ -273,45 +314,437 @@ class _MidtransWebViewState extends State<_MidtransWebView> {
   }
 }
 
-class _RiwayatTab extends StatelessWidget {
+class _RiwayatTab extends StatefulWidget {
   final NumberFormat currency;
 
   const _RiwayatTab({required this.currency});
+
+  @override
+  State<_RiwayatTab> createState() => _RiwayatTabState();
+}
+
+class _RiwayatTabState extends State<_RiwayatTab> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<IplProvider>().loadRiwayat();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final iplProvider = context.watch<IplProvider>();
 
     if (iplProvider.riwayat.isEmpty) {
-      return const Center(child: Text('Belum ada riwayat pembayaran.'));
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: iplProvider.riwayat.length,
-      itemBuilder: (context, index) {
-        final item = iplProvider.riwayat[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 10),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: item.isSuccess
-                  ? AppTheme.successColor.withOpacity(0.1)
-                  : AppTheme.errorColor.withOpacity(0.1),
-              child: Icon(
-                item.isSuccess ? Icons.check : Icons.close,
-                color: item.isSuccess ? AppTheme.successColor : AppTheme.errorColor,
+      return RefreshIndicator(
+        onRefresh: () => context.read<IplProvider>().loadRiwayat(),
+        child: ListView(
+          children: [
+            const SizedBox(height: 100),
+            Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey.shade300),
+            const SizedBox(height: 12),
+            const Center(
+              child: Text(
+                'Belum ada riwayat pembayaran',
+                style: TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
-            title: Text(item.orderId),
-            subtitle: Text(item.paymentType ?? '-'),
-            trailing: Text(
-              currency.format(item.nominal),
-              style: const TextStyle(fontWeight: FontWeight.bold),
+            const Center(
+              child: Text(
+                'Tarik ke bawah untuk refresh',
+                style: TextStyle(color: Color(0xFF9E9E9E), fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => context.read<IplProvider>().loadRiwayat(),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: iplProvider.riwayat.length,
+        itemBuilder: (context, index) {
+          final item = iplProvider.riwayat[index];
+          return _RiwayatCard(
+            pembayaran: item,
+            currency: widget.currency,
+            onTap: () => _showDetailPembayaran(context, item),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showDetailPembayaran(BuildContext context, PembayaranModel pembayaran) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => _DetailPembayaranSheet(
+        pembayaran: pembayaran,
+        currency: widget.currency,
+      ),
+    );
+  }
+}
+
+class _RiwayatCard extends StatelessWidget {
+  final PembayaranModel pembayaran;
+  final NumberFormat currency;
+  final VoidCallback? onTap;
+
+  const _RiwayatCard({
+    required this.pembayaran,
+    required this.currency,
+    this.onTap,
+  });
+
+  Color get statusColor {
+    switch (pembayaran.status) {
+      case 'success': return AppTheme.successColor;
+      case 'pending': return AppTheme.warningColor;
+      case 'failed':
+      case 'expired':
+      case 'cancel': return AppTheme.errorColor;
+      default: return AppTheme.textSecondary;
+    }
+  }
+
+  IconData get statusIcon {
+    switch (pembayaran.status) {
+      case 'success': return Icons.check_circle;
+      case 'pending': return Icons.schedule;
+      case 'failed':
+      case 'expired':
+      case 'cancel': return Icons.cancel;
+      default: return Icons.help;
+    }
+  }
+
+  String get statusLabel {
+    switch (pembayaran.status) {
+      case 'success': return 'Berhasil';
+      case 'pending': return 'Menunggu';
+      case 'failed': return 'Gagal';
+      case 'expired': return 'Kedaluwarsa';
+      case 'cancel': return 'Dibatalkan';
+      default: return pembayaran.status;
+    }
+  }
+
+  String get methodLabel {
+    final m = pembayaran.paymentType;
+    if (m == null || m.isEmpty) return 'Pembayaran';
+    return {
+      'tunai': '💵 Tunai',
+      'transfer': '🏦 Transfer',
+      'bank_transfer': '🏦 Bank Transfer',
+      'gopay': '🟢 GoPay',
+      'shopeepay': '🟧 ShopeePay',
+      'qris': '📱 QRIS',
+      'credit_card': '💳 Kartu Kredit',
+    }[m] ?? m.toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              alignment: Alignment.center,
+              child: Icon(statusIcon, color: statusColor, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          methodLabel,
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: statusColor.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          statusLabel,
+                          style: TextStyle(
+                            color: statusColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    pembayaran.orderId,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppTheme.textSecondary,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    currency.format(pembayaran.nominal),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: AppTheme.primaryColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+          ],
+        ),
+      ),
+      ),
+    );
+  }
+}
+
+// ============== DETAIL PEMBAYARAN SHEET ==============
+class _DetailPembayaranSheet extends StatelessWidget {
+  final PembayaranModel pembayaran;
+  final NumberFormat currency;
+
+  const _DetailPembayaranSheet({
+    required this.pembayaran,
+    required this.currency,
+  });
+
+  Color get statusColor {
+    switch (pembayaran.status) {
+      case 'success': return AppTheme.successColor;
+      case 'pending': return AppTheme.warningColor;
+      case 'failed':
+      case 'expired':
+      case 'cancel': return AppTheme.errorColor;
+      default: return AppTheme.textSecondary;
+    }
+  }
+
+  IconData get statusIcon {
+    switch (pembayaran.status) {
+      case 'success': return Icons.check_circle;
+      case 'pending': return Icons.schedule;
+      default: return Icons.cancel;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      maxChildSize: 0.95,
+      minChildSize: 0.5,
+      expand: false,
+      builder: (_, controller) => SingleChildScrollView(
+        controller: controller,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Drag handle
+            const SizedBox(height: 12),
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+
+            // Header status (full-width gradient)
+            Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    statusColor.withOpacity(0.12),
+                    statusColor.withOpacity(0.04),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: statusColor.withOpacity(0.25)),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(statusIcon, color: statusColor, size: 36),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    pembayaran.statusLabel,
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    currency.format(pembayaran.nominal),
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Detail Transaksi',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  const SizedBox(height: 10),
+                  _row('Order ID', pembayaran.orderId, isMono: true),
+                  _row('Metode Pembayaran', pembayaran.methodLabel),
+                  if (pembayaran.midtransTransactionId != null)
+                    _row('Transaction ID', pembayaran.midtransTransactionId!, isMono: true),
+                  _row('Tanggal Transaksi',
+                      DateFormat('d MMMM yyyy, HH:mm', 'id_ID').format(pembayaran.createdAt)),
+                  if (pembayaran.updatedAt != null && pembayaran.status == 'success')
+                    _row('Tanggal Lunas',
+                        DateFormat('d MMMM yyyy, HH:mm', 'id_ID').format(pembayaran.updatedAt!)),
+
+                  if (pembayaran.tagihan != null) ...[
+                    const SizedBox(height: 16),
+                    const Text('Detail Tagihan',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    const SizedBox(height: 10),
+                    _row(
+                      'Jenis',
+                      pembayaran.tagihan!.jenis == 'kedukaan'
+                          ? 'Uang Kedukaan'
+                          : 'IPL Bulanan',
+                    ),
+                    _row(
+                      'Periode',
+                      '${pembayaran.tagihan!.namaBulan} ${pembayaran.tagihan!.tahun}',
+                    ),
+                    _row('Nominal', currency.format(pembayaran.tagihan!.nominal)),
+                  ],
+
+                  if (pembayaran.catatan != null && pembayaran.catatan!.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    const Text('Catatan',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    const SizedBox(height: 6),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.backgroundColor,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border(
+                          left: BorderSide(color: AppTheme.primaryColor.withOpacity(0.5), width: 3),
+                        ),
+                      ),
+                      child: Text(
+                        pembayaran.catatan!,
+                        style: const TextStyle(fontSize: 13, height: 1.5),
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.check, size: 18),
+                      label: const Text('Tutup'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _row(String label, String value, {bool isMono = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 130,
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
             ),
           ),
-        );
-      },
+          const Text(': ', style: TextStyle(color: AppTheme.textSecondary)),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                fontFamily: isMono ? 'monospace' : null,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

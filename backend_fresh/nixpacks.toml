@@ -1,0 +1,19 @@
+[phases.setup]
+nixPkgs = ['php84', 'php84Packages.composer', 'nodejs_20']
+
+[phases.install]
+cmds = [
+  'composer install --no-dev --optimize-autoloader --ignore-platform-reqs',
+  'cp .env.example .env',
+  'php artisan key:generate --force',
+  'php artisan storage:link || true',
+]
+
+[phases.build]
+cmds = [
+  'php artisan config:cache',
+  'php artisan route:cache',
+]
+
+[start]
+cmd = 'php artisan migrate --force && php -S 0.0.0.0:$PORT -t public'
