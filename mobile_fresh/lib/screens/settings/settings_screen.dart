@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/locale_provider.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../utils/app_theme.dart';
+
+const String _adminWhatsApp = '6282115525327';
+const String _adminName = 'Admin Griya Pesona Madani';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -20,19 +25,53 @@ class SettingsScreen extends StatelessWidget {
       appBar: AppBar(title: Text(l10n.settings)),
       body: ListView(
         children: [
-          // Profile Section
+          // Profile Header
           Container(
             padding: const EdgeInsets.all(20),
-            color: AppTheme.primaryColor,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF1B5E20), Color(0xFF388E3C)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 32,
-                  backgroundColor: Colors.white.withOpacity(0.2),
-                  child: Text(
-                    (user?.name ?? 'U')[0].toUpperCase(),
-                    style: const TextStyle(
-                        color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                GestureDetector(
+                  onTap: () => _showEditProfile(context),
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 36,
+                        backgroundColor: Colors.white,
+                        backgroundImage: user?.avatar != null && user!.avatar!.isNotEmpty
+                            ? NetworkImage(_getAvatarUrl(user.avatar!))
+                            : null,
+                        child: user?.avatar == null || user!.avatar!.isEmpty
+                            ? Text(
+                                (user?.name ?? 'U')[0].toUpperCase(),
+                                style: const TextStyle(
+                                  color: AppTheme.primaryColor,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                            : null,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: AppTheme.primaryColor, width: 2),
+                          ),
+                          child: const Icon(Icons.camera_alt, size: 12, color: AppTheme.primaryColor),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -44,15 +83,24 @@ class SettingsScreen extends StatelessWidget {
                         user?.name ?? '-',
                         style: const TextStyle(
                             color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
                       ),
                       Text(
                         user?.phone ?? '-',
                         style: const TextStyle(color: Colors.white70),
                       ),
                       if (user?.warga != null)
-                        Text(
-                          user!.warga!.alamatLengkap,
-                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                        Container(
+                          margin: const EdgeInsets.only(top: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            user!.warga!.alamatLengkap,
+                            style: const TextStyle(color: Colors.white, fontSize: 11),
+                          ),
                         ),
                     ],
                   ),
@@ -63,34 +111,7 @@ class SettingsScreen extends StatelessWidget {
 
           const SizedBox(height: 8),
 
-          // Language Setting
-          _SectionHeader(title: l10n.language),
-          Card(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Column(
-              children: [
-                _LanguageTile(
-                  flag: '🇮🇩',
-                  language: 'Bahasa Indonesia',
-                  code: 'id',
-                  isSelected: locale.language == 'id',
-                  onTap: () => context.read<LocaleProvider>().setLanguage('id'),
-                ),
-                const Divider(height: 1, indent: 56),
-                _LanguageTile(
-                  flag: '🇬🇧',
-                  language: 'English',
-                  code: 'en',
-                  isSelected: locale.language == 'en',
-                  onTap: () => context.read<LocaleProvider>().setLanguage('en'),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          // Account Settings
+          // Account
           _SectionHeader(title: l10n.account),
           Card(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -99,19 +120,49 @@ class SettingsScreen extends StatelessWidget {
                 _SettingsTile(
                   icon: Icons.person_outline,
                   title: l10n.editProfile,
+                  subtitle: 'Ubah nama & foto profil',
                   onTap: () => _showEditProfile(context),
                 ),
                 const Divider(height: 1, indent: 56),
                 _SettingsTile(
                   icon: Icons.lock_outline,
                   title: l10n.changePassword,
+                  subtitle: 'Ubah password login',
                   onTap: () => _showChangePassword(context),
                 ),
                 const Divider(height: 1, indent: 56),
                 _SettingsTile(
                   icon: Icons.family_restroom,
                   title: l10n.dataKeluarga,
-                  onTap: () {},
+                  subtitle: user?.warga != null
+                      ? '${user!.warga!.anggotaKeluarga.length} anggota keluarga'
+                      : 'Lihat anggota KK',
+                  onTap: () => _showDataKeluarga(context),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // Language
+          _SectionHeader(title: l10n.language),
+          Card(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Column(
+              children: [
+                _LanguageTile(
+                  flag: '🇮🇩',
+                  language: 'Bahasa Indonesia',
+                  isSelected: locale.language == 'id',
+                  onTap: () => context.read<LocaleProvider>().setLanguage('id'),
+                ),
+                const Divider(height: 1, indent: 56),
+                _LanguageTile(
+                  flag: '🇬🇧',
+                  language: 'English',
+                  isSelected: locale.language == 'en',
+                  onTap: () => context.read<LocaleProvider>().setLanguage('en'),
                 ),
               ],
             ),
@@ -125,17 +176,19 @@ class SettingsScreen extends StatelessWidget {
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Column(
               children: [
-                _SettingsTile(
+                const _SettingsTile(
                   icon: Icons.info_outline,
                   title: 'Versi Aplikasi',
-                  trailing: const Text('1.0.0', style: TextStyle(color: AppTheme.textSecondary)),
+                  trailing: Text('1.0.0', style: TextStyle(color: AppTheme.textSecondary)),
                   onTap: null,
                 ),
                 const Divider(height: 1, indent: 56),
                 _SettingsTile(
-                  icon: Icons.phone_outlined,
+                  icon: Icons.support_agent,
                   title: 'Hubungi Admin',
-                  onTap: () {},
+                  subtitle: 'Chat WhatsApp admin',
+                  trailing: const Icon(Icons.chat, color: Color(0xFF25D366), size: 20),
+                  onTap: () => openAdminWhatsApp(context),
                 ),
               ],
             ),
@@ -143,7 +196,6 @@ class SettingsScreen extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // Logout Button
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: ElevatedButton.icon(
@@ -156,10 +208,432 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
           ),
+
+          const SizedBox(height: 12),
+          const Center(
+            child: Text(
+              'Created by Edi Prasetiyo',
+              style: TextStyle(fontSize: 11, color: Color(0xFF9E9E9E)),
+            ),
+          ),
           const SizedBox(height: 32),
         ],
       ),
     );
+  }
+
+  String _getAvatarUrl(String avatar) {
+    if (avatar.startsWith('http')) return avatar;
+    return 'https://apppembayaranipl-production.up.railway.app$avatar';
+  }
+
+  void _showEditProfile(BuildContext context) {
+    final user = context.read<AuthProvider>().user;
+    final nameCtrl = TextEditingController(text: user?.name);
+    final imageProvider = ValueNotifier<dynamic>(null);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            left: 20, right: 20, top: 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40, height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text('Edit Profil', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              Center(
+                child: GestureDetector(
+                  onTap: () async {
+                    final picker = ImagePicker();
+                    final img = await picker.pickImage(
+                      source: ImageSource.gallery,
+                      imageQuality: 70,
+                      maxWidth: 800,
+                    );
+                    if (img != null) {
+                      setState(() => imageProvider.value = img.path);
+                    }
+                  },
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 48,
+                        backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                        child: Text(
+                          (user?.name ?? 'U')[0].toUpperCase(),
+                          style: const TextStyle(
+                            color: AppTheme.primaryColor,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 0, right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                          child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Center(
+                child: Text('Tap foto untuk ubah (segera)',
+                    style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Nama Lengkap',
+                  prefixIcon: Icon(Icons.person_outline),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    final success = await context.read<AuthProvider>()
+                        .updateProfile({'name': nameCtrl.text.trim()});
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(success ? 'Profil berhasil diperbarui!' : 'Gagal update profil'),
+                      backgroundColor: success ? AppTheme.successColor : AppTheme.errorColor,
+                    ));
+                  },
+                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
+                  child: const Text('Simpan'),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showChangePassword(BuildContext context) {
+    final oldCtrl = TextEditingController();
+    final newCtrl = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(ctx).viewInsets.bottom,
+          left: 20, right: 20, top: 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text('Ganti Password', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            TextField(
+              controller: oldCtrl,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Password Lama',
+                prefixIcon: Icon(Icons.lock_outline),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: newCtrl,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Password Baru',
+                prefixIcon: Icon(Icons.lock_reset),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  final success = await context
+                      .read<AuthProvider>()
+                      .changePassword(oldCtrl.text, newCtrl.text);
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(success ? 'Password berhasil diubah!' : 'Gagal mengubah password.'),
+                    backgroundColor: success ? AppTheme.successColor : AppTheme.errorColor,
+                  ));
+                },
+                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
+                child: const Text('Simpan'),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDataKeluarga(BuildContext context) {
+    final user = context.read<AuthProvider>().user;
+    final keluarga = user?.warga?.anggotaKeluarga ?? [];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        maxChildSize: 0.95,
+        minChildSize: 0.5,
+        expand: false,
+        builder: (ctx, scrollController) => SingleChildScrollView(
+          controller: scrollController,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40, height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Row(
+                children: [
+                  Icon(Icons.family_restroom, color: AppTheme.primaryColor),
+                  SizedBox(width: 8),
+                  Text('Data Keluarga (KK)',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Anggota keluarga sesuai Kartu Keluarga yang didaftarkan',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 20),
+
+              _kepalaKeluargaCard(user),
+              const SizedBox(height: 16),
+
+              if (keluarga.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Column(
+                    children: [
+                      Icon(Icons.people_outline, size: 56, color: Colors.grey.shade300),
+                      const SizedBox(height: 8),
+                      const Text('Belum ada anggota keluarga terdaftar',
+                          style: TextStyle(color: AppTheme.textSecondary)),
+                      const SizedBox(height: 4),
+                      Text('Hubungi admin untuk menambahkan',
+                          style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+                    ],
+                  ),
+                )
+              else ...[
+                Text(
+                  'Anggota Keluarga (${keluarga.length})',
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                ),
+                const SizedBox(height: 8),
+                ...keluarga.map((a) => _anggotaCard(a)),
+              ],
+
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppTheme.primaryColor.withOpacity(0.2)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline, size: 16, color: AppTheme.primaryColor),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Untuk mengubah data keluarga, hubungi admin via WhatsApp.',
+                        style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _kepalaKeluargaCard(dynamic user) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppTheme.primaryColor.withOpacity(0.1), AppTheme.primaryColor.withOpacity(0.02)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.primaryColor.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: AppTheme.primaryColor,
+            child: Text(
+              (user?.name ?? 'K')[0].toUpperCase(),
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text('Kepala Keluarga',
+                      style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w600)),
+                ),
+                const SizedBox(height: 4),
+                Text(user?.name ?? '-',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                Text(user?.phone ?? '-',
+                    style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _anggotaCard(dynamic a) {
+    final isPerempuan = a.jenisKelamin == 'perempuan';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: (isPerempuan ? Colors.pink : Colors.blue).withOpacity(0.15),
+            child: Icon(
+              isPerempuan ? Icons.female : Icons.male,
+              color: isPerempuan ? Colors.pink : Colors.blue,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(a.nama,
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        _hubunganLabel(a.hubungan),
+                        style: const TextStyle(fontSize: 10, color: AppTheme.primaryColor, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    if (a.pekerjaan != null && a.pekerjaan.toString().isNotEmpty) ...[
+                      const SizedBox(width: 6),
+                      Text('· ${a.pekerjaan}',
+                          style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _hubunganLabel(String h) {
+    return {
+      'kepala_keluarga': 'Kepala Keluarga',
+      'istri': 'Istri',
+      'anak': 'Anak',
+      'orang_tua': 'Orang Tua',
+      'saudara': 'Saudara',
+      'lainnya': 'Lainnya',
+    }[h] ?? h;
   }
 
   void _confirmLogout(BuildContext context) {
@@ -191,103 +665,38 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  void _showEditProfile(BuildContext context) {
-    final user = context.read<AuthProvider>().user;
-    final nameCtrl = TextEditingController(text: user?.name);
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-          left: 24, right: 24, top: 24,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Edit Profil', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            TextField(
-              controller: nameCtrl,
-              decoration: const InputDecoration(labelText: 'Nama Lengkap'),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(ctx);
-                await context.read<AuthProvider>().updateProfile({'name': nameCtrl.text});
-              },
-              child: const Text('Simpan'),
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
+// === GLOBAL: Open WhatsApp to Admin ===
+Future<void> openAdminWhatsApp(BuildContext context, {String? customMessage}) async {
+  final user = context.read<AuthProvider>().user;
+  final message = customMessage ??
+      'Halo $_adminName,\n\n'
+      'Saya ${user?.name ?? "Warga"} dari Blok ${user?.warga?.blok ?? "-"} No. ${user?.warga?.nomorRumah ?? "-"}\n'
+      'Nomor HP: ${user?.phone ?? "-"}\n\n'
+      'Saya ingin menyampaikan...';
+  final url = Uri.parse('https://wa.me/$_adminWhatsApp?text=${Uri.encodeComponent(message)}');
 
-  void _showChangePassword(BuildContext context) {
-    final oldCtrl = TextEditingController();
-    final newCtrl = TextEditingController();
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-          left: 24, right: 24, top: 24,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Ganti Password', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            TextField(
-              controller: oldCtrl,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Password Lama'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: newCtrl,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Password Baru'),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(ctx);
-                final success = await context
-                    .read<AuthProvider>()
-                    .changePassword(oldCtrl.text, newCtrl.text);
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text(success ? 'Password berhasil diubah!' : 'Gagal mengubah password.'),
-                  backgroundColor: success ? AppTheme.successColor : AppTheme.errorColor,
-                ));
-              },
-              child: const Text('Simpan'),
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
+  try {
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('WhatsApp tidak terpasang. Install WhatsApp terlebih dahulu.'),
+        ));
+      }
+    }
+  } catch (e) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal buka WhatsApp: $e')));
+    }
   }
 }
 
 class _SectionHeader extends StatelessWidget {
   final String title;
-
   const _SectionHeader({required this.title});
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -308,21 +717,22 @@ class _SectionHeader extends StatelessWidget {
 class _SettingsTile extends StatelessWidget {
   final IconData icon;
   final String title;
+  final String? subtitle;
   final Widget? trailing;
   final VoidCallback? onTap;
-
   const _SettingsTile({
     required this.icon,
     required this.title,
+    this.subtitle,
     this.trailing,
     required this.onTap,
   });
-
   @override
   Widget build(BuildContext context) {
     return ListTile(
       leading: Icon(icon, color: AppTheme.primaryColor),
       title: Text(title),
+      subtitle: subtitle != null ? Text(subtitle!, style: const TextStyle(fontSize: 11)) : null,
       trailing: trailing ?? (onTap != null ? const Icon(Icons.chevron_right, color: AppTheme.textSecondary) : null),
       onTap: onTap,
     );
@@ -332,18 +742,14 @@ class _SettingsTile extends StatelessWidget {
 class _LanguageTile extends StatelessWidget {
   final String flag;
   final String language;
-  final String code;
   final bool isSelected;
   final VoidCallback onTap;
-
   const _LanguageTile({
     required this.flag,
     required this.language,
-    required this.code,
     required this.isSelected,
     required this.onTap,
   });
-
   @override
   Widget build(BuildContext context) {
     return ListTile(

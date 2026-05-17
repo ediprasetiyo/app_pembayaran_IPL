@@ -90,7 +90,7 @@
       <div class="card p-4 flex items-center gap-3 border-l-4 border-primary-700">
         <span class="text-2xl">💰</span>
         <div>
-          <p class="text-xs text-gray-500">Total Nominal</p>
+          <p class="text-xs text-gray-500">Total Terbayar</p>
           <p class="font-bold text-sm text-primary-700">{{ formatCurrency(summary.totalNominal) }}</p>
         </div>
       </div>
@@ -323,7 +323,10 @@ const summary = computed(() => ({
   lunas: tagihans.value.filter((t) => t.status === 'sudah_bayar').length,
   belumBayar: tagihans.value.filter((t) => t.status === 'belum_bayar').length,
   terlambat: tagihans.value.filter((t) => t.status === 'terlambat').length,
-  totalNominal: tagihans.value.reduce((sum, t) => sum + Number(t.total_tagihan ?? t.nominal ?? 0), 0),
+  // Total Nominal = HANYA yang sudah dibayar
+  totalNominal: tagihans.value
+    .filter((t) => t.status === 'sudah_bayar')
+    .reduce((sum, t) => sum + Number(t.total_tagihan ?? t.nominal ?? 0), 0),
 }))
 
 async function fetchData() {

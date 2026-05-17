@@ -176,12 +176,27 @@ class _LoginScreenState extends State<LoginScreen> {
                           : Text(l10n.login),
                     ),
                     const SizedBox(height: 20),
+                    // Belum punya akun → hubungi admin via WA
                     Center(
-                      child: Text(
-                        l10n.contactAdmin,
-                        style: const TextStyle(
-                            color: AppTheme.textSecondary, fontSize: 12),
-                        textAlign: TextAlign.center,
+                      child: GestureDetector(
+                        onTap: _hubungiAdminBaru,
+                        child: RichText(
+                          textAlign: TextAlign.center,
+                          text: const TextSpan(
+                            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                            children: [
+                              TextSpan(text: 'Belum punya akun? '),
+                              TextSpan(
+                                text: 'Hubungi Admin',
+                                style: TextStyle(
+                                  color: AppTheme.primaryColor,
+                                  fontWeight: FontWeight.bold,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 28),
@@ -231,16 +246,27 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // Lupa Password → input nomor HP → buka WA ke admin
   void _showForgotPasswordDialog() {
     final phoneCtrl = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Lupa Password'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.lock_reset, color: AppTheme.primaryColor),
+            SizedBox(width: 8),
+            Text('Lupa Password'),
+          ],
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Masukkan nomor telepon Anda untuk menghubungi admin via WhatsApp.'),
+            const Text(
+              'Masukkan nomor telepon yang terdaftar. Kami akan menghubungkan Anda ke admin via WhatsApp.',
+              style: TextStyle(fontSize: 13),
+            ),
             const SizedBox(height: 16),
             TextField(
               controller: phoneCtrl,
@@ -248,6 +274,7 @@ class _LoginScreenState extends State<LoginScreen> {
               decoration: const InputDecoration(
                 labelText: 'Nomor Telepon',
                 hintText: '08xxxxxxxxxx',
+                prefixIcon: Icon(Icons.phone_outlined),
               ),
             ),
           ],
@@ -257,26 +284,61 @@ class _LoginScreenState extends State<LoginScreen> {
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Batal'),
           ),
-          ElevatedButton(
+          ElevatedButton.icon(
             onPressed: () async {
               Navigator.pop(ctx);
-              final result = await context.read<AuthProvider>()
-                  .forgotPassword(phoneCtrl.text);
-              if (!mounted) return;
-              if (result['success'] == true) {
-                final waUrl = result['data']['wa_url'];
-                if (await canLaunchUrl(Uri.parse(waUrl))) {
-                  await launchUrl(Uri.parse(waUrl));
-                }
-              }
+              await _bukaWAAdmin(
+                customMessage: 'Halo Admin Griya Pesona Madani,\n\n'
+                    'Saya warga dengan nomor HP: ${phoneCtrl.text}\n\n'
+                    'Saya lupa password aplikasi IPL. Mohon bantuannya untuk reset password.',
+              );
             },
+            icon: const Icon(Icons.chat, size: 16),
+            label: const Text('Hubungi Admin'),
             style: ElevatedButton.styleFrom(
-              minimumSize: const Size(80, 40),
+              backgroundColor: const Color(0xFF25D366),
+              foregroundColor: Colors.white,
             ),
-            child: const Text('Hubungi Admin'),
           ),
         ],
       ),
     );
+  }
+
+  // Belum punya akun → hubungi admin
+  Future<void> _hubungiAdminBaru() async {
+    await _bukaWAAdmin(
+      customMessage: 'Halo Admin Griya Pesona Madani,\n\n'
+          'Saya warga baru Perumahan Griya Pesona Madani Tenjo.\n'
+          'Mohon dibantu untuk didaftarkan ke aplikasi IPL.\n\n'
+          'Berikut data saya:\n'
+          'Nama: \n'
+          'Nomor HP: \n'
+          'Blok / No. Rumah: \n\n'
+          'Terima kasih.',
+    );
+  }
+
+  // Helper buka WhatsApp ke nomor admin
+  Future<void> _bukaWAAdmin({String? customMessage}) async {
+    const adminWA = '6282115525327';
+    final message = customMessage ?? 'Halo Admin Griya Pesona Madani';
+    final url = Uri.parse('https://wa.me/$adminWA?text=${Uri.encodeComponent(message)}');
+
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('WhatsApp tidak terpasang. Install WhatsApp dulu.'),
+          ));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal buka WA: $e')));
+      }
+    }
   }
 }

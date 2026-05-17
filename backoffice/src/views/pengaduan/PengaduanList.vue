@@ -194,7 +194,14 @@ function getFotos(p) {
   // Backend mengirim foto_urls (full URL) atau foto (path saja)
   const urls = p.foto_urls ?? p.foto ?? []
   if (!Array.isArray(urls)) return []
-  return urls.filter(Boolean)
+  return urls.filter(Boolean).map((url) => {
+    if (!url) return null
+    if (url.startsWith('http')) return url
+    // Prepend backend host untuk path relatif
+    const apiBase = import.meta.env.VITE_API_URL || ''
+    const host = apiBase.replace(/\/api\/v\d+\/?$/, '')
+    return `${host}${url}`
+  }).filter(Boolean)
 }
 
 const updateForm = ref({ status: 'diproses', prioritas: 'sedang', keterangan_admin: '' })

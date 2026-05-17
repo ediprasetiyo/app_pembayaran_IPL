@@ -44,6 +44,9 @@ php artisan cache:clear || true
 php artisan view:clear || true
 php artisan route:clear || true
 
+# Create storage symlink (untuk gambar di /storage/*)
+php artisan storage:link 2>/dev/null || echo "storage:link already exists or failed (non-fatal)"
+
 # Run migrations (don't fail if migrations have issue)
 php artisan migrate --force --no-interaction || echo "Migration step skipped/failed (non-fatal)"
 
