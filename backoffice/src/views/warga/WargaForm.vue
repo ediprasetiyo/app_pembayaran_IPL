@@ -98,9 +98,25 @@
                 <label class="label">Tanggal Lahir</label>
                 <DatePickerField v-model="form.tanggal_lahir" placeholder="Pilih tanggal lahir" :max-date="new Date()" />
               </div>
+              <!-- Honeypot fields untuk distract Chrome autofill -->
+              <div style="position:absolute;left:-9999px;opacity:0;" aria-hidden="true">
+                <input type="text" name="fakeusernameremembered" tabindex="-1" autocomplete="username" />
+                <input type="password" name="fakepasswordremembered" tabindex="-1" autocomplete="current-password" />
+              </div>
+
               <div>
                 <label class="label">Nomor Telepon (untuk login) <span class="text-red-500">*</span></label>
-                <input v-model="form.phone" type="tel" class="input" placeholder="08xxxxxxxxxx" required autocomplete="new-password" />
+                <input
+                  v-model="form.phone"
+                  type="tel"
+                  class="input"
+                  placeholder="08xxxxxxxxxx"
+                  required
+                  :name="`phone-${randomKey}`"
+                  autocomplete="off"
+                  readonly
+                  @focus="$event.target.removeAttribute('readonly')"
+                />
               </div>
               <div>
                 <label class="label">
@@ -115,7 +131,10 @@
                   :placeholder="isEdit ? 'Biarkan kosong untuk tidak ubah password' : 'Min. 6 karakter'"
                   :required="!isEdit"
                   minlength="6"
+                  :name="`pwd-${randomKey}`"
                   autocomplete="new-password"
+                  readonly
+                  @focus="$event.target.removeAttribute('readonly')"
                 />
               </div>
             </div>
@@ -392,6 +411,8 @@ const isEdit = computed(() => !!route.params.id)
 const isLoading = ref(false)
 const error = ref('')
 const currentStep = ref(0)
+// Random key untuk attribute name input → bikin Chrome bingung & tidak autofill
+const randomKey = Math.random().toString(36).substring(2, 10)
 
 const steps = [
   { title: 'Data KK', desc: 'Kartu Keluarga & Kepala Keluarga' },

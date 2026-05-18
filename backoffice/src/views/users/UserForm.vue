@@ -5,20 +5,43 @@
       <p class="text-sm text-gray-500">{{ isEdit ? 'Perbarui data akun pengguna' : 'Buat akun baru untuk admin atau warga' }}</p>
     </div>
 
-    <form @submit.prevent="submit" class="card p-6 space-y-4">
+    <form @submit.prevent="submit" class="card p-6 space-y-4" autocomplete="off">
+      <!-- Honeypot fields utk distract Chrome autofill -->
+      <div style="position:absolute;left:-9999px;opacity:0;" aria-hidden="true">
+        <input type="text" name="fakeusernameremembered" tabindex="-1" autocomplete="username" />
+        <input type="password" name="fakepasswordremembered" tabindex="-1" autocomplete="current-password" />
+      </div>
+
       <div>
         <label class="label">Nama Lengkap *</label>
-        <input v-model="form.name" type="text" class="input" required />
+        <input v-model="form.name" type="text" class="input" required autocomplete="off" />
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="label">Nomor HP *</label>
-          <input v-model="form.phone" type="text" class="input" required placeholder="08xxxx" />
+          <input
+            v-model="form.phone"
+            type="text"
+            class="input"
+            required
+            placeholder="08xxxx"
+            :name="`phone-${randomKey}`"
+            autocomplete="off"
+            readonly
+            @focus="$event.target.removeAttribute('readonly')"
+          />
         </div>
         <div>
           <label class="label">Email</label>
-          <input v-model="form.email" type="email" class="input" placeholder="opsional" />
+          <input
+            v-model="form.email"
+            type="email"
+            class="input"
+            placeholder="opsional"
+            :name="`email-${randomKey}`"
+            autocomplete="off"
+          />
         </div>
       </div>
 
@@ -45,7 +68,17 @@
 
       <div>
         <label class="label">{{ isEdit ? 'Password Baru (kosongkan jika tidak diubah)' : 'Password *' }}</label>
-        <input v-model="form.password" type="password" class="input" :required="!isEdit" minlength="6" />
+        <input
+          v-model="form.password"
+          type="password"
+          class="input"
+          :required="!isEdit"
+          minlength="6"
+          :name="`pwd-${randomKey}`"
+          autocomplete="new-password"
+          readonly
+          @focus="$event.target.removeAttribute('readonly')"
+        />
       </div>
 
       <div v-if="isEdit" class="flex items-center gap-2">
@@ -77,6 +110,8 @@ const auth = useAuthStore()
 const saving = ref(false)
 
 const isEdit = computed(() => !!route.params.id)
+// Random key untuk bikin Chrome bingung & tidak autofill
+const randomKey = Math.random().toString(36).substring(2, 10)
 
 const form = ref({
   id: null,

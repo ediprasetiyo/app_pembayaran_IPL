@@ -47,24 +47,32 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> login(String phone, String password) async {
     _error = null;
     try {
+      // Pakai default timeout Dio (30 detik) — koneksi mobile kadang lambat
       final response = await _api.post('/auth/login', data: {
         'phone': phone,
         'password': password,
-      }).timeout(const Duration(seconds: 15));
+      });
 
-      await _api.saveToken(response.data['token']);
+      // Save token DULU sebelum parse user, biar request lain bisa pakai token
+      if (response.data is Map && response.data['token'] != null) {
+        await _api.saveToken(response.data['token']);
+      }
+
       try {
         _user = UserModel.fromJson(response.data['user']);
       } catch (parseErr) {
-        // Kalau parsing user gagal, login dianggap gagal & bersihkan token
+        // Parsing user gagal — login secara teknis sukses (token diterima),
+        // tapi user data tidak bisa di-parse. Bersihkan token & beri pesan.
         await _api.deleteToken();
-        _error = 'Format data user dari server tidak sesuai. Hubungi admin.';
+        _error = 'Format data user dari server tidak sesuai. Detail: $parseErr';
         notifyListeners();
         return false;
       }
 
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('language', _user!.language);
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('language', _user!.language);
+      } catch (_) {/* prefs failure tidak boleh blok login */}
 
       notifyListeners();
       return true;
