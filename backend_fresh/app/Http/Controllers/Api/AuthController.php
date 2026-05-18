@@ -91,9 +91,26 @@ class AuthController extends Controller
             'email' => 'sometimes|email|unique:users,email,' . $user->id,
             'language' => 'sometimes|in:id,en',
             'fcm_token' => 'sometimes|string',
+            'avatar' => 'sometimes|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
-        $user->update($request->only(['name', 'email', 'language', 'fcm_token']));
+        // Upload avatar (jika ada)
+        if ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
+            try {
+                // Hapus avatar lama
+                if ($user->avatar && str_starts_with($user->avatar, '/storage/')) {
+                    $oldPath = str_replace('/storage/', '', $user->avatar);
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
+                }
+                $path = $request->file('avatar')->store('avatars', 'public');
+                $user->avatar = \Illuminate\Support\Facades\Storage::url($path);
+            } catch (\Throwable $e) {
+                \Log::warning('Avatar upload failed: ' . $e->getMessage());
+            }
+        }
+
+        $user->fill($request->only(['name', 'email', 'language', 'fcm_token']));
+        $user->save();
 
         return response()->json([
             'message' => 'Profil berhasil diperbarui.',

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
@@ -230,7 +232,8 @@ class SettingsScreen extends StatelessWidget {
   void _showEditProfile(BuildContext context) {
     final user = context.read<AuthProvider>().user;
     final nameCtrl = TextEditingController(text: user?.name);
-    final imageProvider = ValueNotifier<dynamic>(null);
+    File? pickedImage;
+    bool saving = false;
 
     showModalBottomSheet(
       context: context,
@@ -242,7 +245,8 @@ class SettingsScreen extends StatelessWidget {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => Padding(
           padding: EdgeInsets.only(
-            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom +
+                MediaQuery.of(ctx).padding.bottom + 24,
             left: 20, right: 20, top: 20,
           ),
           child: Column(
@@ -271,7 +275,7 @@ class SettingsScreen extends StatelessWidget {
                       maxWidth: 800,
                     );
                     if (img != null) {
-                      setState(() => imageProvider.value = img.path);
+                      setState(() => pickedImage = File(img.path));
                     }
                   },
                   child: Stack(
@@ -279,14 +283,22 @@ class SettingsScreen extends StatelessWidget {
                       CircleAvatar(
                         radius: 48,
                         backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                        child: Text(
-                          (user?.name ?? 'U')[0].toUpperCase(),
-                          style: const TextStyle(
-                            color: AppTheme.primaryColor,
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        backgroundImage: pickedImage != null
+                            ? FileImage(pickedImage!) as ImageProvider
+                            : (user?.avatar != null && user!.avatar!.isNotEmpty
+                                ? NetworkImage(_getAvatarUrl(user.avatar!))
+                                : null),
+                        child: (pickedImage == null &&
+                                (user?.avatar == null || user!.avatar!.isEmpty))
+                            ? Text(
+                                (user?.name ?? 'U')[0].toUpperCase(),
+                                style: const TextStyle(
+                                  color: AppTheme.primaryColor,
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                            : null,
                       ),
                       Positioned(
                         bottom: 0, right: 0,
@@ -306,7 +318,7 @@ class SettingsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               const Center(
-                child: Text('Tap foto untuk ubah (segera)',
+                child: Text('Tap foto untuk ubah dari galeri',
                     style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
               ),
               const SizedBox(height: 16),
@@ -317,28 +329,49 @@ class SettingsScreen extends StatelessWidget {
                   prefixIcon: Icon(Icons.person_outline),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () async {
-                    Navigator.pop(ctx);
-                    final success = await context.read<AuthProvider>()
-                        .updateProfile({'name': nameCtrl.text.trim()});
+                  onPressed: saving ? null : () async {
+                    setState(() => saving = true);
+                    final success = await context.read<AuthProvider>().updateProfile(
+                          {'name': nameCtrl.text.trim()},
+                          avatarPath: pickedImage?.path,
+                        );
                     if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(success ? 'Profil berhasil diperbarui!' : 'Gagal update profil'),
-                      backgroundColor: success ? AppTheme.successColor : AppTheme.errorColor,
-                    ));
+                    Navigator.pop(ctx);
+                    _showCenteredSnack(
+                      context,
+                      success ? 'Profil berhasil diperbarui!' : 'Gagal update profil',
+                      success: success,
+                    );
                   },
                   style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
-                  child: const Text('Simpan'),
+                  child: saving
+                      ? const SizedBox(
+                          height: 20, width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('Simpan'),
                 ),
               ),
-              const SizedBox(height: 16),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showCenteredSnack(BuildContext context, String msg, {bool success = true}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg, textAlign: TextAlign.center),
+        backgroundColor: success ? AppTheme.successColor : AppTheme.errorColor,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -355,7 +388,8 @@ class SettingsScreen extends StatelessWidget {
       ),
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom +
+              MediaQuery.of(ctx).padding.bottom + 24,
           left: 20, right: 20, top: 20,
         ),
         child: Column(
@@ -401,16 +435,16 @@ class SettingsScreen extends StatelessWidget {
                       .read<AuthProvider>()
                       .changePassword(oldCtrl.text, newCtrl.text);
                   if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(success ? 'Password berhasil diubah!' : 'Gagal mengubah password.'),
-                    backgroundColor: success ? AppTheme.successColor : AppTheme.errorColor,
-                  ));
+                  _showCenteredSnack(
+                    context,
+                    success ? 'Password berhasil diubah!' : 'Gagal mengubah password.',
+                    success: success,
+                  );
                 },
                 style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
                 child: const Text('Simpan'),
               ),
             ),
-            const SizedBox(height: 16),
           ],
         ),
       ),

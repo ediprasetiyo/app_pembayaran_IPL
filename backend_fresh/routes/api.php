@@ -39,6 +39,8 @@ Route::prefix('v1')->group(function () {
         Route::get('/auth/me', [AuthController::class, 'me']);
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::put('/auth/profile', [AuthController::class, 'updateProfile']);
+        // POST utk upload multipart (avatar) — PUT susah dgn FormData
+        Route::post('/auth/profile', [AuthController::class, 'updateProfile']);
         Route::put('/auth/change-password', [AuthController::class, 'changePassword']);
 
         // IPL

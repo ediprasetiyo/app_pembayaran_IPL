@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
@@ -66,9 +67,19 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> updateProfile(Map<String, dynamic> data) async {
+  Future<bool> updateProfile(Map<String, dynamic> data, {String? avatarPath}) async {
     try {
-      final response = await _api.put('/auth/profile', data: data);
+      dynamic response;
+      if (avatarPath != null && avatarPath.isNotEmpty) {
+        // Upload via POST multipart
+        final formData = FormData.fromMap({
+          ...data,
+          'avatar': await MultipartFile.fromFile(avatarPath),
+        });
+        response = await _api.post('/auth/profile', formData: formData);
+      } else {
+        response = await _api.put('/auth/profile', data: data);
+      }
       _user = UserModel.fromJson(response.data['user']);
       notifyListeners();
       return true;

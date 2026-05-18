@@ -35,8 +35,16 @@ class ApiService {
   Future<Response> get(String path, {Map<String, dynamic>? params}) =>
       _dio.get(path, queryParameters: params);
 
-  Future<Response> post(String path, {dynamic data, FormData? formData}) =>
-      _dio.post(path, data: formData ?? data);
+  Future<Response> post(String path, {dynamic data, FormData? formData}) {
+    if (formData != null) {
+      return _dio.post(
+        path,
+        data: formData,
+        options: Options(contentType: 'multipart/form-data'),
+      );
+    }
+    return _dio.post(path, data: data);
+  }
 
   Future<Response> put(String path, {dynamic data}) =>
       _dio.put(path, data: data);
