@@ -1,3 +1,8 @@
+# Deploy artifacts (jangan commit ke git)
+deploy_staging/
+ipl-backend-deploy.zip
+ipl_deploy
+
 # Laravel Backend
 backend/vendor/
 backend/.env
