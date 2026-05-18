@@ -226,7 +226,7 @@ class SettingsScreen extends StatelessWidget {
 
   String _getAvatarUrl(String avatar) {
     if (avatar.startsWith('http')) return avatar;
-    return 'https://apppembayaranipl-production.up.railway.app$avatar';
+    return 'https://ipl-griya-pesona-madani.my.id$avatar';
   }
 
   void _showEditProfile(BuildContext context) {

@@ -1,6 +1,8 @@
 class AppConstants {
-  // Production: Railway public URL (bisa diakses dari mana saja)
-  static const baseUrl = 'https://apppembayaranipl-production.up.railway.app/api/v1';
+  // Production: IDcloudHost (cPanel shared hosting)
+  static const baseUrl = 'https://ipl-griya-pesona-madani.my.id/api/v1';
+  // Backup: Railway (deprecated)
+  // static const baseUrl = 'https://apppembayaranipl-production.up.railway.app/api/v1';
   // Local development: ganti dengan IP komputer + port
   // static const baseUrl = 'http://192.168.1.5:8000/api/v1';
   static const appName = 'IPL Griya Pesona Madani';

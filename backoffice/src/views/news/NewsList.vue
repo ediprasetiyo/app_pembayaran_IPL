@@ -130,7 +130,7 @@ function getImageUrl(path) {
   if (!path) return null
   if (path.startsWith('http')) return path
   // Ambil base URL dari env atau fallback ke localhost dev
-  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
+  const apiBase = import.meta.env.VITE_API_URL || 'https://ipl-griya-pesona-madani.my.id/api/v1'
   // Strip /api/v1 dari URL untuk mendapatkan host saja
   const host = apiBase.replace(/\/api\/v\d+\/?$/, '')
   return `${host}${path}`

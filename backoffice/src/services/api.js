@@ -1,8 +1,8 @@
 import axios from 'axios'
 import router from '@/router'
 
-// Production: pakai URL Railway. Development: pakai proxy Vite "/api/v1"
-const baseURL = import.meta.env.VITE_API_URL || '/api/v1'
+// Production: IDcloudHost. Development: pakai proxy Vite "/api/v1"
+const baseURL = import.meta.env.VITE_API_URL || 'https://ipl-griya-pesona-madani.my.id/api/v1'
 
 const api = axios.create({
   baseURL,

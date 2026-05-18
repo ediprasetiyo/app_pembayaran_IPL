@@ -182,7 +182,7 @@ async function loadNews() {
         ? (n.gambar.startsWith('http')
             ? n.gambar
             : (() => {
-                const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
+                const apiBase = import.meta.env.VITE_API_URL || 'https://ipl-griya-pesona-madani.my.id/api/v1'
                 const host = apiBase.replace(/\/api\/v\d+\/?$/, '')
                 return `${host}${n.gambar}`
               })())
