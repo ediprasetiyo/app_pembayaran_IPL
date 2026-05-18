@@ -40,6 +40,8 @@ class WargaController extends Controller
             'name' => 'required|string|max:100',
             'phone' => 'required|string|unique:users,phone',
             'password' => 'required|string|min:6',
+            'tanggal_lahir' => 'nullable|date',
+            'tempat_lahir' => 'nullable|string|max:100',
             'nik' => 'nullable|string|size:16|unique:warga,nik',
             'nomor_kk' => 'nullable|string|size:16|unique:warga,nomor_kk',
             // Data Hunian
@@ -64,6 +66,8 @@ class WargaController extends Controller
             $user = User::create([
                 'name' => $request->name,
                 'phone' => $request->phone,
+                'tanggal_lahir' => $request->tanggal_lahir,
+                'tempat_lahir' => $request->tempat_lahir,
                 'password' => Hash::make($request->password),
                 'role' => 'warga',
             ]);
@@ -132,6 +136,8 @@ class WargaController extends Controller
         $request->validate([
             'name' => 'sometimes|string|max:100',
             'phone' => 'sometimes|string|unique:users,phone,' . $warga->user_id,
+            'tanggal_lahir' => 'nullable|date',
+            'tempat_lahir' => 'nullable|string|max:100',
             'nomor_kk' => 'nullable|string|size:16|unique:warga,nomor_kk,' . $warga->id,
             'nomor_rumah' => 'sometimes|string|max:10',
             'status_hunian' => 'sometimes|in:milik,sewa,kontrak',
@@ -142,12 +148,26 @@ class WargaController extends Controller
             'is_active' => 'sometimes|boolean',
             'uang_kedukaan_dibayar' => 'sometimes|boolean',
             'catatan' => 'nullable|string',
+            // Password optional saat update — hanya update kalau dikirim
+            'password' => 'nullable|string|min:6',
+            // Anggota keluarga sync
+            'anggota_keluarga' => 'nullable|array',
+            'anggota_keluarga.*.nama' => 'required_with:anggota_keluarga|string',
+            'anggota_keluarga.*.hubungan' => 'required_with:anggota_keluarga|in:kepala_keluarga,istri,anak,orang_tua,saudara,lainnya',
+            'anggota_keluarga.*.jenis_kelamin' => 'required_with:anggota_keluarga|in:laki_laki,perempuan',
+            'anggota_keluarga.*.tanggal_lahir' => 'nullable|date',
+            'anggota_keluarga.*.nik' => 'nullable|string|max:16',
         ]);
 
         DB::beginTransaction();
         try {
-            if ($request->has('name') || $request->has('phone')) {
-                $warga->user->update($request->only(['name', 'phone']));
+            // Update User (KK) — name, phone, tanggal_lahir, tempat_lahir, password
+            $userUpdate = $request->only(['name', 'phone', 'tanggal_lahir', 'tempat_lahir']);
+            if ($request->filled('password')) {
+                $userUpdate['password'] = Hash::make($request->password);
+            }
+            if (!empty($userUpdate)) {
+                $warga->user->update($userUpdate);
             }
 
             $statusKedukaanLama = $warga->uang_kedukaan_dibayar;
@@ -168,6 +188,39 @@ class WargaController extends Controller
             }
 
             $warga->update($updateData);
+
+            // ===== SYNC ANGGOTA KELUARGA =====
+            // Strategi: kalau request kirim anggota_keluarga array, hapus semua dulu lalu insert ulang.
+            // Cara ini paling reliable & match dengan UI yang allow add/remove arbitrarily.
+            if ($request->has('anggota_keluarga')) {
+                $existingIds = $warga->anggotaKeluarga()->pluck('id')->toArray();
+                $payloadIds = collect($request->anggota_keluarga)->pluck('id')->filter()->toArray();
+
+                // Hapus anggota yang ID-nya tidak ada di payload (user menghapus dari form)
+                $toDelete = array_diff($existingIds, $payloadIds);
+                if (!empty($toDelete)) {
+                    \App\Models\AnggotaKeluarga::whereIn('id', $toDelete)->delete();
+                }
+
+                // Upsert anggota dari payload
+                foreach ($request->anggota_keluarga as $anggota) {
+                    $data = collect($anggota)->only([
+                        'nama', 'hubungan', 'jenis_kelamin', 'tanggal_lahir',
+                        'nik', 'pekerjaan', 'pendidikan', 'agama', 'status_perkawinan',
+                    ])->toArray();
+                    // Bersihkan empty string jadi null untuk field nullable
+                    foreach (['tanggal_lahir', 'nik', 'pekerjaan', 'pendidikan', 'agama', 'status_perkawinan'] as $k) {
+                        if (isset($data[$k]) && $data[$k] === '') $data[$k] = null;
+                    }
+                    if (!empty($anggota['id']) && in_array($anggota['id'], $existingIds)) {
+                        // Update existing
+                        \App\Models\AnggotaKeluarga::where('id', $anggota['id'])->update($data);
+                    } else {
+                        // Insert new
+                        $warga->anggotaKeluarga()->create($data);
+                    }
+                }
+            }
 
             if ($request->has('uang_kedukaan_dibayar')) {
                 $sudahBayar = $request->boolean('uang_kedukaan_dibayar');

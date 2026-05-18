@@ -67,6 +67,7 @@
               placeholder="16 digit nomor KK"
               maxlength="16"
               pattern="[0-9]*"
+              autocomplete="off"
             />
             <p class="text-xs text-gray-500 mt-1">Sesuai dengan yang tercantum di Kartu Keluarga</p>
           </div>
@@ -74,9 +75,9 @@
           <div class="border-t pt-5">
             <h3 class="font-medium text-gray-800 mb-3 text-sm">Data Kepala Keluarga</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+              <div class="md:col-span-2">
                 <label class="label">Nama Lengkap <span class="text-red-500">*</span></label>
-                <input v-model="form.name" type="text" class="input" placeholder="Sesuai KTP" required />
+                <input v-model="form.name" type="text" class="input" placeholder="Sesuai KTP" required autocomplete="off" />
               </div>
               <div>
                 <label class="label">NIK Kepala Keluarga</label>
@@ -86,21 +87,35 @@
                   class="input"
                   placeholder="16 digit NIK"
                   maxlength="16"
+                  autocomplete="off"
                 />
               </div>
               <div>
-                <label class="label">Nomor Telepon (untuk login) <span class="text-red-500">*</span></label>
-                <input v-model="form.phone" type="tel" class="input" placeholder="08xxxxxxxxxx" required />
+                <label class="label">Tempat Lahir</label>
+                <input v-model="form.tempat_lahir" type="text" class="input" placeholder="Kota tempat lahir" autocomplete="off" />
               </div>
-              <div v-if="!isEdit">
-                <label class="label">Password Login <span class="text-red-500">*</span></label>
+              <div>
+                <label class="label">Tanggal Lahir</label>
+                <DatePickerField v-model="form.tanggal_lahir" placeholder="Pilih tanggal lahir" :max-date="new Date()" />
+              </div>
+              <div>
+                <label class="label">Nomor Telepon (untuk login) <span class="text-red-500">*</span></label>
+                <input v-model="form.phone" type="tel" class="input" placeholder="08xxxxxxxxxx" required autocomplete="new-password" />
+              </div>
+              <div>
+                <label class="label">
+                  Password Login
+                  <span v-if="!isEdit" class="text-red-500">*</span>
+                  <span v-else class="text-xs text-gray-500 font-normal">(kosongkan jika tidak ingin diubah)</span>
+                </label>
                 <input
                   v-model="form.password"
                   type="password"
                   class="input"
-                  placeholder="Min. 6 karakter"
-                  required
+                  :placeholder="isEdit ? 'Biarkan kosong untuk tidak ubah password' : 'Min. 6 karakter'"
+                  :required="!isEdit"
                   minlength="6"
+                  autocomplete="new-password"
                 />
               </div>
             </div>
@@ -144,7 +159,7 @@
             </div>
             <div>
               <label class="label">Tanggal Pindah</label>
-              <input v-model="form.tanggal_pindah" type="date" class="input" />
+              <DatePickerField v-model="form.tanggal_pindah" placeholder="Pilih tanggal pindah" />
             </div>
           </div>
 
@@ -246,7 +261,7 @@
               </div>
               <div>
                 <label class="label">Tanggal Lahir</label>
-                <input v-model="anggota.tanggal_lahir" type="date" class="input bg-white" />
+                <DatePickerField v-model="anggota.tanggal_lahir" placeholder="Pilih tanggal lahir" :max-date="new Date()" />
               </div>
               <div>
                 <label class="label">Hubungan dengan KK <span class="text-red-500">*</span></label>
@@ -366,6 +381,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import { useToast } from 'vue-toastification'
 import { useWargaStore } from '@/stores/warga'
+import DatePickerField from '@/components/DatePickerField.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -389,6 +405,8 @@ const form = ref({
   phone: '',
   password: '',
   nik: '',
+  tanggal_lahir: '',
+  tempat_lahir: '',
   nomor_rumah: '',
   blok: 'E',
   rt: '',
@@ -398,6 +416,19 @@ const form = ref({
   uang_kedukaan_dibayar: false,
   anggota_keluarga: [],
 })
+
+// Helper: format ISO datetime ke YYYY-MM-DD (untuk input date HTML/DatePicker)
+function isoToDate(iso) {
+  if (!iso) return ''
+  // Sudah dalam format YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return ''
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
 
 function nextStep() {
   error.value = ''
@@ -450,6 +481,10 @@ async function handleSubmit() {
     if (!payload.nik) delete payload.nik
     if (!payload.nomor_kk) delete payload.nomor_kk
     if (!payload.tanggal_pindah) delete payload.tanggal_pindah
+    if (!payload.tanggal_lahir) delete payload.tanggal_lahir
+    if (!payload.tempat_lahir) delete payload.tempat_lahir
+    // Password optional di edit — hanya kirim kalau diisi
+    if (isEdit.value && !payload.password) delete payload.password
 
     if (isEdit.value) {
       await store.update(route.params.id, payload)
@@ -484,14 +519,28 @@ onMounted(async () => {
       phone: warga.user?.phone ?? '',
       password: '',
       nik: warga.nik ?? '',
-      nomor_rumah: warga.nomor_rumah,
-      blok: warga.blok,
+      tanggal_lahir: isoToDate(warga.user?.tanggal_lahir),
+      tempat_lahir: warga.user?.tempat_lahir ?? '',
+      nomor_rumah: warga.nomor_rumah ?? '',
+      blok: warga.blok ?? 'E',
       rt: warga.rt ?? '',
       rw: warga.rw ?? '',
-      status_hunian: warga.status_hunian,
-      tanggal_pindah: warga.tanggal_pindah ?? '',
+      status_hunian: warga.status_hunian ?? 'milik',
+      tanggal_pindah: isoToDate(warga.tanggal_pindah),
       uang_kedukaan_dibayar: !!warga.uang_kedukaan_dibayar,
-      anggota_keluarga: warga.anggota_keluarga ?? [],
+      // Map anggota keluarga: preserve id + semua field, convert tanggal_lahir
+      anggota_keluarga: (warga.anggota_keluarga ?? []).map((a) => ({
+        id: a.id,
+        nama: a.nama ?? '',
+        hubungan: a.hubungan ?? 'anak',
+        jenis_kelamin: a.jenis_kelamin ?? 'laki_laki',
+        tanggal_lahir: isoToDate(a.tanggal_lahir),
+        nik: a.nik ?? '',
+        pekerjaan: a.pekerjaan ?? '',
+        pendidikan: a.pendidikan ?? '',
+        agama: a.agama ?? '',
+        status_perkawinan: a.status_perkawinan ?? '',
+      })),
     }
   }
 })

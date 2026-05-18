@@ -22,6 +22,9 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> _checkAuth() async {
+    // Minimum splash delay 1.2 detik agar tidak flicker ke login screen terlalu cepat
+    final minSplashFuture = Future.delayed(const Duration(milliseconds: 1200));
+
     final token = await _api.getToken();
     if (token != null) {
       try {
@@ -31,6 +34,8 @@ class AuthProvider extends ChangeNotifier {
         await _api.deleteToken();
       }
     }
+
+    await minSplashFuture; // pastikan splash terlihat min 1.2 detik
     _isLoading = false;
     notifyListeners();
   }
@@ -113,14 +118,36 @@ class AuthProvider extends ChangeNotifier {
   }
 
   String _parseError(dynamic error) {
-    if (error.runtimeType.toString().contains('DioException')) {
+    // Coba ambil response dari DioException (bisa DioException, DioError, dll)
+    try {
       final response = (error as dynamic).response;
-      if (response != null) {
-        if (response.data is Map) {
-          return response.data['message'] ?? 'Terjadi kesalahan.';
+      if (response != null && response.data is Map) {
+        final data = response.data as Map;
+        // Cek message field standar Laravel
+        if (data['message'] is String) return data['message'] as String;
+        // Cek errors field (validation errors Laravel)
+        if (data['errors'] is Map) {
+          final errors = data['errors'] as Map;
+          final firstField = errors.values.first;
+          if (firstField is List && firstField.isNotEmpty) {
+            return firstField.first.toString();
+          }
         }
       }
+    } catch (_) {}
+
+    // Cek error type untuk pesan yg lebih spesifik
+    final errStr = error.toString().toLowerCase();
+    if (errStr.contains('connectiontimeout') || errStr.contains('connection timeout')) {
+      return 'Koneksi timeout. Periksa internet Anda.';
     }
-    return 'Terjadi kesalahan. Periksa koneksi internet.';
+    if (errStr.contains('connectionerror') || errStr.contains('socketexception')) {
+      return 'Tidak bisa terhubung ke server. Pastikan internet aktif.';
+    }
+    if (errStr.contains('certificate') || errStr.contains('handshake')) {
+      return 'Masalah sertifikat SSL. Coba update aplikasi.';
+    }
+
+    return 'Terjadi kesalahan: ${error.toString().substring(0, error.toString().length > 100 ? 100 : error.toString().length)}';
   }
 }

@@ -14,6 +14,8 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'phone',
+        'tanggal_lahir',
+        'tempat_lahir',
         'email',
         'password',
         'role',
@@ -32,6 +34,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'is_active' => 'boolean',
+        'tanggal_lahir' => 'date',
     ];
 
     public function warga()
