@@ -22,22 +22,26 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> _checkAuth() async {
-    // Minimum splash delay 1.2 detik agar tidak flicker ke login screen terlalu cepat
-    final minSplashFuture = Future.delayed(const Duration(milliseconds: 1200));
-
-    final token = await _api.getToken();
-    if (token != null) {
-      try {
-        final response = await _api.get('/auth/me');
-        _user = UserModel.fromJson(response.data['user']);
-      } catch (_) {
-        await _api.deleteToken();
+    try {
+      final token = await _api.getToken();
+      if (token != null) {
+        try {
+          // Timeout 8 detik biar tidak stuck kalau server lambat
+          final response = await _api
+              .get('/auth/me')
+              .timeout(const Duration(seconds: 8));
+          _user = UserModel.fromJson(response.data['user']);
+        } catch (_) {
+          // Token invalid/expired/server error → hapus & lanjut ke login
+          await _api.deleteToken();
+        }
       }
+    } catch (_) {
+      // Jangan biarkan exception apapun blokir splash transition
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-
-    await minSplashFuture; // pastikan splash terlihat min 1.2 detik
-    _isLoading = false;
-    notifyListeners();
   }
 
   Future<bool> login(String phone, String password) async {
@@ -46,10 +50,18 @@ class AuthProvider extends ChangeNotifier {
       final response = await _api.post('/auth/login', data: {
         'phone': phone,
         'password': password,
-      });
+      }).timeout(const Duration(seconds: 15));
 
       await _api.saveToken(response.data['token']);
-      _user = UserModel.fromJson(response.data['user']);
+      try {
+        _user = UserModel.fromJson(response.data['user']);
+      } catch (parseErr) {
+        // Kalau parsing user gagal, login dianggap gagal & bersihkan token
+        await _api.deleteToken();
+        _error = 'Format data user dari server tidak sesuai. Hubungi admin.';
+        notifyListeners();
+        return false;
+      }
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('language', _user!.language);

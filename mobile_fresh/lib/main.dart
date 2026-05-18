@@ -83,94 +83,38 @@ class _SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFE8F5E9), Colors.white, Color(0xFFE8F5E9)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            stops: [0.0, 0.5, 1.0],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              const Spacer(flex: 2),
-              // Logo dengan card putih
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 32),
-                padding: const EdgeInsets.all(32),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF1B5E20).withOpacity(0.08),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.asset(
-                      'assets/images/logo.png',
-                      width: 220,
-                      fit: BoxFit.contain,
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1B5E20).withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        'Tenjo • Blok E',
-                        style: TextStyle(
-                          color: Color(0xFF1B5E20),
-                          fontSize: 12,
-                          letterSpacing: 1.0,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              child: Image.asset(
+                'assets/images/logo.png',
+                width: 280,
+                fit: BoxFit.contain,
               ),
-              const Spacer(flex: 1),
-              const SizedBox(
-                width: 36,
-                height: 36,
-                child: CircularProgressIndicator(
-                  strokeWidth: 3,
-                  valueColor: AlwaysStoppedAnimation(Color(0xFF1B5E20)),
-                ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Tenjo - Blok E',
+              style: TextStyle(
+                color: Color(0xFF757575),
+                fontSize: 14,
+                letterSpacing: 1.2,
               ),
-              const SizedBox(height: 16),
-              const Text(
-                'Menghubungkan...',
-                style: TextStyle(
-                  color: Color(0xFF757575),
-                  fontSize: 12,
-                  letterSpacing: 0.5,
-                ),
+            ),
+            const SizedBox(height: 56),
+            const SizedBox(
+              width: 32,
+              height: 32,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor: AlwaysStoppedAnimation(Color(0xFF388E3C)),
               ),
-              const Spacer(flex: 2),
-              const Padding(
-                padding: EdgeInsets.only(bottom: 24),
-                child: Text(
-                  'Created by Edi Prasetiyo',
-                  style: TextStyle(
-                    color: Color(0xFF9E9E9E),
-                    fontSize: 11,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

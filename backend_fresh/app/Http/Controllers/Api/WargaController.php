@@ -63,10 +63,25 @@ class WargaController extends Controller
 
         DB::beginTransaction();
         try {
+            // Normalize tanggal_lahir KK
+            $tglLahirKK = null;
+            if (!empty($request->tanggal_lahir)) {
+                try {
+                    $tglLahirKK = \Carbon\Carbon::parse($request->tanggal_lahir)->format('Y-m-d');
+                } catch (\Throwable $e) { /* abaikan */ }
+            }
+            // Normalize tanggal_pindah
+            $tglPindah = null;
+            if (!empty($request->tanggal_pindah)) {
+                try {
+                    $tglPindah = \Carbon\Carbon::parse($request->tanggal_pindah)->format('Y-m-d');
+                } catch (\Throwable $e) { /* abaikan */ }
+            }
+
             $user = User::create([
                 'name' => $request->name,
                 'phone' => $request->phone,
-                'tanggal_lahir' => $request->tanggal_lahir,
+                'tanggal_lahir' => $tglLahirKK,
                 'tempat_lahir' => $request->tempat_lahir,
                 'password' => Hash::make($request->password),
                 'role' => 'warga',
@@ -82,7 +97,7 @@ class WargaController extends Controller
                 'rt' => $request->rt,
                 'rw' => $request->rw,
                 'status_hunian' => $request->status_hunian,
-                'tanggal_pindah' => $request->tanggal_pindah,
+                'tanggal_pindah' => $tglPindah,
                 'nik' => $request->nik,
                 'uang_kedukaan_dibayar' => $sudahBayarKedukaan,
                 'tanggal_bayar_kedukaan' => $sudahBayarKedukaan ? now() : null,
@@ -90,6 +105,14 @@ class WargaController extends Controller
 
             if ($request->anggota_keluarga) {
                 foreach ($request->anggota_keluarga as $anggota) {
+                    // Normalize tanggal_lahir untuk setiap anggota
+                    if (!empty($anggota['tanggal_lahir'])) {
+                        try {
+                            $anggota['tanggal_lahir'] = \Carbon\Carbon::parse($anggota['tanggal_lahir'])->format('Y-m-d');
+                        } catch (\Throwable $e) {
+                            $anggota['tanggal_lahir'] = null;
+                        }
+                    }
                     $warga->anggotaKeluarga()->create($anggota);
                 }
             }
@@ -163,6 +186,14 @@ class WargaController extends Controller
         try {
             // Update User (KK) — name, phone, tanggal_lahir, tempat_lahir, password
             $userUpdate = $request->only(['name', 'phone', 'tanggal_lahir', 'tempat_lahir']);
+            // Normalize tanggal_lahir
+            if (!empty($userUpdate['tanggal_lahir'])) {
+                try {
+                    $userUpdate['tanggal_lahir'] = \Carbon\Carbon::parse($userUpdate['tanggal_lahir'])->format('Y-m-d');
+                } catch (\Throwable $e) {
+                    unset($userUpdate['tanggal_lahir']);
+                }
+            }
             if ($request->filled('password')) {
                 $userUpdate['password'] = Hash::make($request->password);
             }
@@ -177,6 +208,14 @@ class WargaController extends Controller
                 'status_hunian', 'tanggal_pindah', 'nik',
                 'is_active', 'catatan',
             ]);
+            // Normalize tanggal_pindah
+            if (!empty($updateData['tanggal_pindah'])) {
+                try {
+                    $updateData['tanggal_pindah'] = \Carbon\Carbon::parse($updateData['tanggal_pindah'])->format('Y-m-d');
+                } catch (\Throwable $e) {
+                    unset($updateData['tanggal_pindah']);
+                }
+            }
 
             // Khusus uang_kedukaan_dibayar
             if ($request->has('uang_kedukaan_dibayar')) {
@@ -211,6 +250,14 @@ class WargaController extends Controller
                     // Bersihkan empty string jadi null untuk field nullable
                     foreach (['tanggal_lahir', 'nik', 'pekerjaan', 'pendidikan', 'agama', 'status_perkawinan'] as $k) {
                         if (isset($data[$k]) && $data[$k] === '') $data[$k] = null;
+                    }
+                    // Normalize tanggal_lahir dari format apapun (ISO, dd/mm/yyyy, dll) ke Y-m-d
+                    if (!empty($data['tanggal_lahir'])) {
+                        try {
+                            $data['tanggal_lahir'] = \Carbon\Carbon::parse($data['tanggal_lahir'])->format('Y-m-d');
+                        } catch (\Throwable $e) {
+                            $data['tanggal_lahir'] = null;
+                        }
                     }
                     if (!empty($anggota['id']) && in_array($anggota['id'], $existingIds)) {
                         // Update existing

@@ -61,19 +61,27 @@ class WargaModel {
   });
 
   factory WargaModel.fromJson(Map<String, dynamic> json) {
+    // Defensive int parsing: server bisa kirim string atau int
+    int _toInt(dynamic v, [int fallback = 0]) {
+      if (v is int) return v;
+      if (v is String) return int.tryParse(v) ?? fallback;
+      if (v is num) return v.toInt();
+      return fallback;
+    }
+    String? _toStringNullable(dynamic v) => v?.toString();
     return WargaModel(
-      id: json['id'],
-      userId: json['user_id'],
-      nomorRumah: json['nomor_rumah'],
-      blok: json['blok'],
-      rt: json['rt'],
-      rw: json['rw'],
-      statusHunian: json['status_hunian'],
-      tanggalPindah: json['tanggal_pindah'],
-      isActive: json['is_active'] ?? true,
+      id: _toInt(json['id']),
+      userId: _toInt(json['user_id']),
+      nomorRumah: _toStringNullable(json['nomor_rumah']) ?? '',
+      blok: _toStringNullable(json['blok']) ?? '',
+      rt: _toStringNullable(json['rt']),
+      rw: _toStringNullable(json['rw']),
+      statusHunian: _toStringNullable(json['status_hunian']) ?? 'milik',
+      tanggalPindah: _toStringNullable(json['tanggal_pindah']),
+      isActive: json['is_active'] == true || json['is_active'] == 1 || json['is_active'] == '1',
       anggotaKeluarga: json['anggota_keluarga'] != null
           ? (json['anggota_keluarga'] as List)
-              .map((a) => AnggotaKeluargaModel.fromJson(a))
+              .map((a) => AnggotaKeluargaModel.fromJson(a as Map<String, dynamic>))
               .toList()
           : [],
     );
@@ -102,14 +110,20 @@ class AnggotaKeluargaModel {
   });
 
   factory AnggotaKeluargaModel.fromJson(Map<String, dynamic> json) {
+    int _toInt(dynamic v) {
+      if (v is int) return v;
+      if (v is String) return int.tryParse(v) ?? 0;
+      if (v is num) return v.toInt();
+      return 0;
+    }
     return AnggotaKeluargaModel(
-      id: json['id'],
-      wargaId: json['warga_id'],
-      nama: json['nama'],
-      hubungan: json['hubungan'],
-      jenisKelamin: json['jenis_kelamin'],
-      tanggalLahir: json['tanggal_lahir'],
-      pekerjaan: json['pekerjaan'],
+      id: _toInt(json['id']),
+      wargaId: _toInt(json['warga_id']),
+      nama: json['nama']?.toString() ?? '',
+      hubungan: json['hubungan']?.toString() ?? 'lainnya',
+      jenisKelamin: json['jenis_kelamin']?.toString() ?? 'laki_laki',
+      tanggalLahir: json['tanggal_lahir']?.toString(),
+      pekerjaan: json['pekerjaan']?.toString(),
     );
   }
 }
