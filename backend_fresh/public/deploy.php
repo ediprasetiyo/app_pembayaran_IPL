@@ -68,14 +68,27 @@ foreach ($files as $repoPath => $serverPath) {
     $url = "https://raw.githubusercontent.com/{$repo}/{$branch}/{$repoPath}";
     echo "↓ {$repoPath}\n";
 
-    $ctx = stream_context_create([
-        'http' => ['timeout' => 15, 'user_agent' => 'IPL-Deploy/1.0'],
-        'https' => ['timeout' => 15],
+    // Pakai cURL (lebih reliable di shared hosting yg allow_url_fopen=Off)
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_TIMEOUT => 20,
+        CURLOPT_CONNECTTIMEOUT => 10,
+        CURLOPT_USERAGENT => 'IPL-Deploy/1.0',
+        CURLOPT_SSL_VERIFYPEER => false,  // shared hosting kadang cert chain bermasalah
+        CURLOPT_SSL_VERIFYHOST => false,
+        CURLOPT_HTTPHEADER => [
+            'Accept: text/plain',
+        ],
     ]);
-    $content = @file_get_contents($url, false, $ctx);
+    $content = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlErr = curl_error($ch);
+    curl_close($ch);
 
-    if ($content === false || strlen($content) < 50) {
-        echo "  ✗ GAGAL fetch from GitHub\n\n";
+    if ($content === false || $httpCode !== 200 || strlen($content) < 50) {
+        echo "  ✗ GAGAL fetch (HTTP $httpCode" . ($curlErr ? " | $curlErr" : "") . ")\n\n";
         $failed++;
         continue;
     }
