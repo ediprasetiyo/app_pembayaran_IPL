@@ -44,7 +44,13 @@ php artisan cache:clear || true
 php artisan view:clear || true
 php artisan route:clear || true
 
+# Ensure storage dirs exist (penting setelah mount volume)
+mkdir -p storage/app/public/pengaduan storage/app/public/avatars storage/app/public/news storage/app/public/logos
+chmod -R 775 storage/app/public || true
+
 # Create storage symlink (untuk gambar di /storage/*)
+# Force recreate karena volume mount bisa membuat symlink stale
+rm -f public/storage 2>/dev/null || true
 php artisan storage:link 2>/dev/null || echo "storage:link already exists or failed (non-fatal)"
 
 # Run migrations (don't fail if migrations have issue)
