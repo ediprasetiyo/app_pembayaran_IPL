@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../providers/auth_provider.dart';
 import '../../screens/home/home_screen.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/constants.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,6 +28,58 @@ class _LoginScreenState extends State<LoginScreen> {
     _phoneCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _testConnection() async {
+    final stopwatch = Stopwatch()..start();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        content: Row(children: [
+          CircularProgressIndicator(),
+          SizedBox(width: 16),
+          Expanded(child: Text('Test koneksi ke server...')),
+        ]),
+      ),
+    );
+    String result = '';
+    try {
+      final dio = Dio(BaseOptions(
+        baseUrl: AppConstants.baseUrl,
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 10),
+        headers: {'Accept': 'application/json'},
+      ));
+      final response = await dio.get('/health');
+      stopwatch.stop();
+      result = '✅ SUKSES (${stopwatch.elapsedMilliseconds}ms)\n\n'
+          'URL: ${AppConstants.baseUrl}/health\n'
+          'Status: ${response.statusCode}\n'
+          'Data: ${response.data}';
+    } catch (e) {
+      stopwatch.stop();
+      result = '❌ GAGAL (${stopwatch.elapsedMilliseconds}ms)\n\n'
+          'URL: ${AppConstants.baseUrl}/health\n'
+          'Error: ${e.toString().substring(0, e.toString().length > 200 ? 200 : e.toString().length)}';
+    }
+    if (!mounted) return;
+    Navigator.pop(context); // close loading
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Hasil Test Koneksi'),
+        content: SingleChildScrollView(
+          child: SelectableText(result, style: const TextStyle(fontSize: 12, fontFamily: 'monospace')),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _login() async {
@@ -174,6 +228,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                   color: Colors.white, strokeWidth: 2),
                             )
                           : Text(l10n.login),
+                    ),
+                    const SizedBox(height: 8),
+                    // Tombol Test Koneksi untuk diagnostic
+                    OutlinedButton.icon(
+                      onPressed: _testConnection,
+                      icon: const Icon(Icons.network_check, size: 18),
+                      label: const Text('Test Koneksi Server'),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppTheme.textSecondary),
+                        foregroundColor: AppTheme.textSecondary,
+                        minimumSize: const Size(double.infinity, 40),
+                      ),
                     ),
                     const SizedBox(height: 20),
                     // Belum punya akun → hubungi admin via WA
