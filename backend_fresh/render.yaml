@@ -1,0 +1,67 @@
+# Render.com Blueprint (Infrastructure as Code)
+# https://render.com/docs/blueprint-spec
+#
+# Cara pakai:
+# 1. Connect repo GitHub ini ke Render
+# 2. Render akan auto-detect file ini dan setup service
+# 3. Tinggal set env vars (CLOUDINARY_*, DATABASE_URL, dsb)
+
+services:
+  - type: web
+    name: ipl-backend
+    runtime: docker
+    plan: free
+    region: singapore
+    rootDir: backend_fresh
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: APP_NAME
+        value: "IPL Griya Pesona Madani"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_URL
+        sync: false  # Set manual: https://ipl-backend.onrender.com
+      - key: APP_KEY
+        generateValue: true  # Render auto-generate
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: error
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DATABASE_URL
+        sync: false  # Set manual dari Neon
+      - key: CACHE_DRIVER
+        value: file
+      - key: SESSION_DRIVER
+        value: file
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: FILESYSTEM_DISK
+        value: local
+      # Cloudinary (set manual setelah daftar)
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      # Midtrans (set manual)
+      - key: MIDTRANS_SERVER_KEY
+        sync: false
+      - key: MIDTRANS_CLIENT_KEY
+        sync: false
+      - key: MIDTRANS_IS_PRODUCTION
+        value: "false"
+      # Business config
+      - key: IPL_MONTHLY_AMOUNT
+        value: "150000"
+      - key: IPL_KEDUKAAN_AMOUNT
+        value: "85000"
+      - key: ADMIN_PHONE
+        value: "6282115525327"
+      - key: FRONTEND_URL
+        sync: false  # Vercel URL backoffice
