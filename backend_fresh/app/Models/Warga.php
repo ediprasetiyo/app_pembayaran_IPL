@@ -28,6 +28,7 @@ class Warga extends Model
     ];
 
     protected $casts = [
+        'user_id' => 'integer',
         'tanggal_pindah' => 'date',
         'tanggal_bayar_kedukaan' => 'date',
         'is_active' => 'boolean',
