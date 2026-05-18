@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Notifikasi;
 use App\Models\User;
+use App\Services\CloudinaryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -94,16 +95,31 @@ class AuthController extends Controller
             'avatar' => 'sometimes|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
-        // Upload avatar (jika ada)
+        // Upload avatar (jika ada) — prefer Cloudinary, fallback local storage
         if ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
             try {
-                // Hapus avatar lama
-                if ($user->avatar && str_starts_with($user->avatar, '/storage/')) {
-                    $oldPath = str_replace('/storage/', '', $user->avatar);
-                    \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
+                $cloudinary = app(CloudinaryService::class);
+                $newUrl = null;
+
+                if ($cloudinary->isConfigured()) {
+                    // Hapus avatar lama di Cloudinary jika ada
+                    if ($user->avatar && str_contains($user->avatar, 'cloudinary.com')) {
+                        $cloudinary->deleteByUrl($user->avatar);
+                    }
+                    $newUrl = $cloudinary->upload($request->file('avatar'), 'ipl/avatars');
                 }
-                $path = $request->file('avatar')->store('avatars', 'public');
-                $user->avatar = \Illuminate\Support\Facades\Storage::url($path);
+
+                // Fallback: local storage (kalau Cloudinary belum config / gagal)
+                if (!$newUrl) {
+                    if ($user->avatar && str_starts_with($user->avatar, '/storage/')) {
+                        $oldPath = str_replace('/storage/', '', $user->avatar);
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
+                    }
+                    $path = $request->file('avatar')->store('avatars', 'public');
+                    $newUrl = \Illuminate\Support\Facades\Storage::url($path);
+                }
+
+                $user->avatar = $newUrl;
             } catch (\Throwable $e) {
                 \Log::warning('Avatar upload failed: ' . $e->getMessage());
             }

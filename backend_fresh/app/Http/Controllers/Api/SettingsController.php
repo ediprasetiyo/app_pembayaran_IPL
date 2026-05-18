@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Services\CloudinaryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -103,8 +104,15 @@ class SettingsController extends Controller
         ]);
 
         try {
-            $path = $request->file('logo')->store('settings', 'public');
-            $url = Storage::url($path);
+            $cloudinary = app(CloudinaryService::class);
+            $url = null;
+            if ($cloudinary->isConfigured()) {
+                $url = $cloudinary->upload($request->file('logo'), 'ipl/logos');
+            }
+            if (!$url) {
+                $path = $request->file('logo')->store('settings', 'public');
+                $url = Storage::url($path);
+            }
 
             // Save to settings
             Setting::set('logo_url', $url);

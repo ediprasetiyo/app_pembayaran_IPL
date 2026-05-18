@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pengaduan;
+use App\Services\CloudinaryService;
 use App\Services\NotifikasiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -51,9 +52,17 @@ class PengaduanController extends Controller
 
         $fotos = [];
         if ($request->hasFile('foto')) {
+            $cloudinary = app(CloudinaryService::class);
             foreach ($request->file('foto') as $file) {
-                $path = $file->store('pengaduan', 'public');
-                $fotos[] = Storage::url($path);
+                $url = null;
+                if ($cloudinary->isConfigured()) {
+                    $url = $cloudinary->upload($file, 'ipl/pengaduan');
+                }
+                if (!$url) {
+                    $path = $file->store('pengaduan', 'public');
+                    $url = Storage::url($path);
+                }
+                $fotos[] = $url;
             }
         }
 

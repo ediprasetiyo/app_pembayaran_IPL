@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\News;
 use App\Models\NewsComment;
 use App\Models\NewsLike;
+use App\Services\CloudinaryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -80,10 +81,18 @@ class NewsController extends Controller
 
         if ($request->hasFile('gambar') && $request->file('gambar')->isValid()) {
             try {
-                $path = $request->file('gambar')->store('news', 'public');
-                if (!empty($path)) {
-                    $data['gambar'] = Storage::url($path);
+                $cloudinary = app(CloudinaryService::class);
+                $url = null;
+                if ($cloudinary->isConfigured()) {
+                    $url = $cloudinary->upload($request->file('gambar'), 'ipl/news');
                 }
+                if (!$url) {
+                    $path = $request->file('gambar')->store('news', 'public');
+                    if (!empty($path)) {
+                        $url = Storage::url($path);
+                    }
+                }
+                if ($url) $data['gambar'] = $url;
             } catch (\Throwable $e) {
                 \Log::warning('News image upload failed: ' . $e->getMessage());
             }
@@ -123,16 +132,29 @@ class NewsController extends Controller
 
         if ($request->hasFile('gambar') && $request->file('gambar')->isValid()) {
             try {
+                $cloudinary = app(CloudinaryService::class);
+                // Hapus gambar lama
                 if ($news->gambar) {
-                    $oldPath = str_replace('/storage/', '', parse_url($news->gambar, PHP_URL_PATH) ?? '');
-                    if (!empty($oldPath)) {
-                        Storage::disk('public')->delete($oldPath);
+                    if (str_contains($news->gambar, 'cloudinary.com') && $cloudinary->isConfigured()) {
+                        $cloudinary->deleteByUrl($news->gambar);
+                    } else {
+                        $oldPath = str_replace('/storage/', '', parse_url($news->gambar, PHP_URL_PATH) ?? '');
+                        if (!empty($oldPath)) {
+                            Storage::disk('public')->delete($oldPath);
+                        }
                     }
                 }
-                $path = $request->file('gambar')->store('news', 'public');
-                if (!empty($path)) {
-                    $data['gambar'] = Storage::url($path);
+                $url = null;
+                if ($cloudinary->isConfigured()) {
+                    $url = $cloudinary->upload($request->file('gambar'), 'ipl/news');
                 }
+                if (!$url) {
+                    $path = $request->file('gambar')->store('news', 'public');
+                    if (!empty($path)) {
+                        $url = Storage::url($path);
+                    }
+                }
+                if ($url) $data['gambar'] = $url;
             } catch (\Throwable $e) {
                 \Log::warning('News image upload failed: ' . $e->getMessage());
             }
