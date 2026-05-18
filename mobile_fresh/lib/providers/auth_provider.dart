@@ -47,24 +47,32 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> login(String phone, String password) async {
     _error = null;
     try {
-      // Pakai default timeout Dio (30 detik) — koneksi mobile kadang lambat
+      // Hard timeout 20 detik biar spinner pasti berhenti
       final response = await _api.post('/auth/login', data: {
         'phone': phone,
         'password': password,
-      });
+      }).timeout(
+        const Duration(seconds: 20),
+        onTimeout: () {
+          throw Exception('TIMEOUT_20S');
+        },
+      );
 
-      // Save token DULU sebelum parse user, biar request lain bisa pakai token
+      // Save token DULU sebelum parse user
       if (response.data is Map && response.data['token'] != null) {
-        await _api.saveToken(response.data['token']);
+        try {
+          await _api.saveToken(response.data['token'].toString())
+              .timeout(const Duration(seconds: 5));
+        } catch (e) {
+          // Secure storage gagal — coba lanjut tanpa save
+        }
       }
 
       try {
-        _user = UserModel.fromJson(response.data['user']);
+        _user = UserModel.fromJson(response.data['user'] as Map<String, dynamic>);
       } catch (parseErr) {
-        // Parsing user gagal — login secara teknis sukses (token diterima),
-        // tapi user data tidak bisa di-parse. Bersihkan token & beri pesan.
-        await _api.deleteToken();
-        _error = 'Format data user dari server tidak sesuai. Detail: $parseErr';
+        try { await _api.deleteToken(); } catch (_) {}
+        _error = 'Data dari server tidak terbaca. Detail: ${parseErr.toString().substring(0, parseErr.toString().length > 80 ? 80 : parseErr.toString().length)}';
         notifyListeners();
         return false;
       }
@@ -72,7 +80,7 @@ class AuthProvider extends ChangeNotifier {
       try {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('language', _user!.language);
-      } catch (_) {/* prefs failure tidak boleh blok login */}
+      } catch (_) {}
 
       notifyListeners();
       return true;
