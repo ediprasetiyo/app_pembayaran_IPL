@@ -1,3 +1,12 @@
+int _toInt(dynamic v, [int fallback = 0]) {
+  if (v == null) return fallback;
+  if (v is int) return v;
+  if (v is double) return v.toInt();
+  if (v is String) return int.tryParse(v) ?? double.tryParse(v)?.toInt() ?? fallback;
+  if (v is num) return v.toInt();
+  return fallback;
+}
+
 class NewsModel {
   final int id;
   final String judul;
@@ -34,22 +43,28 @@ class NewsModel {
   });
 
   factory NewsModel.fromJson(Map<String, dynamic> json) {
+    DateTime? parseNullableDate(dynamic v) {
+      if (v is String && v.isNotEmpty) {
+        try { return DateTime.parse(v); } catch (_) {}
+      }
+      return null;
+    }
     return NewsModel(
-      id: json['id'],
-      judul: json['judul'] ?? '',
-      slug: json['slug'] ?? '',
-      ringkasan: json['ringkasan'],
-      konten: json['konten'] ?? '',
-      gambar: json['gambar'],
-      gambarUrl: json['gambar_url'],
-      kategori: json['kategori'] ?? 'informasi',
-      isPinned: json['is_pinned'] == true || json['is_pinned'] == 1,
-      publishedAt: json['published_at'] != null ? DateTime.parse(json['published_at']) : null,
-      penulis: json['pembuat']?['name'],
-      likesCount: json['likes_count'] ?? 0,
-      commentsCount: json['comments_count'] ?? 0,
-      isLiked: json['is_liked'] == true || json['is_liked'] == 1,
-      viewCount: json['view_count'] ?? 0,
+      id: _toInt(json['id']),
+      judul: json['judul']?.toString() ?? '',
+      slug: json['slug']?.toString() ?? '',
+      ringkasan: json['ringkasan']?.toString(),
+      konten: json['konten']?.toString() ?? '',
+      gambar: json['gambar']?.toString(),
+      gambarUrl: json['gambar_url']?.toString(),
+      kategori: json['kategori']?.toString() ?? 'informasi',
+      isPinned: json['is_pinned'] == true || json['is_pinned'] == 1 || json['is_pinned'] == '1',
+      publishedAt: parseNullableDate(json['published_at']),
+      penulis: json['pembuat']?['name']?.toString(),
+      likesCount: _toInt(json['likes_count']),
+      commentsCount: _toInt(json['comments_count']),
+      isLiked: json['is_liked'] == true || json['is_liked'] == 1 || json['is_liked'] == '1',
+      viewCount: _toInt(json['view_count']),
     );
   }
 
@@ -94,15 +109,21 @@ class CommentModel {
   });
 
   factory CommentModel.fromJson(Map<String, dynamic> json) {
+    DateTime parseDate(dynamic v) {
+      if (v is String && v.isNotEmpty) {
+        try { return DateTime.parse(v); } catch (_) {}
+      }
+      return DateTime.now();
+    }
     return CommentModel(
-      id: json['id'],
-      newsId: json['news_id'],
-      parentId: json['parent_id'],
-      isi: json['isi'] ?? '',
-      userName: json['user']?['name'] ?? 'User',
-      userId: json['user_id'],
-      createdAt: DateTime.parse(json['created_at']),
-      replies: (json['replies'] as List?)?.map((e) => CommentModel.fromJson(e)).toList() ?? [],
+      id: _toInt(json['id']),
+      newsId: _toInt(json['news_id']),
+      parentId: json['parent_id'] != null ? _toInt(json['parent_id']) : null,
+      isi: json['isi']?.toString() ?? '',
+      userName: json['user']?['name']?.toString() ?? 'User',
+      userId: _toInt(json['user_id']),
+      createdAt: parseDate(json['created_at']),
+      replies: (json['replies'] as List?)?.map((e) => CommentModel.fromJson(e as Map<String, dynamic>)).toList() ?? [],
     );
   }
 }

@@ -40,6 +40,9 @@ class AuthController extends Controller
 
         $token = $user->createToken('mobile-app')->plainTextToken;
 
+        // Load relasi lengkap agar mobile dapat data warga + anggota keluarga
+        $user->load('warga.anggotaKeluarga');
+
         return response()->json([
             'token' => $token,
             'user' => $this->formatUser($user),

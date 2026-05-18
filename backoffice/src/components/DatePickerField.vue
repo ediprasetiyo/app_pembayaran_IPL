@@ -8,31 +8,45 @@ const props = defineProps({
   placeholder: { type: String, default: 'Pilih tanggal' },
   minDate: { type: [String, Date, null], default: null },
   maxDate: { type: [String, Date, null], default: null },
-  // 'date' (default) atau 'datetime'
-  enableTime: { type: Boolean, default: false },
   disabled: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue'])
 
-// Convert ISO/Date ke Date object untuk vue-datepicker
+/**
+ * Parse berbagai format date jadi Date object (LOCAL time, time = 00:00:00)
+ * Supported: "YYYY-MM-DD", ISO "2025-01-01T00:00:00.000000Z", Date object
+ */
+function parseToDate(val) {
+  if (!val) return null
+  if (val instanceof Date) return val
+  if (typeof val === 'string') {
+    // Plain YYYY-MM-DD → parse as LOCAL date (hindari timezone shift)
+    const ymd = val.match(/^(\d{4})-(\d{2})-(\d{2})/)
+    if (ymd) {
+      return new Date(parseInt(ymd[1]), parseInt(ymd[2]) - 1, parseInt(ymd[3]))
+    }
+    // ISO or other format
+    const d = new Date(val)
+    if (!isNaN(d.getTime())) {
+      // Reset ke local midnight untuk hindari time component
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate())
+    }
+  }
+  return null
+}
+
 const dateValue = computed({
   get() {
-    if (!props.modelValue) return null
-    if (props.modelValue instanceof Date) return props.modelValue
-    // ISO string atau "YYYY-MM-DD"
-    const d = new Date(props.modelValue)
-    return isNaN(d.getTime()) ? null : d
+    return parseToDate(props.modelValue)
   },
   set(val) {
     if (!val) return emit('update:modelValue', '')
-    // Format ke YYYY-MM-DD untuk konsistensi dengan backend Laravel
+    // STRICT: always YYYY-MM-DD only, NO TIME
     const y = val.getFullYear()
     const m = String(val.getMonth() + 1).padStart(2, '0')
     const d = String(val.getDate()).padStart(2, '0')
-    emit('update:modelValue', props.enableTime
-      ? `${y}-${m}-${d} ${String(val.getHours()).padStart(2,'0')}:${String(val.getMinutes()).padStart(2,'0')}:00`
-      : `${y}-${m}-${d}`)
+    emit('update:modelValue', `${y}-${m}-${d}`)
   }
 })
 </script>
@@ -41,19 +55,22 @@ const dateValue = computed({
   <VueDatePicker
     v-model="dateValue"
     :placeholder="placeholder"
-    :enable-time-picker="enableTime"
+    :enable-time-picker="false"
     :min-date="minDate"
     :max-date="maxDate"
     :disabled="disabled"
-    :format="enableTime ? 'dd MMM yyyy HH:mm' : 'dd MMM yyyy'"
+    format="dd MMM yyyy"
     locale="id-ID"
     cancel-text="Batal"
     select-text="Pilih"
     :year-range="[1940, new Date().getFullYear() + 5]"
+    :year-first="false"
+    month-name-format="long"
     auto-apply
     :clearable="true"
     text-input
     :teleport="true"
+    :hide-input-icons="false"
   />
 </template>
 

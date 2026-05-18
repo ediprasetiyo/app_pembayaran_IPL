@@ -1,3 +1,22 @@
+/// Helper untuk parsing yang defensive (handle int/string/double dari API)
+int _toInt(dynamic v, [int fallback = 0]) {
+  if (v == null) return fallback;
+  if (v is int) return v;
+  if (v is double) return v.toInt();
+  if (v is String) return int.tryParse(v) ?? double.tryParse(v)?.toInt() ?? fallback;
+  if (v is num) return v.toInt();
+  return fallback;
+}
+
+double _toDouble(dynamic v, [double fallback = 0]) {
+  if (v == null) return fallback;
+  if (v is double) return v;
+  if (v is int) return v.toDouble();
+  if (v is String) return double.tryParse(v) ?? fallback;
+  if (v is num) return v.toDouble();
+  return fallback;
+}
+
 class TagihanModel {
   final int id;
   final int wargaId;
@@ -32,22 +51,28 @@ class TagihanModel {
   });
 
   factory TagihanModel.fromJson(Map<String, dynamic> json) {
+    DateTime parseDate(dynamic v) {
+      if (v is String && v.isNotEmpty) {
+        try { return DateTime.parse(v); } catch (_) {}
+      }
+      return DateTime.now();
+    }
     return TagihanModel(
-      id: json['id'],
-      wargaId: json['warga_id'],
-      jenis: json['jenis'] ?? 'ipl_bulanan',
-      bulan: json['bulan'],
-      tahun: json['tahun'],
-      nominal: double.parse(json['nominal'].toString()),
-      denda: double.parse((json['denda'] ?? 0).toString()),
-      status: json['status'] ?? 'belum_bayar',
-      jatuhTempo: DateTime.parse(json['jatuh_tempo']),
-      tanggalBayar: json['tanggal_bayar'],
-      keterangan: json['keterangan'],
-      namaBulan: json['nama_bulan'] ?? '',
-      totalTagihan: double.parse((json['total_tagihan'] ?? json['nominal']).toString()),
+      id: _toInt(json['id']),
+      wargaId: _toInt(json['warga_id']),
+      jenis: json['jenis']?.toString() ?? 'ipl_bulanan',
+      bulan: _toInt(json['bulan']),
+      tahun: _toInt(json['tahun']),
+      nominal: _toDouble(json['nominal']),
+      denda: _toDouble(json['denda']),
+      status: json['status']?.toString() ?? 'belum_bayar',
+      jatuhTempo: parseDate(json['jatuh_tempo']),
+      tanggalBayar: json['tanggal_bayar']?.toString(),
+      keterangan: json['keterangan']?.toString(),
+      namaBulan: json['nama_bulan']?.toString() ?? '',
+      totalTagihan: _toDouble(json['total_tagihan'] ?? json['nominal']),
       pembayaran: json['pembayaran'] != null
-          ? PembayaranModel.fromJson(json['pembayaran'])
+          ? PembayaranModel.fromJson(json['pembayaran'] as Map<String, dynamic>)
           : null,
     );
   }
@@ -89,20 +114,26 @@ class PembayaranModel {
   });
 
   factory PembayaranModel.fromJson(Map<String, dynamic> json) {
+    DateTime parseDate(dynamic v) {
+      if (v is String && v.isNotEmpty) {
+        try { return DateTime.parse(v); } catch (_) {}
+      }
+      return DateTime.now();
+    }
     return PembayaranModel(
-      id: json['id'],
-      tagihanId: json['tagihan_id'],
-      orderId: json['order_id'] ?? '',
-      nominal: double.parse((json['nominal'] ?? 0).toString()),
-      snapToken: json['midtrans_snap_token'],
-      redirectUrl: json['midtrans_redirect_url'],
-      status: json['status'] ?? 'pending',
-      paymentType: json['midtrans_payment_type'],
-      catatan: json['catatan'],
-      midtransTransactionId: json['midtrans_transaction_id'],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at']) : null,
-      tagihan: json['tagihan'] != null ? TagihanModel.fromJson(json['tagihan']) : null,
+      id: _toInt(json['id']),
+      tagihanId: _toInt(json['tagihan_id']),
+      orderId: json['order_id']?.toString() ?? '',
+      nominal: _toDouble(json['nominal']),
+      snapToken: json['midtrans_snap_token']?.toString(),
+      redirectUrl: json['midtrans_redirect_url']?.toString(),
+      status: json['status']?.toString() ?? 'pending',
+      paymentType: json['midtrans_payment_type']?.toString(),
+      catatan: json['catatan']?.toString(),
+      midtransTransactionId: json['midtrans_transaction_id']?.toString(),
+      createdAt: parseDate(json['created_at']),
+      updatedAt: json['updated_at'] != null ? parseDate(json['updated_at']) : null,
+      tagihan: json['tagihan'] != null ? TagihanModel.fromJson(json['tagihan'] as Map<String, dynamic>) : null,
     );
   }
 
