@@ -80,4 +80,26 @@ class IplProvider extends ChangeNotifier {
       return null;
     }
   }
+
+  /// Poll status pembayaran dari Midtrans via backend
+  /// Backend akan call Midtrans API untuk cek status real-time
+  Future<String?> cekStatusPembayaran(int pembayaranId) async {
+    try {
+      final response = await _api.get('/ipl/pembayaran/$pembayaranId');
+      final pembayaran = response.data['pembayaran'];
+      if (pembayaran is Map) {
+        return pembayaran['status']?.toString();
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// Refresh semua data tagihan + pembayaran (panggil setelah bayar)
+  Future<void> refreshAll() async {
+    await Future.wait([
+      loadTagihanBulanIni(),
+      loadTunggakan(),
+      loadRiwayat(),
+    ]);
+  }
 }

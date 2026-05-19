@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Midtrans\Config;
 use Midtrans\Snap;
+use Midtrans\Transaction;
 
 class MidtransService
 {
@@ -45,6 +46,21 @@ class MidtransService
             'token' => $snapToken,
             'redirect_url' => "{$snapHost}/snap/v2/vtweb/{$snapToken}",
         ];
+    }
+
+    /**
+     * Get transaction status real-time dari Midtrans
+     * Return: array with transaction_status, fraud_status, payment_type, dll
+     */
+    public function getStatus(string $orderId): ?array
+    {
+        try {
+            $status = Transaction::status($orderId);
+            return is_object($status) ? json_decode(json_encode($status), true) : (array) $status;
+        } catch (\Throwable $e) {
+            \Log::warning("Midtrans getStatus error for $orderId: " . $e->getMessage());
+            return null;
+        }
     }
 
     public function verifySignature(string $orderId, string $statusCode, string $grossAmount, string $signatureKey): bool

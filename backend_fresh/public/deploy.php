@@ -55,6 +55,22 @@ $files = [
         => $basePath . '/app/Models/Pengaduan.php',
     'backend_fresh/app/Models/Setting.php'
         => $basePath . '/app/Models/Setting.php',
+    'backend_fresh/app/Models/Notifikasi.php'
+        => $basePath . '/app/Models/Notifikasi.php',
+    'backend_fresh/app/Services/MidtransService.php'
+        => $basePath . '/app/Services/MidtransService.php',
+    'backend_fresh/app/Services/NotifikasiService.php'
+        => $basePath . '/app/Services/NotifikasiService.php',
+    'backend_fresh/app/Console/Commands/ReminderTagihan.php'
+        => $basePath . '/app/Console/Commands/ReminderTagihan.php',
+    'backend_fresh/app/Console/Commands/CheckTagihanTerlambat.php'
+        => $basePath . '/app/Console/Commands/CheckTagihanTerlambat.php',
+    'backend_fresh/app/Console/Commands/GenerateTagihanBulanan.php'
+        => $basePath . '/app/Console/Commands/GenerateTagihanBulanan.php',
+    'backend_fresh/app/Console/Kernel.php'
+        => $basePath . '/app/Console/Kernel.php',
+    'backend_fresh/app/Http/Controllers/Api/NotifikasiController.php'
+        => $basePath . '/app/Http/Controllers/Api/NotifikasiController.php',
     'backend_fresh/app/Services/CloudinaryService.php'
         => $basePath . '/app/Services/CloudinaryService.php',
     'backend_fresh/config/services.php'

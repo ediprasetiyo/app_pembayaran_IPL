@@ -242,12 +242,25 @@ class _TagihanItem extends StatelessWidget {
       return;
     }
 
+    // Ambil pembayaran ID untuk polling status
+    int? pembayaranId;
+    final p = result['pembayaran'];
+    if (p is Map && p['id'] != null) {
+      final pid = p['id'];
+      if (pid is int) {
+        pembayaranId = pid;
+      } else if (pid is String) {
+        pembayaranId = int.tryParse(pid);
+      }
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => _MidtransWebView(
           url: redirectUrl,
           orderId: result['pembayaran']?['order_id'] ?? '',
+          pembayaranId: pembayaranId,
         ),
       ),
     );
@@ -257,8 +270,9 @@ class _TagihanItem extends StatelessWidget {
 class _MidtransWebView extends StatefulWidget {
   final String url;
   final String orderId;
+  final int? pembayaranId;
 
-  const _MidtransWebView({required this.url, required this.orderId});
+  const _MidtransWebView({required this.url, required this.orderId, this.pembayaranId});
 
   @override
   State<_MidtransWebView> createState() => _MidtransWebViewState();
@@ -266,6 +280,7 @@ class _MidtransWebView extends StatefulWidget {
 
 class _MidtransWebViewState extends State<_MidtransWebView> {
   late final WebViewController _controller;
+  bool _closing = false;
 
   @override
   void initState() {
@@ -274,9 +289,18 @@ class _MidtransWebViewState extends State<_MidtransWebView> {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(NavigationDelegate(
         onPageStarted: (url) {
-          if (url.contains('selesai') || url.contains('finish')) {
+          final u = url.toLowerCase();
+          // Match berbagai pattern URL finish/complete Midtrans
+          if (u.contains('selesai') ||
+              u.contains('finish') ||
+              u.contains('settlement') ||
+              u.contains('success') ||
+              u.contains('thank')) {
             _onPaymentComplete(true);
-          } else if (url.contains('gagal') || url.contains('error')) {
+          } else if (u.contains('gagal') ||
+              u.contains('failed') ||
+              u.contains('error') ||
+              u.contains('expired')) {
             _onPaymentComplete(false);
           }
         },
@@ -284,32 +308,98 @@ class _MidtransWebViewState extends State<_MidtransWebView> {
       ..loadRequest(Uri.parse(widget.url));
   }
 
-  void _onPaymentComplete(bool success) {
+  Future<void> _onPaymentComplete(bool success) async {
+    if (_closing) return;
+    _closing = true;
+    await _checkAndClose(autoSuccess: success);
+  }
+
+  /// Manual close: cek status real ke server dulu
+  Future<void> _handleManualClose() async {
+    if (_closing) return;
+    _closing = true;
+    await _checkAndClose();
+  }
+
+  Future<void> _checkAndClose({bool? autoSuccess}) async {
     final provider = context.read<IplProvider>();
-    provider.loadTagihanBulanIni();
-    provider.loadTunggakan();
-    provider.loadRiwayat();
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(success
-          ? 'Pembayaran sedang diproses, cek tab Riwayat untuk status terbaru.'
-          : 'Pembayaran gagal.'),
-      backgroundColor: success ? AppTheme.successColor : AppTheme.errorColor,
-      duration: const Duration(seconds: 4),
-    ));
+
+    // Tampilkan loading mini
+    if (mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // Poll status dari server (server kadang sudah dapat callback Midtrans)
+    String? statusReal;
+    if (widget.pembayaranId != null) {
+      statusReal = await provider.cekStatusPembayaran(widget.pembayaranId!);
+    }
+
+    // Refresh semua data tagihan
+    await provider.refreshAll();
+
+    if (!mounted) return;
+    Navigator.pop(context); // close loading
+    Navigator.pop(context); // close WebView
+
+    // Tentukan message berdasarkan status real
+    String msg;
+    Color bgColor;
+    if (statusReal == 'success') {
+      msg = '✅ Pembayaran BERHASIL! Tagihan sudah lunas.';
+      bgColor = AppTheme.successColor;
+    } else if (statusReal == 'pending') {
+      msg = '⏳ Pembayaran sedang diproses. Tarik ke bawah di tab Riwayat untuk refresh status.';
+      bgColor = Colors.orange;
+    } else if (statusReal == 'failed' || statusReal == 'expired' || statusReal == 'cancel') {
+      msg = '❌ Pembayaran gagal/dibatalkan. Silakan coba lagi.';
+      bgColor = AppTheme.errorColor;
+    } else {
+      // Status tidak diketahui — fallback ke autoSuccess
+      msg = (autoSuccess ?? false)
+          ? '⏳ Pembayaran selesai. Status sedang disinkronkan, cek tab Riwayat dalam beberapa detik.'
+          : 'ℹ️ WebView ditutup. Cek tab Riwayat untuk status terbaru.';
+      bgColor = AppTheme.primaryColor;
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(msg),
+        backgroundColor: bgColor,
+        duration: const Duration(seconds: 5),
+      ));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pembayaran Midtrans'),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context),
+    return WillPopScope(
+      onWillPop: () async {
+        await _handleManualClose();
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Pembayaran Midtrans'),
+          leading: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: _handleManualClose,
+            tooltip: 'Tutup & cek status',
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _handleManualClose,
+              tooltip: 'Cek status pembayaran',
+            ),
+          ],
         ),
+        body: WebViewWidget(controller: _controller),
       ),
-      body: WebViewWidget(controller: _controller),
     );
   }
 }

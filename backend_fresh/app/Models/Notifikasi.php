@@ -22,6 +22,7 @@ class Notifikasi extends Model
     ];
 
     protected $casts = [
+        'user_id' => 'integer',
         'is_read' => 'boolean',
         'data' => 'array',
         'read_at' => 'datetime',

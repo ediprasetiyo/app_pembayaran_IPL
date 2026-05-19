@@ -469,6 +469,44 @@ class IplController extends Controller
             return response()->json(['message' => 'Tidak diizinkan.'], 403);
         }
 
-        return response()->json(['pembayaran' => $pembayaran->load('tagihan')]);
+        // Kalau status masih pending, coba sinkron real-time dari Midtrans
+        // Ini handle kasus user bayar tapi callback Midtrans belum sampai (atau gagal)
+        if ($pembayaran->status === 'pending' && !empty($pembayaran->order_id)) {
+            try {
+                $midtransStatus = $this->midtrans->getStatus($pembayaran->order_id);
+                if ($midtransStatus) {
+                    $tx = $midtransStatus['transaction_status'] ?? null;
+                    $fraud = $midtransStatus['fraud_status'] ?? null;
+
+                    $newStatus = match (true) {
+                        $tx === 'capture' && $fraud === 'accept' => 'success',
+                        $tx === 'settlement' => 'success',
+                        in_array($tx, ['cancel', 'deny', 'expire'], true) => 'failed',
+                        $tx === 'pending' => 'pending',
+                        default => null,
+                    };
+
+                    if ($newStatus && $newStatus !== $pembayaran->status) {
+                        $pembayaran->update([
+                            'status' => $newStatus,
+                            'midtrans_payment_type' => $midtransStatus['payment_type'] ?? $pembayaran->midtrans_payment_type,
+                            'midtrans_transaction_id' => $midtransStatus['transaction_id'] ?? $pembayaran->midtrans_transaction_id,
+                        ]);
+
+                        // Update tagihan kalau pembayaran success
+                        if ($newStatus === 'success') {
+                            $pembayaran->tagihan?->update([
+                                'status' => 'sudah_bayar',
+                                'tanggal_bayar' => now(),
+                            ]);
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('Failed to sync Midtrans status: ' . $e->getMessage());
+            }
+        }
+
+        return response()->json(['pembayaran' => $pembayaran->fresh()->load('tagihan')]);
     }
 }
