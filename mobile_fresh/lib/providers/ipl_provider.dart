@@ -70,8 +70,11 @@ class IplProvider extends ChangeNotifier {
 
   Future<Map<String, dynamic>?> bayarTagihan(int tagihanId) async {
     try {
-      final response = await _api.post('/ipl/tagihan/$tagihanId/bayar');
-      return response.data;
+      // Kirim body minimal {} agar LiteSpeed/ModSecurity tidak block POST kosong
+      final response = await _api.post('/ipl/tagihan/$tagihanId/bayar', data: {});
+      return response.data is Map<String, dynamic>
+          ? response.data as Map<String, dynamic>
+          : null;
     } catch (e) {
       _error = e.toString();
       return null;
