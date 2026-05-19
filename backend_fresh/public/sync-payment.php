@@ -25,6 +25,34 @@ $kernel->bootstrap();
 
 $midtrans = $app->make(\App\Services\MidtransService::class);
 
+// === DIAGNOSTIC: cek versi MidtransService yang ke-load ===
+$reflection = new \ReflectionClass($midtrans);
+$filePath = $reflection->getFileName();
+$fileSize = file_exists($filePath) ? filesize($filePath) : 0;
+$fileMtime = file_exists($filePath) ? date('Y-m-d H:i:s', filemtime($filePath)) : 'N/A';
+$hasGetStatus = method_exists($midtrans, 'getStatus');
+$methods = array_map(fn($m) => $m->getName(), $reflection->getMethods(\ReflectionMethod::IS_PUBLIC));
+
+echo "=== DIAGNOSTIC MidtransService ===\n";
+echo "File path : $filePath\n";
+echo "File size : $fileSize bytes\n";
+echo "Modified  : $fileMtime\n";
+echo "Has getStatus(): " . ($hasGetStatus ? 'YES ✓' : 'NO ✗') . "\n";
+echo "Public methods: " . implode(', ', $methods) . "\n";
+echo "OPcache enabled: " . (function_exists('opcache_get_status') && opcache_get_status() !== false ? 'YES' : 'NO') . "\n";
+if (function_exists('opcache_reset')) {
+    opcache_reset();
+    echo "OPcache: RESET\n";
+}
+echo "\n";
+
+if (!$hasGetStatus) {
+    echo "❌ getStatus() method TIDAK ADA di file " . $filePath . "\n";
+    echo "Solusi: jalankan deploy.php lagi, atau edit manual via cPanel File Manager.\n";
+    echo "Hapus juga file: " . $filePath . ".bak (kalau ada, untuk paksa fresh write)\n";
+    exit;
+}
+
 $id = $_GET['id'] ?? null;
 $query = \App\Models\Pembayaran::query();
 if ($id) {
