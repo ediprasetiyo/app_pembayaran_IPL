@@ -171,11 +171,23 @@ class IplController extends Controller
     public function midtransCallback(Request $request): JsonResponse
     {
         $payload = $request->all();
-        $orderId = $payload['order_id'];
-        $transactionStatus = $payload['transaction_status'];
+        $orderId = $payload['order_id'] ?? null;
+        $transactionStatus = $payload['transaction_status'] ?? null;
         $fraudStatus = $payload['fraud_status'] ?? null;
 
-        $pembayaran = Pembayaran::where('order_id', $orderId)->firstOrFail();
+        // Validasi payload
+        if (empty($orderId) || empty($transactionStatus)) {
+            return response()->json([
+                'message' => 'Invalid payload. Need order_id & transaction_status.',
+            ], 400);
+        }
+
+        $pembayaran = Pembayaran::where('order_id', $orderId)->first();
+        if (!$pembayaran) {
+            return response()->json([
+                'message' => "Pembayaran dengan order_id $orderId tidak ditemukan.",
+            ], 404);
+        }
 
         $status = match (true) {
             $transactionStatus === 'capture' && $fraudStatus === 'accept' => 'success',
