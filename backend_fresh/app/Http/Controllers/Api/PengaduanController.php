@@ -87,7 +87,7 @@ class PengaduanController extends Controller
     {
         $warga = $request->user()->warga;
 
-        if ($pengaduan->warga_id !== $warga->id && ! $request->user()->isAdmin()) {
+        if ((int) $pengaduan->warga_id !== (int) ($warga?->id ?? 0) && ! $request->user()->isAdmin()) {
             return response()->json(['message' => 'Tidak diizinkan.'], 403);
         }
 

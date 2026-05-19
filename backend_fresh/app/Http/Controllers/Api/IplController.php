@@ -109,7 +109,12 @@ class IplController extends Controller
     {
         $warga = $request->user()->warga;
 
-        if ($tagihan->warga_id !== $warga->id) {
+        if (!$warga) {
+            return response()->json(['message' => 'User tidak terdaftar sebagai warga.'], 403);
+        }
+
+        // Compare as integer to avoid string-int mismatch
+        if ((int) $tagihan->warga_id !== (int) $warga->id) {
             return response()->json(['message' => 'Tidak diizinkan.'], 403);
         }
 
@@ -460,7 +465,7 @@ class IplController extends Controller
     {
         $warga = $request->user()->warga;
 
-        if ($pembayaran->warga_id !== $warga->id) {
+        if ((int) $pembayaran->warga_id !== (int) ($warga?->id ?? 0)) {
             return response()->json(['message' => 'Tidak diizinkan.'], 403);
         }
 

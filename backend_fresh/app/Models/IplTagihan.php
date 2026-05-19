@@ -26,6 +26,9 @@ class IplTagihan extends Model
     ];
 
     protected $casts = [
+        'warga_id' => 'integer',
+        'bulan' => 'integer',
+        'tahun' => 'integer',
         'jatuh_tempo' => 'date',
         'tanggal_bayar' => 'date',
         'reminder_terakhir' => 'date',
