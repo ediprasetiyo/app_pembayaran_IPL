@@ -26,6 +26,8 @@ class Pembayaran extends Model
     ];
 
     protected $casts = [
+        'tagihan_id' => 'integer',
+        'warga_id' => 'integer',
         'nominal' => 'decimal:2',
         'midtrans_response' => 'array',
     ];
