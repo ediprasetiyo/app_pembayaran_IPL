@@ -43,6 +43,8 @@ $files = [
         => $basePath . '/app/Http/Controllers/Api/SettingsController.php',
     'backend_fresh/app/Http/Controllers/Api/UserController.php'
         => $basePath . '/app/Http/Controllers/Api/UserController.php',
+    'backend_fresh/app/Models/IplTagihan.php'
+        => $basePath . '/app/Models/IplTagihan.php',
     'backend_fresh/app/Models/User.php'
         => $basePath . '/app/Models/User.php',
     'backend_fresh/app/Models/Warga.php'
