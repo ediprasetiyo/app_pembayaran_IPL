@@ -77,6 +77,10 @@ $files = [
         => $basePath . '/app/Http/Controllers/Api/BlokController.php',
     'backend_fresh/app/Http/Controllers/Api/AuditLogController.php'
         => $basePath . '/app/Http/Controllers/Api/AuditLogController.php',
+    'backend_fresh/app/Http/Controllers/Api/MidtransPaymentMethodController.php'
+        => $basePath . '/app/Http/Controllers/Api/MidtransPaymentMethodController.php',
+    'backend_fresh/app/Services/MidtransPaymentMethodService.php'
+        => $basePath . '/app/Services/MidtransPaymentMethodService.php',
     'backend_fresh/app/Models/Blok.php'
         => $basePath . '/app/Models/Blok.php',
     'backend_fresh/app/Models/AuditLog.php'

@@ -35,6 +35,12 @@ class MidtransService
             ],
         ];
 
+        // Filter payment methods sesuai pengaturan backoffice
+        // (super_admin bisa enable/disable per method dari menu Midtrans Payment)
+        if (!empty($params['enabled_payments']) && is_array($params['enabled_payments'])) {
+            $payload['enabled_payments'] = $params['enabled_payments'];
+        }
+
         $snapToken = Snap::getSnapToken($payload);
 
         // URL Snap berbeda untuk sandbox vs production

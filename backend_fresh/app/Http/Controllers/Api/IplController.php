@@ -172,6 +172,9 @@ class IplController extends Controller
         // Gross amount = jumlah semua item (Midtrans validate ini harus = sum item_details)
         $grossAmount = (int) $tagihan->total_tagihan + $biayaAdmin;
 
+        // Ambil daftar payment method yang aktif dari Settings backoffice
+        $enabledPayments = \App\Services\MidtransPaymentMethodService::getEnabledCodes();
+
         $snapData = $this->midtrans->createTransaction([
             'order_id' => $orderId,
             'gross_amount' => $grossAmount,
@@ -180,6 +183,7 @@ class IplController extends Controller
                 'phone' => $request->user()->phone,
             ],
             'item_details' => $items,
+            'enabled_payments' => $enabledPayments,
         ]);
 
         $pembayaran = Pembayaran::create([

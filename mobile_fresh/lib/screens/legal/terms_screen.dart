@@ -73,7 +73,13 @@ class TermsScreen extends StatelessWidget {
                 'Konfirmasi pembayaran akan dikirim melalui notifikasi aplikasi dan email '
                 '(jika alamat email terdaftar).\n\n'
                 'Biaya admin transaksi (jika ada) akan ditampilkan secara transparan '
-                'sebelum Anda menyelesaikan pembayaran.',
+                'sebelum Anda menyelesaikan pembayaran.\n\n'
+                'PENTING: Biaya admin / Merchant Discount Rate (MDR) yang dipotong oleh Midtrans '
+                'mengikuti tarif resmi yang ditetapkan oleh PT Midtrans selaku payment gateway. '
+                'Tarif ini dapat berubah sewaktu-waktu sesuai kebijakan PT Midtrans tanpa pemberitahuan '
+                'sebelumnya kepada pengguna. Pengelola aplikasi dan pembuat aplikasi TIDAK bertanggung jawab '
+                'atas perubahan tarif tersebut. Untuk tarif terkini, silakan cek '
+                'midtrans.com/id/biaya-transaksi.',
           ),
 
           _section(

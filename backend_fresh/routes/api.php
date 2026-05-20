@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BlokController;
 use App\Http\Controllers\Api\IplController;
+use App\Http\Controllers\Api\MidtransPaymentMethodController;
 use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\NotifikasiController;
 use App\Http\Controllers\Api\PengaduanController;
@@ -124,6 +125,11 @@ Route::prefix('v1')->group(function () {
             Route::get('/audit-logs', [AuditLogController::class, 'index']);
             Route::get('/audit-logs/stats', [AuditLogController::class, 'stats']);
             Route::delete('/audit-logs/cleanup', [AuditLogController::class, 'cleanup']);
+
+            // Midtrans payment methods management (enable/disable + lihat biaya admin)
+            Route::get('/midtrans/methods', [MidtransPaymentMethodController::class, 'index']);
+            Route::post('/midtrans/methods/toggle', [MidtransPaymentMethodController::class, 'toggle']);
+            Route::post('/midtrans/methods/bulk', [MidtransPaymentMethodController::class, 'bulkUpdate']);
         });
     });
 });

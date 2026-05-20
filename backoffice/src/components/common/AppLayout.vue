@@ -131,6 +131,8 @@ const navItems = [
     roles: ['super_admin'] },
   { to: '/bloks', label: 'Manajemen Blok', icon: Squares2X2Icon,
     roles: ['super_admin'] },
+  { to: '/midtrans-payment', label: 'Pembayaran Midtrans', icon: CreditCardIcon,
+    roles: ['super_admin'] },
   { to: '/audit-log', label: 'Audit Log', icon: ClipboardDocumentListIcon,
     roles: ['super_admin'] },
   { to: '/settings', label: 'Pengaturan', icon: Cog6ToothIcon,
