@@ -160,12 +160,24 @@
               <textarea v-model="updateForm.keterangan_admin" class="input" rows="3"
                 placeholder="Tambahkan keterangan atau tanggapan untuk warga..." />
             </div>
-            <div class="flex gap-3 justify-end">
-              <button @click="selectedPengaduan = null" class="btn-secondary">Tutup</button>
-              <button @click="updateStatus" class="btn-primary" :disabled="updating">
-                <span v-if="updating" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Perbarui Status
+            <div class="flex gap-3 justify-between items-center">
+              <button
+                @click="hapusPengaduan(selectedPengaduan)"
+                class="px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg border border-red-200 flex items-center gap-1.5"
+                :disabled="deleting"
+                title="Hapus pengaduan + foto terkait"
+              >
+                <span v-if="deleting" class="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                <TrashIcon v-else class="w-4 h-4" />
+                Hapus
               </button>
+              <div class="flex gap-3">
+                <button @click="selectedPengaduan = null" class="btn-secondary">Tutup</button>
+                <button @click="updateStatus" class="btn-primary" :disabled="updating">
+                  <span v-if="updating" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Perbarui Status
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -176,7 +188,7 @@
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import { ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
+import { ExclamationTriangleIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import { useToast } from 'vue-toastification'
 import api from '@/services/api'
 import dayjs from 'dayjs'
@@ -188,6 +200,23 @@ const activeStatus = ref('')
 const selectedPengaduan = ref(null)
 const previewFoto = ref(null)
 const updating = ref(false)
+const deleting = ref(false)
+
+async function hapusPengaduan(p) {
+  if (!p) return
+  if (!confirm(`Hapus pengaduan "${p.judul}"?\n\nFoto terkait juga akan dihapus dari server. Aksi ini tidak bisa dibatalkan.`)) return
+  deleting.value = true
+  try {
+    await api.delete(`/pengaduan/${p.id}`)
+    toast.success('Pengaduan berhasil dihapus.')
+    selectedPengaduan.value = null
+    await fetchData()
+  } catch (e) {
+    toast.error(e.response?.data?.message ?? 'Gagal hapus pengaduan.')
+  } finally {
+    deleting.value = false
+  }
+}
 
 function getFotos(p) {
   if (!p) return []

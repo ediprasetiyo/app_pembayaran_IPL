@@ -55,12 +55,26 @@ class PengaduanController extends Controller
             $cloudinary = app(CloudinaryService::class);
             foreach ($request->file('foto') as $file) {
                 $url = null;
+                // Try Cloudinary dulu (wrap try/catch supaya tidak crash kalau gagal)
                 if ($cloudinary->isConfigured()) {
-                    $url = $cloudinary->upload($file, 'ipl/pengaduan');
+                    try {
+                        $url = $cloudinary->upload($file, 'ipl/pengaduan');
+                    } catch (\Throwable $e) {
+                        \Log::warning('Cloudinary upload pengaduan gagal: ' . $e->getMessage());
+                        $url = null;
+                    }
                 }
+                // Fallback ke local storage kalau Cloudinary gagal / belum configured
                 if (!$url) {
-                    $path = $file->store('pengaduan', 'public');
-                    $url = Storage::url($path);
+                    try {
+                        $path = $file->store('pengaduan', 'public');
+                        $url = Storage::url($path);
+                    } catch (\Throwable $e) {
+                        \Log::error('Local storage upload pengaduan gagal: ' . $e->getMessage());
+                        return response()->json([
+                            'message' => 'Gagal upload foto: ' . $e->getMessage(),
+                        ], 500);
+                    }
                 }
                 $fotos[] = $url;
             }
@@ -127,6 +141,40 @@ class PengaduanController extends Controller
         return response()->json([
             'message' => 'Status pengaduan diperbarui.',
             'pengaduan' => $pengaduan->fresh(),
+        ]);
+    }
+
+    /**
+     * Hapus pengaduan (admin/super_admin only) + hapus foto terkait.
+     */
+    public function destroy(Request $request, Pengaduan $pengaduan): JsonResponse
+    {
+        $user = $request->user();
+        if (!in_array($user->role, ['admin', 'super_admin'])) {
+            return response()->json(['message' => 'Hanya admin yang bisa hapus pengaduan.'], 403);
+        }
+
+        // Hapus foto terkait dari Cloudinary atau local storage
+        if (is_array($pengaduan->foto) && count($pengaduan->foto) > 0) {
+            $cloudinary = app(CloudinaryService::class);
+            foreach ($pengaduan->foto as $fotoUrl) {
+                try {
+                    if (str_contains($fotoUrl, 'cloudinary.com')) {
+                        $cloudinary->deleteByUrl($fotoUrl);
+                    } elseif (str_starts_with($fotoUrl, '/storage/')) {
+                        $path = str_replace('/storage/', '', $fotoUrl);
+                        Storage::disk('public')->delete($path);
+                    }
+                } catch (\Throwable $e) {
+                    \Log::warning('Gagal hapus foto pengaduan: ' . $e->getMessage());
+                }
+            }
+        }
+
+        $pengaduan->delete();
+
+        return response()->json([
+            'message' => 'Pengaduan berhasil dihapus.',
         ]);
     }
 }

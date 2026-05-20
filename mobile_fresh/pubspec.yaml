@@ -82,15 +82,18 @@ flutter_launcher_icons:
   web:
     generate: false
 
-# Native splash screen — muncul INSTANT saat app dibuka,
-# sebelum Flutter framework loaded. Hilangkan "white flash".
+# Native splash screen — muncul INSTANT saat app dibuka.
+# Logo wide (ada teks brand) akan ke-crop kalau pakai image di Android 12+ (circular mask).
+# Solusi: di Android 12+ pakai color saja, lalu app-level splash (_SplashScreen di main.dart)
+# yang menampilkan logo penuh. Transisi seamless karena warna background sama.
 flutter_native_splash:
   color: "#FFFFFF"
   image: assets/images/logo.png
   android: true
   ios: false
+  android_gravity: center
+  fullscreen: false
+  # Android 12+: HANYA color (tanpa image) untuk menghindari crop circular mask
   android_12:
     color: "#FFFFFF"
-    image: assets/images/logo.png
     icon_background_color: "#FFFFFF"
-  fullscreen: false

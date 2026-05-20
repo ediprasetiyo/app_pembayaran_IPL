@@ -497,10 +497,13 @@ class _FormPengaduanScreenState extends State<_FormPengaduanScreen> {
       );
       Navigator.pop(context);
     } else {
+      // Tampilkan detail error supaya gampang diagnose
+      final errMsg = context.read<PengaduanProvider>().error ?? 'Gagal mengirim pengaduan.';
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Gagal mengirim pengaduan.'),
+        SnackBar(
+          content: Text('Gagal: $errMsg', maxLines: 3),
           backgroundColor: AppTheme.errorColor,
+          duration: const Duration(seconds: 6),
         ),
       );
     }

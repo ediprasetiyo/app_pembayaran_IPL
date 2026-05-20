@@ -57,6 +57,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/pengaduan', [PengaduanController::class, 'store']);
         Route::get('/pengaduan/{pengaduan}', [PengaduanController::class, 'show']);
         Route::put('/pengaduan/{pengaduan}', [PengaduanController::class, 'update']);
+        Route::delete('/pengaduan/{pengaduan}', [PengaduanController::class, 'destroy']);
 
         // News - semua user bisa baca, admin bisa CRUD
         Route::get('/news', [NewsController::class, 'index']);

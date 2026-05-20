@@ -78,21 +78,65 @@ class PengaduanProvider extends ChangeNotifier {
     List<String>? fotoPaths,
   }) async {
     try {
-      final formData = FormData.fromMap({
-        'judul': judul,
-        'deskripsi': deskripsi,
-        'kategori': kategori,
-        if (fotoPaths != null)
+      // Kalau ada foto → kirim sebagai multipart. Kalau tidak → kirim JSON biasa
+      // (lebih reliable, LiteSpeed/ModSecurity kadang block multipart kosong).
+      if (fotoPaths != null && fotoPaths.isNotEmpty) {
+        final formData = FormData.fromMap({
+          'judul': judul,
+          'deskripsi': deskripsi,
+          'kategori': kategori,
           for (int i = 0; i < fotoPaths.length; i++)
             'foto[$i]': await MultipartFile.fromFile(fotoPaths[i]),
-      });
-
-      await _api.post('/pengaduan', formData: formData);
+        });
+        await _api.post('/pengaduan', formData: formData);
+      } else {
+        await _api.post('/pengaduan', data: {
+          'judul': judul,
+          'deskripsi': deskripsi,
+          'kategori': kategori,
+        });
+      }
       await load();
       return true;
     } catch (e) {
-      _error = e.toString();
+      // Parse error message ke yang lebih user-friendly
+      _error = _parseError(e);
+      if (kDebugMode) {
+        debugPrint('❌ Pengaduan kirim error: $e');
+      }
       return false;
     }
+  }
+
+  String _parseError(dynamic err) {
+    try {
+      if (err is DioException) {
+        final resp = err.response;
+        if (resp != null) {
+          final data = resp.data;
+          if (data is Map) {
+            // Laravel validation errors
+            if (data['errors'] is Map) {
+              final errors = data['errors'] as Map;
+              final firstField = errors.entries.firstWhere(
+                (e) => e.value is List && (e.value as List).isNotEmpty,
+                orElse: () => MapEntry('', []),
+              );
+              if (firstField.value is List && (firstField.value as List).isNotEmpty) {
+                return (firstField.value as List).first.toString();
+              }
+            }
+            if (data['message'] is String) return data['message'].toString();
+          }
+          return 'Server error (${resp.statusCode}). Coba lagi.';
+        }
+        if (err.type == DioExceptionType.connectionTimeout ||
+            err.type == DioExceptionType.receiveTimeout) {
+          return 'Koneksi timeout. Cek internet & coba lagi.';
+        }
+        return 'Tidak bisa terhubung ke server.';
+      }
+    } catch (_) {}
+    return err.toString();
   }
 }
