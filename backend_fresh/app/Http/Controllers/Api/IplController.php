@@ -106,6 +106,31 @@ class IplController extends Controller
         ]);
     }
 
+    /**
+     * GET /ipl/tagihan/{tagihan}/payment-methods
+     * Return list payment method aktif dengan biaya admin yang sudah dihitung
+     * berdasarkan nominal tagihan ini. Untuk ditampilkan di mobile sebelum
+     * user pilih method.
+     */
+    public function paymentMethodsForTagihan(Request $request, IplTagihan $tagihan): JsonResponse
+    {
+        $warga = $request->user()->warga;
+        if (!$warga || (int) $tagihan->warga_id !== (int) $warga->id) {
+            return response()->json(['message' => 'Tidak diizinkan.'], 403);
+        }
+
+        $baseAmount = (int) $tagihan->total_tagihan;
+        $methods = \App\Services\MidtransPaymentMethodService::getEnabledForAmount($baseAmount);
+
+        return response()->json([
+            'base_amount' => $baseAmount,
+            'nominal' => (int) $tagihan->nominal,
+            'denda' => (int) $tagihan->denda,
+            'methods' => $methods,
+            'disclaimer' => 'Biaya admin adalah tarif resmi PT Midtrans selaku payment gateway. Tarif dapat berubah sesuai kebijakan Midtrans.',
+        ]);
+    }
+
     public function bayar(Request $request, IplTagihan $tagihan): JsonResponse
     {
         $warga = $request->user()->warga;
@@ -123,6 +148,18 @@ class IplController extends Controller
             return response()->json(['message' => 'Tagihan ini sudah dibayar.'], 422);
         }
 
+        $request->validate([
+            'payment_method' => 'nullable|string|max:30',
+        ]);
+
+        // Kalau user pilih method spesifik dari mobile, batalkan pending lama
+        // (karena fee bisa beda per method)
+        if ($request->payment_method) {
+            Pembayaran::where('tagihan_id', $tagihan->id)
+                ->where('status', 'pending')
+                ->update(['status' => 'cancelled']);
+        }
+
         $existingPembayaran = Pembayaran::where('tagihan_id', $tagihan->id)
             ->where('status', 'pending')
             ->first();
@@ -137,11 +174,17 @@ class IplController extends Controller
 
         $orderId = 'IPL-' . $warga->id . '-' . $tagihan->bulan . $tagihan->tahun . '-' . Str::random(6);
 
-        // Biaya admin (di-pass ke user, bukan admin yang tanggung).
-        // Default 4500 (kira-kira cover Midtrans fee untuk VA/QRIS/GoPay).
-        $biayaAdmin = (int) (\App\Models\Setting::get('biaya_admin') ?? 4500);
+        // Hitung biaya admin berdasarkan method yang dipilih user (kalau ada).
+        // Kalau tidak dipilih, biaya admin = 0 (admin RT tanggung fee Midtrans).
+        $paymentMethod = $request->payment_method;
+        $baseAmount = (int) $tagihan->total_tagihan;
+        $biayaAdmin = 0;
 
-        // Build item details. Total = nominal tagihan + denda + biaya admin
+        if ($paymentMethod) {
+            $biayaAdmin = \App\Services\MidtransPaymentMethodService::calculateFee($baseAmount, $paymentMethod);
+        }
+
+        // Build item details
         $items = [
             [
                 'id' => 'IPL-' . $tagihan->bulan . '-' . $tagihan->tahun,
@@ -161,19 +204,21 @@ class IplController extends Controller
         }
 
         if ($biayaAdmin > 0) {
+            // Label spesifik biar warga tahu ini fee Midtrans, bukan admin RT
             $items[] = [
-                'id' => 'ADMIN-FEE',
+                'id' => 'MIDTRANS-FEE',
                 'price' => $biayaAdmin,
                 'quantity' => 1,
-                'name' => 'Biaya Admin Transaksi',
+                'name' => 'Biaya Pemrosesan Midtrans',
             ];
         }
 
-        // Gross amount = jumlah semua item (Midtrans validate ini harus = sum item_details)
-        $grossAmount = (int) $tagihan->total_tagihan + $biayaAdmin;
+        $grossAmount = $baseAmount + $biayaAdmin;
 
-        // Ambil daftar payment method yang aktif dari Settings backoffice
-        $enabledPayments = \App\Services\MidtransPaymentMethodService::getEnabledCodes();
+        // Filter Snap ke 1 method aja kalau user sudah pilih, atau semua aktif kalau belum
+        $enabledPayments = $paymentMethod
+            ? [$paymentMethod]
+            : \App\Services\MidtransPaymentMethodService::getEnabledCodes();
 
         $snapData = $this->midtrans->createTransaction([
             'order_id' => $orderId,
@@ -190,19 +235,19 @@ class IplController extends Controller
             'tagihan_id' => $tagihan->id,
             'warga_id' => $warga->id,
             'order_id' => $orderId,
-            'nominal' => $grossAmount, // simpan TOTAL yang user bayar (sudah include biaya admin)
+            'nominal' => $grossAmount,
             'midtrans_snap_token' => $snapData['token'],
             'midtrans_redirect_url' => $snapData['redirect_url'],
+            'midtrans_payment_type' => $paymentMethod, // simpan method yang dipilih (audit only)
             'status' => 'pending',
-            'catatan' => $biayaAdmin > 0
-                ? "Termasuk biaya admin Rp " . number_format($biayaAdmin, 0, ',', '.')
-                : null,
+            'catatan' => null, // jangan kasih catatan biaya admin biar tidak salah persepsi
         ]);
 
         return response()->json([
             'pembayaran' => $pembayaran,
             'snap_token' => $snapData['token'],
             'redirect_url' => $snapData['redirect_url'],
+            'payment_method' => $paymentMethod,
             'breakdown' => [
                 'nominal' => (int) $tagihan->nominal,
                 'denda' => (int) $tagihan->denda,

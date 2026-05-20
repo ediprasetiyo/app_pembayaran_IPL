@@ -240,4 +240,52 @@ class MidtransPaymentMethodService
             return $m;
         }, self::masterList());
     }
+
+    /**
+     * Hitung biaya admin (fee Midtrans) untuk 1 method dengan amount tertentu.
+     * Return integer rupiah (rounded up).
+     *
+     * @param int $amount Nominal dasar (sebelum fee)
+     * @param string $code Method code (e.g. 'gopay', 'bca_va')
+     * @return int Biaya admin yang harus ditambahkan
+     */
+    public static function calculateFee(int $amount, string $code): int
+    {
+        $method = collect(self::masterList())->firstWhere('code', $code);
+        if (!$method) return 0;
+
+        $type = $method['fee_type'] ?? 'fixed';
+        $value = $method['fee_value'] ?? 0;
+        $extra = $method['fee_extra'] ?? 0;
+
+        return match ($type) {
+            'fixed' => (int) $value,
+            'percent' => (int) ceil($amount * $value / 100),
+            'percent_plus' => (int) (ceil($amount * $value / 100) + $extra),
+            default => 0,
+        };
+    }
+
+    /**
+     * Get enabled methods + fee dihitung untuk amount tertentu.
+     * Untuk ditampilkan di mobile sebelum user pilih method.
+     */
+    public static function getEnabledForAmount(int $amount): array
+    {
+        $enabled = self::getEnabledCodes();
+        $all = self::masterList();
+        $result = [];
+
+        foreach ($all as $m) {
+            if (!in_array($m['code'], $enabled)) continue;
+            $fee = self::calculateFee($amount, $m['code']);
+            $m['fee_amount'] = $fee;
+            $m['total_amount'] = $amount + $fee;
+            $result[] = $m;
+        }
+
+        // Sort: fee terendah dulu (paling hemat untuk user)
+        usort($result, fn($a, $b) => $a['fee_amount'] <=> $b['fee_amount']);
+        return $result;
+    }
 }

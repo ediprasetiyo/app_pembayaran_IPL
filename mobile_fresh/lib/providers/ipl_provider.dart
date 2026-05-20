@@ -68,10 +68,27 @@ class IplProvider extends ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>?> bayarTagihan(int tagihanId) async {
+  /// Fetch payment method list (yang aktif dari backoffice) dengan biaya
+  /// admin sudah dihitung untuk tagihan ini.
+  Future<List<Map<String, dynamic>>?> getPaymentMethods(int tagihanId) async {
     try {
-      // Kirim body minimal {} agar LiteSpeed/ModSecurity tidak block POST kosong
-      final response = await _api.post('/ipl/tagihan/$tagihanId/bayar', data: {});
+      final res = await _api.get('/ipl/tagihan/$tagihanId/payment-methods');
+      final list = (res.data['methods'] as List?) ?? [];
+      return list.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
+    } catch (e) {
+      _error = e.toString();
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> bayarTagihan(int tagihanId, {String? paymentMethod}) async {
+    try {
+      // Kirim payment_method kalau user sudah pilih → backend hitung fee spesifik
+      final body = <String, dynamic>{};
+      if (paymentMethod != null && paymentMethod.isNotEmpty) {
+        body['payment_method'] = paymentMethod;
+      }
+      final response = await _api.post('/ipl/tagihan/$tagihanId/bayar', data: body);
       return response.data is Map<String, dynamic>
           ? response.data as Map<String, dynamic>
           : null;

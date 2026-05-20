@@ -50,6 +50,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/ipl/tagihan', [IplController::class, 'tagihan']);
         Route::get('/ipl/tagihan/bulan-ini', [IplController::class, 'tagihanBulanIni']);
         Route::get('/ipl/tunggakan', [IplController::class, 'tunggakan']);
+        Route::get('/ipl/tagihan/{tagihan}/payment-methods', [IplController::class, 'paymentMethodsForTagihan']);
         Route::post('/ipl/tagihan/{tagihan}/bayar', [IplController::class, 'bayar']);
         Route::post('/ipl/tagihan/{tagihan}/bayar-manual', [IplController::class, 'bayarManual']);
         Route::get('/ipl/pembayaran', [IplController::class, 'riwayatPembayaran']);

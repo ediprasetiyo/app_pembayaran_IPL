@@ -212,14 +212,41 @@ class _TagihanItem extends StatelessWidget {
   }
 
   Future<void> _bayar(BuildContext context, TagihanModel tagihan) async {
-    // Loading dialog
+    // === STEP 1: Load list payment methods + biaya admin per method ===
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+    final methods = await context.read<IplProvider>().getPaymentMethods(tagihan.id);
+    if (!context.mounted) return;
+    Navigator.pop(context); // close loading
+
+    if (methods == null || methods.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Belum ada metode pembayaran yang aktif. Hubungi admin.'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+      return;
+    }
+
+    // === STEP 2: Tampilkan modal pilih payment method ===
+    final selectedMethod = await _showMethodPicker(context, tagihan, methods);
+    if (selectedMethod == null) return;
+
+    // === STEP 3: Loading + call bayar dengan method yg dipilih ===
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),
     );
 
-    final result = await context.read<IplProvider>().bayarTagihan(tagihan.id);
+    final result = await context.read<IplProvider>().bayarTagihan(
+      tagihan.id,
+      paymentMethod: selectedMethod,
+    );
     if (!context.mounted) return;
     Navigator.pop(context); // close loading
 
@@ -254,57 +281,7 @@ class _TagihanItem extends StatelessWidget {
       }
     }
 
-    // Tampilkan breakdown sebelum buka WebView — transparan ke user
-    final breakdown = result['breakdown'];
-    if (breakdown is Map) {
-      final fmt = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
-      final nominal = (breakdown['nominal'] ?? 0) is num ? breakdown['nominal'] as num : 0;
-      final denda = (breakdown['denda'] ?? 0) is num ? breakdown['denda'] as num : 0;
-      final biayaAdmin = (breakdown['biaya_admin'] ?? 0) is num ? breakdown['biaya_admin'] as num : 0;
-      final total = (breakdown['total'] ?? 0) is num ? breakdown['total'] as num : 0;
-
-      final lanjut = await showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.receipt_long, color: AppTheme.primaryColor),
-              const SizedBox(width: 8),
-              const Text('Rincian Pembayaran'),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _breakdownRow('IPL ${tagihan.namaBulan} ${tagihan.tahun}', fmt.format(nominal)),
-              if (denda > 0) _breakdownRow('Denda Keterlambatan', fmt.format(denda), color: AppTheme.errorColor),
-              if (biayaAdmin > 0) _breakdownRow('Biaya Admin Transaksi', fmt.format(biayaAdmin), color: AppTheme.textSecondary),
-              const Divider(height: 20),
-              _breakdownRow('TOTAL', fmt.format(total), bold: true, big: true),
-              const SizedBox(height: 8),
-              const Text(
-                'Biaya admin sudah termasuk fee Midtrans (VA/QRIS/GoPay).',
-                style: TextStyle(fontSize: 10, color: AppTheme.textSecondary),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Lanjut Bayar'),
-            ),
-          ],
-        ),
-      );
-      if (lanjut != true) return;
-    }
-
+    // Breakdown sudah ditampilkan di method picker — langsung buka WebView.
     if (!context.mounted) return;
     Navigator.push(
       context,
@@ -313,6 +290,164 @@ class _TagihanItem extends StatelessWidget {
           url: redirectUrl,
           orderId: result['pembayaran']?['order_id'] ?? '',
           pembayaranId: pembayaranId,
+        ),
+      ),
+    );
+  }
+
+  /// Tampilkan modal pilih payment method dengan biaya admin masing-masing.
+  /// Return: payment method code yang dipilih, atau null kalau batal.
+  Future<String?> _showMethodPicker(
+    BuildContext context,
+    TagihanModel tagihan,
+    List<Map<String, dynamic>> methods,
+  ) async {
+    final fmt = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+
+    // Group by category
+    final grouped = <String, List<Map<String, dynamic>>>{};
+    for (final m in methods) {
+      final cat = (m['category'] ?? 'Lainnya').toString();
+      grouped.putIfAbsent(cat, () => []).add(m);
+    }
+
+    return showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        maxChildSize: 0.95,
+        minChildSize: 0.5,
+        expand: false,
+        builder: (ctx, scrollController) => Column(
+          children: [
+            // Handle bar
+            const SizedBox(height: 10),
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.payment, color: AppTheme.primaryColor),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Pilih Metode Pembayaran',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Nominal: ${fmt.format(tagihan.totalTagihan)} · '
+                    'Biaya admin sesuai tarif PT Midtrans',
+                    style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            // List per kategori
+            Expanded(
+              child: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                children: [
+                  for (final entry in grouped.entries) ...[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 6),
+                      child: Text(
+                        entry.key.toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textSecondary,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                    ),
+                    ...entry.value.map((m) {
+                      final code = m['code'].toString();
+                      final name = m['name'].toString();
+                      final icon = m['icon']?.toString() ?? '💳';
+                      final feeAmount = (m['fee_amount'] ?? 0) is num ? (m['fee_amount'] as num).toInt() : 0;
+                      final totalAmount = (m['total_amount'] ?? 0) is num ? (m['total_amount'] as num).toInt() : 0;
+                      final feeLabel = m['fee_label']?.toString() ?? '';
+
+                      return InkWell(
+                        onTap: () => Navigator.pop(ctx, code),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          child: Row(
+                            children: [
+                              Text(icon, style: const TextStyle(fontSize: 28)),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Biaya admin: ${fmt.format(feeAmount)} ($feeLabel)',
+                                      style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    fmt.format(totalAmount),
+                                    style: TextStyle(
+                                      color: AppTheme.primaryColor,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const Text(
+                                    'Total bayar',
+                                    style: TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.chevron_right, color: AppTheme.textSecondary, size: 20),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      'ℹ️ Biaya admin adalah tarif resmi PT Midtrans selaku payment gateway. '
+                      'Tarif dapat berubah sewaktu-waktu sesuai kebijakan Midtrans.',
+                      style: TextStyle(fontSize: 10, color: Colors.grey.shade600, height: 1.5),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
