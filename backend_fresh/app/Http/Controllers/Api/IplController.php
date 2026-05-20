@@ -473,6 +473,56 @@ class IplController extends Controller
         }
     }
 
+    /**
+     * RESET tagihan ke belum_bayar untuk testing pembayaran berulang.
+     * Hanya super_admin. Tagihan jadi belum_bayar, tanggal_bayar di-null,
+     * pembayaran terkait di-mark 'failed' (audit trail).
+     */
+    public function resetTagihan(Request $request, IplTagihan $tagihan): JsonResponse
+    {
+        $user = $request->user();
+        if ($user->role !== 'super_admin') {
+            return response()->json([
+                'message' => 'Hanya Super Admin yang bisa reset status tagihan.',
+            ], 403);
+        }
+
+        \DB::beginTransaction();
+        try {
+            // Reset tagihan
+            $tagihan->update([
+                'status' => 'belum_bayar',
+                'tanggal_bayar' => null,
+            ]);
+
+            // Reset uang kedukaan kalau jenis kedukaan
+            if ($tagihan->jenis === 'kedukaan') {
+                $tagihan->warga?->update([
+                    'uang_kedukaan_dibayar' => false,
+                    'tanggal_bayar_kedukaan' => null,
+                ]);
+            }
+
+            // Tandai semua pembayaran yang 'success' jadi 'failed' (untuk audit)
+            $affected = Pembayaran::where('tagihan_id', $tagihan->id)
+                ->whereIn('status', ['success', 'pending'])
+                ->update([
+                    'status' => 'failed',
+                    'catatan' => 'Reset oleh super_admin ' . $user->name . ' untuk testing pada ' . now()->format('Y-m-d H:i:s'),
+                ]);
+
+            \DB::commit();
+
+            return response()->json([
+                'message' => "Tagihan berhasil direset. $affected pembayaran ditandai failed.",
+                'tagihan' => $tagihan->fresh(),
+            ]);
+        } catch (\Throwable $e) {
+            \DB::rollBack();
+            return response()->json(['message' => 'Gagal reset: ' . $e->getMessage()], 500);
+        }
+    }
+
     public function statusPembayaran(Request $request, Pembayaran $pembayaran): JsonResponse
     {
         $warga = $request->user()->warga;

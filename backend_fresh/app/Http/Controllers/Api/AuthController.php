@@ -131,9 +131,13 @@ class AuthController extends Controller
         $user->fill($request->only(['name', 'email', 'language', 'fcm_token']));
         $user->save();
 
+        // FIX: harus eager-load warga.anggotaKeluarga supaya data keluarga
+        // tidak hilang di mobile setelah update foto/profil
+        $fresh = $user->fresh()->load('warga.anggotaKeluarga');
+
         return response()->json([
             'message' => 'Profil berhasil diperbarui.',
-            'user' => $this->formatUser($user->fresh()),
+            'user' => $this->formatUser($fresh),
         ]);
     }
 

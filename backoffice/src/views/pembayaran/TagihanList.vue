@@ -176,15 +176,27 @@
                 <span :class="statusClass(item.status)">{{ statusLabel(item.status) }}</span>
               </td>
               <td>
-                <button
-                  v-if="canManage && item.status !== 'sudah_bayar'"
-                  @click="openBayarManual(item)"
-                  class="btn-sm bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 rounded-lg"
-                  title="Catat pembayaran manual"
-                >
-                  <BanknotesIcon class="w-3.5 h-3.5" /> Bayar
-                </button>
-                <span v-else-if="item.status === 'sudah_bayar'" class="text-xs text-gray-400">—</span>
+                <div class="flex gap-1 justify-center">
+                  <button
+                    v-if="canManage && item.status !== 'sudah_bayar'"
+                    @click="openBayarManual(item)"
+                    class="btn-sm bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 rounded-lg"
+                    title="Catat pembayaran manual"
+                  >
+                    <BanknotesIcon class="w-3.5 h-3.5" /> Bayar
+                  </button>
+                  <button
+                    v-if="isSuperAdmin && item.status === 'sudah_bayar'"
+                    @click="resetTagihan(item)"
+                    class="btn-sm bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200 rounded-lg"
+                    title="Reset ke belum_bayar (testing)"
+                    :disabled="resetting === item.id"
+                  >
+                    <span v-if="resetting === item.id" class="w-3.5 h-3.5 border-2 border-orange-700 border-t-transparent rounded-full animate-spin" />
+                    <ArrowPathIcon v-else class="w-3.5 h-3.5" />
+                    Reset
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -196,7 +208,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { DocumentPlusIcon, BanknotesIcon, CheckIcon, ArrowDownTrayIcon } from '@heroicons/vue/24/outline'
+import { DocumentPlusIcon, BanknotesIcon, CheckIcon, ArrowDownTrayIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
 import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
@@ -242,6 +254,25 @@ async function exportExcel() {
 const canManage = computed(() =>
   ['super_admin', 'bendahara'].includes(auth.user?.role)
 )
+
+// Hanya super_admin yang bisa reset (untuk testing)
+const isSuperAdmin = computed(() => auth.user?.role === 'super_admin')
+const resetting = ref(null)
+
+async function resetTagihan(item) {
+  const confirmMsg = `⚠️ RESET TESTING\n\nTagihan ${item.nama_bulan} ${item.tahun} milik ${item.warga?.user?.name} akan diubah dari Lunas → Belum Bayar.\nSemua pembayaran sebelumnya akan ditandai "failed" (untuk audit).\n\nLanjutkan?`
+  if (!confirm(confirmMsg)) return
+  resetting.value = item.id
+  try {
+    const res = await api.post(`/admin/tagihan/${item.id}/reset`)
+    toast.success(res.data?.message || 'Tagihan berhasil direset.')
+    await fetchData()
+  } catch (e) {
+    toast.error(e.response?.data?.message ?? 'Gagal reset tagihan.')
+  } finally {
+    resetting.value = null
+  }
+}
 
 const bayarModal = ref({
   show: false,

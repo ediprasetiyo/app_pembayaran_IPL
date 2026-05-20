@@ -99,6 +99,9 @@ Route::prefix('v1')->group(function () {
             Route::apiResource('/users', UserController::class);
             Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword']);
 
+            // Reset tagihan untuk testing (super_admin only)
+            Route::post('/tagihan/{tagihan}/reset', [IplController::class, 'resetTagihan']);
+
             // Settings management
             Route::get('/settings', [SettingsController::class, 'index']);
             Route::put('/settings/{key}', [SettingsController::class, 'update']);
