@@ -6,12 +6,21 @@ const baseURL = import.meta.env.VITE_API_URL || 'https://ipl-griya-pesona-madani
 
 const api = axios.create({
   baseURL,
-  headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+  headers: { Accept: 'application/json' },
 })
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) config.headers.Authorization = `Bearer ${token}`
+
+  // Auto-set Content-Type:
+  // - FormData → biarkan browser/axios set multipart/form-data dengan boundary
+  // - Lainnya → application/json
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type']
+  } else if (!config.headers['Content-Type']) {
+    config.headers['Content-Type'] = 'application/json'
+  }
   return config
 })
 
