@@ -163,6 +163,89 @@ class SettingsController extends Controller
     }
 
     /**
+     * Get notification templates (default + custom).
+     */
+    public function getNotifTemplates(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user || !$user->isSuperAdmin()) {
+            return response()->json(['message' => 'Akses ditolak.'], 403);
+        }
+
+        $defaults = \App\Services\NotifikasiService::DEFAULT_TEMPLATES;
+        $raw = Setting::get('notif_templates');
+        $custom = $raw ? json_decode($raw, true) : [];
+        $custom = is_array($custom) ? $custom : [];
+
+        $merged = [];
+        foreach ($defaults as $key => $tpl) {
+            $merged[$key] = [
+                'default' => $tpl,
+                'custom' => $custom[$key] ?? null,
+                'effective' => [
+                    'judul' => $custom[$key]['judul'] ?? $tpl['judul'],
+                    'pesan' => $custom[$key]['pesan'] ?? $tpl['pesan'],
+                ],
+            ];
+        }
+
+        return response()->json([
+            'templates' => $merged,
+            'placeholders' => [
+                'nama' => 'Nama warga / admin',
+                'bulan' => 'Nama bulan tagihan (Januari, Februari, dll)',
+                'tahun' => 'Tahun tagihan',
+                'nominal' => 'Nominal tagihan (sudah diformat Rp X.XXX)',
+                'tanggal' => 'Tanggal jatuh tempo / tanggal terkini',
+                'denda' => 'Nominal denda keterlambatan',
+                'judul' => 'Judul pengaduan',
+                'status' => 'Status pengaduan (sedang diproses, telah diselesaikan, ditolak)',
+                'kategori' => 'Kategori pengaduan',
+            ],
+        ]);
+    }
+
+    /**
+     * Save notification templates (super_admin only).
+     * Body: { templates: { pembayaran_sukses: { judul, pesan }, ... } }
+     */
+    public function saveNotifTemplates(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user || !$user->isSuperAdmin()) {
+            return response()->json(['message' => 'Akses ditolak.'], 403);
+        }
+
+        $request->validate([
+            'templates' => 'required|array',
+        ]);
+
+        $clean = [];
+        $defaults = \App\Services\NotifikasiService::DEFAULT_TEMPLATES;
+        foreach ($request->templates as $key => $tpl) {
+            if (!isset($defaults[$key])) continue;
+            $judul = trim($tpl['judul'] ?? '');
+            $pesan = trim($tpl['pesan'] ?? '');
+            // Skip kalau sama persis dengan default → biar reset ke default
+            if ($judul === $defaults[$key]['judul'] && $pesan === $defaults[$key]['pesan']) continue;
+            $clean[$key] = ['judul' => $judul, 'pesan' => $pesan];
+        }
+
+        Setting::set('notif_templates', json_encode($clean));
+
+        AuditLogger::log(
+            action: 'notif_templates_updated',
+            description: 'Template notifikasi di-update: ' . count($clean) . ' custom templates',
+            newValues: ['count' => count($clean)],
+        );
+
+        return response()->json([
+            'message' => 'Template notifikasi berhasil disimpan.',
+            'custom_count' => count($clean),
+        ]);
+    }
+
+    /**
      * Update nominal di semua tagihan yang belum_bayar dengan tarif terbaru
      * dari Settings. Berguna setelah admin ubah ipl_amount / kedukaan_amount.
      */

@@ -70,16 +70,37 @@
         </div>
         <div class="divide-y">
           <div v-for="m in items" :key="m.code" class="flex items-center gap-4 px-5 py-4 hover:bg-gray-50">
-            <!-- Brand logo dengan emoji fallback -->
-            <div class="flex-shrink-0 w-12 h-10 flex items-center justify-center bg-gray-50 rounded">
-              <img
-                v-if="m.logo_url"
-                :src="m.logo_url"
-                :alt="m.name"
-                class="max-w-full max-h-full object-contain"
-                @error="$event.target.style.display = 'none'; $event.target.nextElementSibling.style.display='block'"
-              />
-              <span :style="{ display: m.logo_url ? 'none' : 'block' }" class="text-2xl">{{ m.icon }}</span>
+            <!-- Brand logo dengan upload & reset capability -->
+            <div class="relative flex-shrink-0 group">
+              <div class="w-14 h-12 flex items-center justify-center bg-gray-50 rounded border border-gray-200 overflow-hidden">
+                <img
+                  v-if="m.logo_url"
+                  :src="m.logo_url"
+                  :alt="m.name"
+                  class="max-w-full max-h-full object-contain p-1"
+                  @error="$event.target.style.display = 'none'; $event.target.nextElementSibling.style.display='flex'"
+                />
+                <span :style="{ display: m.logo_url ? 'none' : 'flex' }" class="text-2xl items-center justify-center">{{ m.icon }}</span>
+              </div>
+              <!-- Custom logo badge -->
+              <span v-if="m.logo_is_custom"
+                class="absolute -top-1 -right-1 bg-blue-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[8px] font-bold"
+                title="Logo custom">
+                ✓
+              </span>
+              <!-- Hover actions: upload + reset -->
+              <div class="absolute inset-0 bg-black/60 rounded items-center justify-center gap-1 hidden group-hover:flex">
+                <button @click="openLogoUpload(m)"
+                  class="text-white hover:text-blue-300 p-1"
+                  title="Ganti logo">
+                  📷
+                </button>
+                <button v-if="m.logo_is_custom" @click="resetLogo(m)"
+                  class="text-white hover:text-red-300 p-1"
+                  title="Reset ke logo default">
+                  🔄
+                </button>
+              </div>
             </div>
             <div class="flex-1 min-w-0">
               <p class="font-semibold text-gray-800">{{ m.name }}</p>
@@ -101,7 +122,12 @@
 
     <p class="text-xs text-gray-400 text-center pt-4">
       Perubahan langsung diterapkan ke mobile app — saat warga klik "Bayar", hanya method aktif yang akan tampil di Snap UI Midtrans.
+      <br/>
+      💡 Hover logo untuk ganti/reset logo custom. Format: PNG/JPG square, max 2 MB.
     </p>
+
+    <!-- Hidden file input untuk upload -->
+    <input ref="logoFileInput" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" class="hidden" @change="onLogoFileSelected" />
   </div>
 </template>
 
@@ -119,6 +145,8 @@ const referenceUrl = ref('')
 const disclaimer = ref('')
 const loading = ref(false)
 const saving = ref(false)
+const logoFileInput = ref(null)
+const uploadingFor = ref(null) // method code yang sedang di-upload logonya
 
 async function load() {
   loading.value = true
@@ -180,6 +208,75 @@ function disableAll() {
 function enableRecommended() {
   if (!confirm('Aktifkan hanya method paling umum?')) return
   bulkSet(['bca_va', 'bni_va', 'bri_va', 'permata_va', 'other_va', 'gopay', 'shopeepay', 'qris', 'credit_card'])
+}
+
+// === Upload custom logo per method (via direct Cloudinary) ===
+function openLogoUpload(method) {
+  uploadingFor.value = method
+  // Trigger file picker
+  logoFileInput.value?.click()
+}
+
+async function onLogoFileSelected(e) {
+  const file = e.target.files[0]
+  e.target.value = '' // reset supaya bisa pilih file yang sama lagi
+  if (!file || !uploadingFor.value) return
+
+  if (file.size > 2 * 1024 * 1024) {
+    toast.error('File terlalu besar. Max 2 MB.')
+    return
+  }
+
+  const method = uploadingFor.value
+  saving.value = true
+  try {
+    // 1. Get signed signature dari backend
+    const sigRes = await api.post('/admin/settings/cloudinary-signature', {
+      folder: 'ipl/payment-logos',
+    })
+    const { cloud_name, api_key, timestamp, signature, folder } = sigRes.data
+
+    // 2. Upload langsung ke Cloudinary (bypass ModSecurity)
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('api_key', api_key)
+    fd.append('timestamp', timestamp)
+    fd.append('signature', signature)
+    fd.append('folder', folder)
+
+    const cloudRes = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`,
+      { method: 'POST', body: fd },
+    )
+    if (!cloudRes.ok) throw new Error('Cloudinary upload failed')
+    const cloudData = await cloudRes.json()
+    const url = cloudData.secure_url
+
+    // 3. Simpan URL ke backend
+    await api.post('/admin/midtrans/methods/logo', { code: method.code, url })
+
+    toast.success(`Logo ${method.name} berhasil diupload!`)
+    await load()
+  } catch (e) {
+    toast.error('Gagal upload logo: ' + (e.response?.data?.message || e.message))
+  } finally {
+    saving.value = false
+    uploadingFor.value = null
+  }
+}
+
+async function resetLogo(method) {
+  if (!confirm(`Reset logo ${method.name} ke logo default?`)) return
+  saving.value = true
+  try {
+    await api.post('/admin/midtrans/methods/logo', { code: method.code, url: null })
+    toast.success(`Logo ${method.name} di-reset ke default.`)
+    await load()
+  } catch (e) {
+    toast.error('Gagal reset logo.')
+  } finally {
+    saving.value = false
+  }
 }
 
 onMounted(load)

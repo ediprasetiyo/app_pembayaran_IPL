@@ -118,6 +118,8 @@ Route::prefix('v1')->group(function () {
             Route::post('/settings/cloudinary-signature', [SettingsController::class, 'cloudinarySignature']);
             Route::post('/settings/save-logo-url', [SettingsController::class, 'saveLogoUrl']);
             Route::post('/settings/update-tagihan-nominal', [SettingsController::class, 'updateTagihanNominal']);
+            Route::get('/settings/notif-templates', [SettingsController::class, 'getNotifTemplates']);
+            Route::post('/settings/notif-templates', [SettingsController::class, 'saveNotifTemplates']);
 
             // Multi-blok management
             Route::apiResource('/bloks', BlokController::class);
@@ -131,6 +133,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/midtrans/methods', [MidtransPaymentMethodController::class, 'index']);
             Route::post('/midtrans/methods/toggle', [MidtransPaymentMethodController::class, 'toggle']);
             Route::post('/midtrans/methods/bulk', [MidtransPaymentMethodController::class, 'bulkUpdate']);
+            Route::post('/midtrans/methods/logo', [MidtransPaymentMethodController::class, 'setLogo']);
         });
     });
 });

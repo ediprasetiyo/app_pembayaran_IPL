@@ -246,13 +246,48 @@ class MidtransPaymentMethodService
     }
 
     /**
-     * Get full list dengan status enabled untuk display di backoffice.
+     * Get custom logo URLs dari Settings (yang di-override admin via upload).
+     * Return: array code => url
+     */
+    public static function getCustomLogos(): array
+    {
+        $raw = Setting::get('midtrans_method_logos');
+        if (empty($raw)) return [];
+        $decoded = json_decode($raw, true);
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    /**
+     * Set custom logo untuk 1 method. URL = null/empty → reset ke default.
+     */
+    public static function setCustomLogo(string $code, ?string $url): void
+    {
+        $logos = self::getCustomLogos();
+        if (empty($url)) {
+            unset($logos[$code]);
+        } else {
+            $logos[$code] = $url;
+        }
+        Setting::set('midtrans_method_logos', json_encode($logos));
+    }
+
+    /**
+     * Get full list dengan status enabled + custom logo URL (jika ada).
      */
     public static function listWithStatus(): array
     {
         $enabled = self::getEnabledCodes();
-        return array_map(function ($m) use ($enabled) {
+        $customLogos = self::getCustomLogos();
+
+        return array_map(function ($m) use ($enabled, $customLogos) {
             $m['enabled'] = in_array($m['code'], $enabled);
+            // Override logo_url kalau admin sudah upload custom
+            if (!empty($customLogos[$m['code']])) {
+                $m['logo_url'] = $customLogos[$m['code']];
+                $m['logo_is_custom'] = true;
+            } else {
+                $m['logo_is_custom'] = false;
+            }
             return $m;
         }, self::masterList());
     }
@@ -289,6 +324,7 @@ class MidtransPaymentMethodService
     public static function getEnabledForAmount(int $amount): array
     {
         $enabled = self::getEnabledCodes();
+        $customLogos = self::getCustomLogos();
         $all = self::masterList();
         $result = [];
 
@@ -297,6 +333,10 @@ class MidtransPaymentMethodService
             $fee = self::calculateFee($amount, $m['code']);
             $m['fee_amount'] = $fee;
             $m['total_amount'] = $amount + $fee;
+            // Override dengan custom logo kalau ada
+            if (!empty($customLogos[$m['code']])) {
+                $m['logo_url'] = $customLogos[$m['code']];
+            }
             $result[] = $m;
         }
 

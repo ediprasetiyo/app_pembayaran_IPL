@@ -212,8 +212,76 @@
       </div>
     </div>
 
+    <!-- ===== NOTIFIKASI ===== -->
+    <div v-if="activeTab === 'notif'" class="space-y-4">
+      <div class="card p-5 space-y-4">
+        <div>
+          <h3 class="font-semibold">🔔 Template Notifikasi</h3>
+          <p class="text-xs text-gray-500 mt-1">
+            Kustomisasi judul + pesan notifikasi yang dikirim ke warga / admin via Push Notification (FCM) & in-app.
+            Pakai placeholder seperti <code class="bg-gray-100 px-1 rounded">{nama}</code>,
+            <code class="bg-gray-100 px-1 rounded">{bulan}</code>,
+            <code class="bg-gray-100 px-1 rounded">{nominal}</code> — akan otomatis di-replace saat kirim.
+          </p>
+        </div>
+
+        <!-- Placeholder helper -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs">
+          <p class="font-semibold text-blue-900 mb-1">📌 Placeholder yang tersedia:</p>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-1 text-blue-800">
+            <div v-for="(desc, key) in placeholders" :key="key">
+              <code class="bg-white px-1.5 py-0.5 rounded font-semibold">{{ '{' + key + '}' }}</code>
+              <span class="ml-1 text-gray-600">{{ desc }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="loadingTpl" class="text-center py-8">
+          <div class="w-6 h-6 border-2 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto" />
+        </div>
+
+        <div v-else class="space-y-5">
+          <div v-for="(tpl, key) in notifTemplates" :key="key" class="border-l-4 border-primary-500 bg-gray-50 rounded-r-lg p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="font-semibold text-sm">{{ notifLabel(key) }}</h4>
+              <button v-if="tpl.custom" @click="resetNotifTemplate(key)" class="text-xs text-red-600 hover:underline">
+                🔄 Reset ke Default
+              </button>
+            </div>
+            <div class="grid grid-cols-1 gap-3">
+              <div>
+                <label class="label">Judul Notifikasi</label>
+                <input v-model="notifEdit[key].judul" type="text" class="input" maxlength="100"
+                  :placeholder="tpl.default.judul" />
+                <p class="text-xs text-gray-400 mt-1">Default: <em>{{ tpl.default.judul }}</em></p>
+              </div>
+              <div>
+                <label class="label">Isi Pesan</label>
+                <textarea v-model="notifEdit[key].pesan" class="input" rows="2" maxlength="300"
+                  :placeholder="tpl.default.pesan" />
+                <p class="text-xs text-gray-400 mt-1">Default: <em>{{ tpl.default.pesan }}</em></p>
+              </div>
+              <!-- Preview -->
+              <div class="bg-white rounded-md p-3 border border-gray-200">
+                <p class="text-xs text-gray-400 mb-1">👀 Preview (dengan contoh data):</p>
+                <p class="font-semibold text-sm">🔔 {{ previewRender(notifEdit[key].judul || tpl.default.judul) }}</p>
+                <p class="text-xs text-gray-700 mt-1">{{ previewRender(notifEdit[key].pesan || tpl.default.pesan) }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-2">
+          <button @click="saveNotifTemplates" class="btn-primary" :disabled="savingTpl">
+            <span v-if="savingTpl" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            🔔 Simpan Template Notifikasi
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Tombol Save -->
-    <div class="sticky bottom-4 bg-white rounded-xl shadow-lg border border-gray-100 px-5 py-3 flex items-center justify-between">
+    <div v-if="activeTab !== 'notif'" class="sticky bottom-4 bg-white rounded-xl shadow-lg border border-gray-100 px-5 py-3 flex items-center justify-between">
       <p class="text-sm text-gray-600">
         <span v-if="hasChanges" class="text-orange-600 font-semibold">⚠ Ada perubahan belum disimpan</span>
         <span v-else>✓ Semua sudah disimpan</span>
@@ -244,6 +312,7 @@ const tabs = [
   { value: 'theme', label: 'Tema Warna', icon: '🌈' },
   { value: 'pages', label: 'Halaman', icon: '📄' },
   { value: 'general', label: 'Umum', icon: '⚙️' },
+  { value: 'notif', label: 'Notifikasi', icon: '🔔' },
 ]
 
 const pageFields = [
@@ -270,6 +339,87 @@ const original = ref({ ...settings.settings })
 const saving = ref(false)
 const uploading = ref(false)
 const applying = ref(false)
+
+// Notif templates state
+const notifTemplates = ref({})
+const notifEdit = ref({})
+const placeholders = ref({})
+const loadingTpl = ref(false)
+const savingTpl = ref(false)
+
+const NOTIF_LABELS = {
+  pembayaran_sukses: '💰 Pembayaran Sukses (ke Warga)',
+  reminder_tagihan: '⏰ Reminder Tagihan (ke Warga)',
+  tagihan_terlambat: '⚠️ Tagihan Terlambat (ke Warga)',
+  pengaduan_baru: '📨 Pengaduan Baru (ke Admin)',
+  pengaduan_update: '✅ Update Status Pengaduan (ke Warga)',
+}
+
+function notifLabel(key) {
+  return NOTIF_LABELS[key] ?? key
+}
+
+// Sample data untuk preview
+const SAMPLE_DATA = {
+  nama: 'Pak Edi',
+  bulan: 'Mei',
+  tahun: '2026',
+  nominal: '65.000',
+  tanggal: '10/05/2026',
+  denda: '3.250',
+  judul: 'Sampah belum diangkut',
+  status: 'sedang diproses',
+  kategori: 'kebersihan',
+}
+
+function previewRender(template) {
+  let out = template || ''
+  for (const [key, value] of Object.entries(SAMPLE_DATA)) {
+    out = out.split('{' + key + '}').join(value)
+  }
+  return out
+}
+
+async function loadNotifTemplates() {
+  loadingTpl.value = true
+  try {
+    const res = await api.get('/admin/settings/notif-templates')
+    notifTemplates.value = res.data.templates
+    placeholders.value = res.data.placeholders
+    // Init edit form dengan effective values
+    notifEdit.value = {}
+    for (const [key, tpl] of Object.entries(res.data.templates)) {
+      notifEdit.value[key] = {
+        judul: tpl.effective.judul,
+        pesan: tpl.effective.pesan,
+      }
+    }
+  } catch (e) {
+    toast.error('Gagal load template notifikasi.')
+  } finally {
+    loadingTpl.value = false
+  }
+}
+
+async function saveNotifTemplates() {
+  savingTpl.value = true
+  try {
+    await api.post('/admin/settings/notif-templates', { templates: notifEdit.value })
+    toast.success('Template notifikasi berhasil disimpan!')
+    await loadNotifTemplates()
+  } catch (e) {
+    toast.error(e.response?.data?.message ?? 'Gagal simpan template.')
+  } finally {
+    savingTpl.value = false
+  }
+}
+
+function resetNotifTemplate(key) {
+  const def = notifTemplates.value[key]?.default
+  if (!def) return
+  notifEdit.value[key] = { judul: def.judul, pesan: def.pesan }
+  toast.info('Template di-reset ke default. Klik Simpan untuk konfirmasi.')
+}
 
 async function applyNominalKeTagihan() {
   const msg = `Update nominal di SEMUA tagihan "Belum Bayar"?\n\n` +
@@ -405,5 +555,7 @@ onMounted(async () => {
   await settings.loadAllSettings()
   form.value = { ...settings.settings }
   original.value = { ...settings.settings }
+  // Load notif templates juga
+  loadNotifTemplates()
 })
 </script>

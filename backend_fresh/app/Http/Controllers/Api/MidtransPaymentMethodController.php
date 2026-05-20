@@ -67,6 +67,43 @@ class MidtransPaymentMethodController extends Controller
     }
 
     /**
+     * Set custom logo URL untuk 1 payment method.
+     * Body: { code: 'gopay', url: 'https://res.cloudinary.com/...' }
+     * Kirim url empty/null untuk reset ke default Wikimedia.
+     */
+    public function setLogo(Request $request): JsonResponse
+    {
+        $request->validate([
+            'code' => 'required|string',
+            'url' => 'nullable|url|max:500',
+        ]);
+
+        $methods = MidtransPaymentMethodService::masterList();
+        $found = collect($methods)->firstWhere('code', $request->code);
+        if (!$found) {
+            return response()->json(['message' => 'Payment method tidak dikenali.'], 422);
+        }
+
+        MidtransPaymentMethodService::setCustomLogo($request->code, $request->url);
+
+        AuditLogger::log(
+            action: $request->url ? 'payment_logo_updated' : 'payment_logo_reset',
+            description: $request->url
+                ? "Logo {$found['name']} diubah ke: {$request->url}"
+                : "Logo {$found['name']} di-reset ke default",
+            newValues: ['code' => $request->code, 'url' => $request->url],
+        );
+
+        return response()->json([
+            'message' => $request->url
+                ? "Logo {$found['name']} berhasil diupdate."
+                : "Logo {$found['name']} di-reset ke default.",
+            'code' => $request->code,
+            'url' => $request->url,
+        ]);
+    }
+
+    /**
      * Bulk update — set semua enabled codes sekaligus.
      */
     public function bulkUpdate(Request $request): JsonResponse

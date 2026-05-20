@@ -6,6 +6,7 @@ use App\Models\IplTagihan;
 use App\Models\Notifikasi;
 use App\Models\Pembayaran;
 use App\Models\Pengaduan;
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\Warga;
 use Illuminate\Support\Collection;
@@ -15,36 +16,105 @@ use Kreait\Laravel\Firebase\Facades\Firebase;
 
 class NotifikasiService
 {
+    /**
+     * Default templates (kalau admin belum customize di backoffice).
+     * Placeholder: {nama}, {bulan}, {tahun}, {nominal}, {tanggal}, {denda}, {judul}, {status}
+     */
+    public const DEFAULT_TEMPLATES = [
+        'pembayaran_sukses' => [
+            'judul' => 'Pembayaran IPL Berhasil',
+            'pesan' => 'Pembayaran IPL {bulan} {tahun} sebesar Rp {nominal} telah berhasil.',
+        ],
+        'reminder_tagihan' => [
+            'judul' => 'Reminder Pembayaran IPL',
+            'pesan' => 'IPL {bulan} {tahun} belum dibayar. Jatuh tempo: {tanggal}.',
+        ],
+        'tagihan_terlambat' => [
+            'judul' => 'Peringatan: IPL Terlambat',
+            'pesan' => 'IPL {bulan} {tahun} terlambat dibayar. Denda sebesar Rp {denda} telah ditambahkan.',
+        ],
+        'pengaduan_baru' => [
+            'judul' => 'Pengaduan Baru',
+            'pesan' => 'Pengaduan baru dari warga: {judul}',
+        ],
+        'pengaduan_update' => [
+            'judul' => 'Update Pengaduan',
+            'pesan' => 'Pengaduan "{judul}" {status}.',
+        ],
+    ];
+
+    /**
+     * Get template (judul + pesan) untuk event tertentu.
+     * Cek Settings 'notif_templates' dulu (JSON), fallback ke default.
+     */
+    public static function getTemplate(string $event): array
+    {
+        $raw = Setting::get('notif_templates');
+        $custom = $raw ? json_decode($raw, true) : [];
+        $custom = is_array($custom) ? $custom : [];
+
+        $default = self::DEFAULT_TEMPLATES[$event] ?? ['judul' => 'Notifikasi', 'pesan' => ''];
+        $userTemplate = $custom[$event] ?? [];
+
+        return [
+            'judul' => $userTemplate['judul'] ?? $default['judul'],
+            'pesan' => $userTemplate['pesan'] ?? $default['pesan'],
+        ];
+    }
+
+    /**
+     * Render template dengan replace placeholder.
+     */
+    public static function render(string $event, array $vars): array
+    {
+        $template = self::getTemplate($event);
+        $judul = $template['judul'];
+        $pesan = $template['pesan'];
+        foreach ($vars as $key => $value) {
+            $judul = str_replace('{' . $key . '}', (string) $value, $judul);
+            $pesan = str_replace('{' . $key . '}', (string) $value, $pesan);
+        }
+        return ['judul' => $judul, 'pesan' => $pesan];
+    }
+
     public function kirimNotifikasiPembayaranBerhasil(Pembayaran $pembayaran): void
     {
         $warga = $pembayaran->warga->load('user');
         $tagihan = $pembayaran->tagihan;
 
-        $judul = 'Pembayaran IPL Berhasil';
-        $pesan = "Pembayaran IPL {$tagihan->nama_bulan} {$tagihan->tahun} sebesar Rp " .
-            number_format($pembayaran->nominal, 0, ',', '.') . " telah berhasil.";
+        $rendered = self::render('pembayaran_sukses', [
+            'nama' => $warga->user->name,
+            'bulan' => $tagihan->nama_bulan,
+            'tahun' => $tagihan->tahun,
+            'nominal' => number_format($pembayaran->nominal, 0, ',', '.'),
+            'tanggal' => now()->format('d/m/Y'),
+        ]);
 
-        $this->simpanNotifikasi($warga->user_id, $judul, $pesan, 'pembayaran', [
+        $this->simpanNotifikasi($warga->user_id, $rendered['judul'], $rendered['pesan'], 'pembayaran', [
             'pembayaran_id' => $pembayaran->id,
             'tagihan_id' => $tagihan->id,
         ]);
 
-        $this->kirimFCM($warga->user, $judul, $pesan);
+        $this->kirimFCM($warga->user, $rendered['judul'], $rendered['pesan']);
     }
 
     public function kirimReminderTagihan(Collection $tagihans): void
     {
         foreach ($tagihans as $tagihan) {
             $user = $tagihan->warga->user;
-            $judul = 'Reminder Pembayaran IPL';
-            $pesan = "IPL {$tagihan->nama_bulan} {$tagihan->tahun} belum dibayar. " .
-                "Jatuh tempo: {$tagihan->jatuh_tempo->format('d/m/Y')}.";
+            $rendered = self::render('reminder_tagihan', [
+                'nama' => $user->name,
+                'bulan' => $tagihan->nama_bulan,
+                'tahun' => $tagihan->tahun,
+                'nominal' => number_format($tagihan->total_tagihan, 0, ',', '.'),
+                'tanggal' => $tagihan->jatuh_tempo->format('d/m/Y'),
+            ]);
 
-            $this->simpanNotifikasi($user->id, $judul, $pesan, 'tagihan', [
+            $this->simpanNotifikasi($user->id, $rendered['judul'], $rendered['pesan'], 'tagihan', [
                 'tagihan_id' => $tagihan->id,
             ]);
 
-            $this->kirimFCM($user, $judul, $pesan);
+            $this->kirimFCM($user, $rendered['judul'], $rendered['pesan']);
         }
     }
 
@@ -52,32 +122,39 @@ class NotifikasiService
     {
         foreach ($tagihans as $tagihan) {
             $user = $tagihan->warga->user;
-            $denda = $tagihan->denda;
-            $judul = 'Peringatan: IPL Terlambat';
-            $pesan = "IPL {$tagihan->nama_bulan} {$tagihan->tahun} terlambat dibayar. " .
-                "Denda sebesar Rp " . number_format($denda, 0, ',', '.') . " telah ditambahkan.";
+            $rendered = self::render('tagihan_terlambat', [
+                'nama' => $user->name,
+                'bulan' => $tagihan->nama_bulan,
+                'tahun' => $tagihan->tahun,
+                'denda' => number_format($tagihan->denda, 0, ',', '.'),
+                'tanggal' => $tagihan->jatuh_tempo->format('d/m/Y'),
+            ]);
 
-            $this->simpanNotifikasi($user->id, $judul, $pesan, 'peringatan', [
+            $this->simpanNotifikasi($user->id, $rendered['judul'], $rendered['pesan'], 'peringatan', [
                 'tagihan_id' => $tagihan->id,
             ]);
 
-            $this->kirimFCM($user, $judul, $pesan);
+            $this->kirimFCM($user, $rendered['judul'], $rendered['pesan']);
         }
     }
 
     public function notifikasiAdminPengaduanBaru(Pengaduan $pengaduan): void
     {
         $admins = User::where('role', 'admin')->get();
+        $warga = $pengaduan->warga->load('user');
 
         foreach ($admins as $admin) {
-            $judul = 'Pengaduan Baru';
-            $pesan = "Pengaduan baru dari warga: {$pengaduan->judul}";
+            $rendered = self::render('pengaduan_baru', [
+                'nama' => $warga->user->name ?? 'Warga',
+                'judul' => $pengaduan->judul,
+                'kategori' => $pengaduan->kategori,
+            ]);
 
-            $this->simpanNotifikasi($admin->id, $judul, $pesan, 'pengaduan', [
+            $this->simpanNotifikasi($admin->id, $rendered['judul'], $rendered['pesan'], 'pengaduan', [
                 'pengaduan_id' => $pengaduan->id,
             ]);
 
-            $this->kirimFCM($admin, $judul, $pesan);
+            $this->kirimFCM($admin, $rendered['judul'], $rendered['pesan']);
         }
     }
 
@@ -91,14 +168,17 @@ class NotifikasiService
             default => $pengaduan->status,
         };
 
-        $judul = 'Update Pengaduan';
-        $pesan = "Pengaduan \"{$pengaduan->judul}\" {$statusLabel}.";
+        $rendered = self::render('pengaduan_update', [
+            'nama' => $user->name,
+            'judul' => $pengaduan->judul,
+            'status' => $statusLabel,
+        ]);
 
-        $this->simpanNotifikasi($user->id, $judul, $pesan, 'pengaduan', [
+        $this->simpanNotifikasi($user->id, $rendered['judul'], $rendered['pesan'], 'pengaduan', [
             'pengaduan_id' => $pengaduan->id,
         ]);
 
-        $this->kirimFCM($user, $judul, $pesan);
+        $this->kirimFCM($user, $rendered['judul'], $rendered['pesan']);
     }
 
     private function simpanNotifikasi(int $userId, string $judul, string $pesan, string $tipe, array $data = []): void
