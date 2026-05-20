@@ -392,7 +392,7 @@ class WargaController extends Controller
             ->count();
 
         // Total dana kedukaan yang sudah terkumpul (dari pembayaran tagihan jenis 'kedukaan')
-        $tarifKedukaan = (int) env('IPL_KEDUKAAN_AMOUNT', 20000);
+        $tarifKedukaan = (int) (\App\Models\Setting::get('kedukaan_amount') ?? env('IPL_KEDUKAAN_AMOUNT', 20000));
         $kedukaanTerkumpul = $kedukaanWargaSudahBayar * $tarifKedukaan;
 
         // Atau dari pembayaran riil (lebih akurat untuk yg via Midtrans)
@@ -422,8 +422,8 @@ class WargaController extends Controller
 
     private function generateTagihanBulanBerjalan(Warga $warga, bool $buatTagihanKedukaan = true): void
     {
-        $tarifIpl = (int) env('IPL_MONTHLY_AMOUNT', 65000);
-        $tarifKedukaan = (int) env('IPL_KEDUKAAN_AMOUNT', 20000);
+        $tarifIpl = (int) (\App\Models\Setting::get('ipl_amount') ?? env('IPL_MONTHLY_AMOUNT', 65000));
+        $tarifKedukaan = (int) (\App\Models\Setting::get('kedukaan_amount') ?? env('IPL_KEDUKAAN_AMOUNT', 20000));
         $jatuhTempo = now()->setDay(10);
 
         // Tagihan IPL bulanan (selalu dibuat)

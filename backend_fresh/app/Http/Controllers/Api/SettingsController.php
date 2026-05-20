@@ -90,6 +90,37 @@ class SettingsController extends Controller
     }
 
     /**
+     * Update nominal di semua tagihan yang belum_bayar dengan tarif terbaru
+     * dari Settings. Berguna setelah admin ubah ipl_amount / kedukaan_amount.
+     */
+    public function updateTagihanNominal(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user || !$user->isSuperAdmin()) {
+            return response()->json(['message' => 'Akses ditolak. Super Admin only.'], 403);
+        }
+
+        $tarifIpl = (int) (Setting::get('ipl_amount') ?? 65000);
+        $tarifKedukaan = (int) (Setting::get('kedukaan_amount') ?? 20000);
+
+        $iplUpdated = \App\Models\IplTagihan::where('jenis', 'ipl_bulanan')
+            ->where('status', 'belum_bayar')
+            ->update(['nominal' => $tarifIpl]);
+
+        $kedukaanUpdated = \App\Models\IplTagihan::where('jenis', 'kedukaan')
+            ->where('status', 'belum_bayar')
+            ->update(['nominal' => $tarifKedukaan]);
+
+        return response()->json([
+            'message' => "Berhasil update {$iplUpdated} tagihan IPL & {$kedukaanUpdated} tagihan Kedukaan dengan nominal terbaru.",
+            'tarif_ipl' => $tarifIpl,
+            'tarif_kedukaan' => $tarifKedukaan,
+            'ipl_updated' => $iplUpdated,
+            'kedukaan_updated' => $kedukaanUpdated,
+        ]);
+    }
+
+    /**
      * Upload logo
      */
     public function uploadLogo(Request $request): JsonResponse

@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\IplTagihan;
+use App\Models\Setting;
 use App\Models\Warga;
 use App\Services\NotifikasiService;
 use Illuminate\Console\Command;
@@ -21,8 +22,9 @@ class GenerateTagihanBulanan extends Command
     {
         $bulan = (int) ($this->option('bulan') ?? now()->month);
         $tahun = (int) ($this->option('tahun') ?? now()->year);
-        $tarifIpl = (int) env('IPL_MONTHLY_AMOUNT', 65000);
-        $tarifKedukaan = (int) env('IPL_KEDUKAAN_AMOUNT', 20000);
+        // Baca dari Settings table, fallback ke env, lalu ke default
+        $tarifIpl = (int) (Setting::get('ipl_amount') ?? env('IPL_MONTHLY_AMOUNT', 65000));
+        $tarifKedukaan = (int) (Setting::get('kedukaan_amount') ?? env('IPL_KEDUKAAN_AMOUNT', 20000));
 
         $wargaAktif = Warga::where('is_active', true)
             ->where('blok', 'E')

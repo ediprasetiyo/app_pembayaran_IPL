@@ -111,6 +111,7 @@ Route::prefix('v1')->group(function () {
             Route::put('/settings/{key}', [SettingsController::class, 'update']);
             Route::post('/settings/bulk', [SettingsController::class, 'updateBulk']);
             Route::post('/settings/logo', [SettingsController::class, 'uploadLogo']);
+            Route::post('/settings/update-tagihan-nominal', [SettingsController::class, 'updateTagihanNominal']);
         });
     });
 });

@@ -51,6 +51,27 @@ export const useSettingsStore = defineStore('settings', () => {
   }
 
   /**
+   * Load ALL settings (admin endpoint) — termasuk yang non-public seperti
+   * ipl_amount, kedukaan_amount, admin_whatsapp. Untuk halaman Settings.
+   */
+  async function loadAllSettings() {
+    try {
+      const res = await api.get('/admin/settings')
+      const flat = res.data.flat ?? []
+      // Flatten array ke object key-value
+      const incoming = {}
+      flat.forEach((s) => { incoming[s.key] = s.value })
+      settings.value = { ...DEFAULT_SETTINGS, ...settings.value, ...incoming }
+      localStorage.setItem('app_settings', JSON.stringify(settings.value))
+      applyTheme()
+      return incoming
+    } catch (e) {
+      console.warn('Failed to load all settings', e)
+      return {}
+    }
+  }
+
+  /**
    * Update setting di backend dan reload
    */
   async function updateSetting(key, value) {
@@ -118,6 +139,7 @@ export const useSettingsStore = defineStore('settings', () => {
     logoUrl,
     themePrimary,
     loadPublicSettings,
+    loadAllSettings,
     updateSetting,
     updateBulk,
     uploadLogo,

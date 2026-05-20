@@ -267,8 +267,9 @@ class IplController extends Controller
 
         $bulan = (int) ($request->bulan ?? now()->month);
         $tahun = (int) ($request->tahun ?? now()->year);
-        $tarifIpl = (int) env('IPL_MONTHLY_AMOUNT', 65000);
-        $tarifKedukaan = (int) env('IPL_KEDUKAAN_AMOUNT', 20000);
+        // Baca dari Settings table (yang di-set dari backoffice), fallback ke .env
+        $tarifIpl = (int) (\App\Models\Setting::get('ipl_amount') ?? env('IPL_MONTHLY_AMOUNT', 65000));
+        $tarifKedukaan = (int) (\App\Models\Setting::get('kedukaan_amount') ?? env('IPL_KEDUKAAN_AMOUNT', 20000));
         $jatuhTempo = now()->setMonth($bulan)->setYear($tahun)->setDay(10);
 
         $wargaAktif = \App\Models\Warga::where('is_active', true)

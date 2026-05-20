@@ -170,6 +170,29 @@
             <p class="text-xs text-gray-400 mt-1">Format internasional tanpa "+". Cth: 6281234567890</p>
           </div>
         </div>
+
+        <!-- Info + Apply nominal ke tagihan belum_bayar yang sudah ada -->
+        <div class="border-t pt-4 mt-2 bg-yellow-50 -mx-5 -mb-5 px-5 py-4 rounded-b-xl">
+          <div class="flex items-start gap-3">
+            <span class="text-xl">⚠️</span>
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-yellow-800">Tagihan yang sudah ada TIDAK otomatis update</p>
+              <p class="text-xs text-yellow-700 mt-1">
+                Setelah simpan nominal baru, tagihan IPL/Kedukaan yang sudah di-generate sebelumnya
+                tetap pakai harga lama. Klik tombol di bawah untuk update nominal SEMUA tagihan
+                yang masih <strong>"Belum Bayar"</strong> dengan harga baru.
+              </p>
+              <button
+                @click="applyNominalKeTagihan"
+                class="mt-3 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded-lg font-medium flex items-center gap-2"
+                :disabled="applying"
+              >
+                <span v-if="applying" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                🔄 Apply Nominal Baru ke Tagihan Belum Bayar
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -194,6 +217,7 @@
 import { ref, computed, onMounted, h, defineComponent } from 'vue'
 import { useToast } from 'vue-toastification'
 import { useSettingsStore } from '@/stores/settings'
+import api from '@/services/api'
 
 const toast = useToast()
 const settings = useSettingsStore()
@@ -229,6 +253,24 @@ const form = ref({ ...settings.settings })
 const original = ref({ ...settings.settings })
 const saving = ref(false)
 const uploading = ref(false)
+const applying = ref(false)
+
+async function applyNominalKeTagihan() {
+  const msg = `Update nominal di SEMUA tagihan "Belum Bayar"?\n\n` +
+    `IPL Bulanan → Rp ${Number(form.value.ipl_amount || 0).toLocaleString('id-ID')}\n` +
+    `Uang Kedukaan → Rp ${Number(form.value.kedukaan_amount || 0).toLocaleString('id-ID')}\n\n` +
+    `Pastikan nominal di atas sudah benar dan sudah di-Simpan dulu sebelum klik ini.`
+  if (!confirm(msg)) return
+  applying.value = true
+  try {
+    const res = await api.post('/admin/settings/update-tagihan-nominal')
+    toast.success(res.data?.message || 'Nominal tagihan berhasil di-update.')
+  } catch (e) {
+    toast.error(e.response?.data?.message ?? 'Gagal update nominal.')
+  } finally {
+    applying.value = false
+  }
+}
 
 const hasChanges = computed(() => {
   return JSON.stringify(form.value) !== JSON.stringify(original.value)
@@ -321,7 +363,9 @@ const ColorPicker = defineComponent({
 })
 
 onMounted(async () => {
+  // Load public settings dulu (untuk theme apply) + all settings (untuk nominal IPL dll)
   await settings.loadPublicSettings()
+  await settings.loadAllSettings()
   form.value = { ...settings.settings }
   original.value = { ...settings.settings }
 })
