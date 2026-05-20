@@ -4,8 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Notifikasi;
+use App\Models\User;
+use App\Services\NotifikasiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification;
+use Kreait\Laravel\Firebase\Facades\Firebase;
 
 class NotifikasiController extends Controller
 {
@@ -54,5 +59,65 @@ class NotifikasiController extends Controller
         $notifikasi->delete();
 
         return response()->json(['message' => 'Notifikasi dihapus.']);
+    }
+
+    /**
+     * Test push notification — super_admin only.
+     * Body: { user_id?: int, judul?: string, pesan?: string }
+     * Kalau user_id kosong → kirim ke diri sendiri.
+     */
+    public function testPush(Request $request): JsonResponse
+    {
+        $caller = $request->user();
+        if ($caller->role !== 'super_admin') {
+            return response()->json(['message' => 'Hanya super_admin.'], 403);
+        }
+
+        $targetUserId = (int) ($request->input('user_id') ?? $caller->id);
+        $user = User::find($targetUserId);
+        if (!$user) {
+            return response()->json(['message' => 'User tidak ditemukan.'], 404);
+        }
+        if (!$user->fcm_token) {
+            return response()->json([
+                'message' => 'User belum punya fcm_token. Pastikan user login lewat mobile app dulu.',
+                'user' => ['id' => $user->id, 'name' => $user->name],
+            ], 422);
+        }
+
+        $judul = $request->input('judul') ?? '🔔 Test Notifikasi IPL';
+        $pesan = $request->input('pesan') ?? 'Halo ' . $user->name . '! Ini test push notification dari backend. Kalau muncul + bunyi, FCM sudah jalan ✅';
+
+        try {
+            $message = CloudMessage::withTarget('token', $user->fcm_token)
+                ->withNotification(Notification::create($judul, $pesan))
+                ->withData([
+                    'type' => 'test',
+                    'sent_at' => now()->toIso8601String(),
+                ]);
+
+            $response = Firebase::messaging()->send($message);
+
+            // Simpan ke tabel notifikasi juga
+            Notifikasi::create([
+                'user_id' => $user->id,
+                'judul' => $judul,
+                'pesan' => $pesan,
+                'tipe' => 'test',
+                'data' => ['from' => $caller->name],
+            ]);
+
+            return response()->json([
+                'message' => 'Push notification terkirim! Cek HP user.',
+                'target_user' => ['id' => $user->id, 'name' => $user->name],
+                'fcm_response' => $response,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Test FCM error: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Gagal kirim FCM: ' . $e->getMessage(),
+                'hint' => 'Cek apakah FIREBASE_CREDENTIALS di .env benar pathnya & file ada.',
+            ], 500);
+        }
     }
 }

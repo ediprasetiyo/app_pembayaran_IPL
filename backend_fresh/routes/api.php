@@ -102,6 +102,9 @@ Route::prefix('v1')->group(function () {
             // Reset tagihan untuk testing (super_admin only)
             Route::post('/tagihan/{tagihan}/reset', [IplController::class, 'resetTagihan']);
 
+            // Test FCM push notification (super_admin only)
+            Route::post('/test-push', [NotifikasiController::class, 'testPush']);
+
             // Settings management
             Route::get('/settings', [SettingsController::class, 'index']);
             Route::put('/settings/{key}', [SettingsController::class, 'update']);

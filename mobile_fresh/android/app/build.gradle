@@ -40,11 +40,12 @@ android {
         }
     }
 
-    // Custom APK output filename
-    applicationVariants.all { variant ->
-        variant.outputs.all {
-            outputFileName = "IPL_Griya_Pesona_Madani.apk"
-        }
+}
+
+// Custom APK output filename (AGP 8+) — rename via task copy after assemble
+android.applicationVariants.configureEach { variant ->
+    variant.outputs.configureEach { output ->
+        output.outputFileName = "IPL_Griya_Pesona_Madani.apk"
     }
 }
 

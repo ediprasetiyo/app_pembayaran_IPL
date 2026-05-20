@@ -64,6 +64,9 @@
               </td>
               <td class="text-gray-500 text-xs">{{ formatDate(u.created_at) }}</td>
               <td class="text-right">
+                <button @click="testPush(u)" class="text-blue-600 hover:underline text-sm mr-3" title="Kirim test push notification ke HP user ini">
+                  🔔 Test Push
+                </button>
                 <RouterLink :to="`/users/${u.id}/edit`" class="text-primary-700 hover:underline text-sm mr-3">Edit</RouterLink>
                 <button v-if="u.id !== auth.user.id" @click="hapus(u)" class="text-red-600 hover:underline text-sm">Hapus</button>
               </td>
@@ -102,6 +105,16 @@ async function loadUsers() {
     toast.error('Gagal memuat user.')
   } finally {
     loading.value = false
+  }
+}
+
+async function testPush(u) {
+  if (!confirm(`Kirim test push notification ke HP "${u.name}"?\n\nPastikan user sudah login mobile app dulu.`)) return
+  try {
+    const res = await api.post('/admin/test-push', { user_id: u.id })
+    toast.success(res.data?.message || 'Push terkirim! Cek HP user.')
+  } catch (e) {
+    toast.error(e.response?.data?.message ?? 'Gagal kirim push.')
   }
 }
 
