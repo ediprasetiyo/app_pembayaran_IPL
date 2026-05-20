@@ -296,6 +296,15 @@ function getLogoUrl(url) {
 async function onLogoUpload(e) {
   const file = e.target.files[0]
   if (!file) return
+
+  // Validasi client-side dulu biar gak waste request
+  const maxBytes = 2 * 1024 * 1024
+  if (file.size > maxBytes) {
+    toast.error(`Ukuran logo terlalu besar (${(file.size / 1024 / 1024).toFixed(2)} MB). Max 2 MB.`)
+    e.target.value = ''
+    return
+  }
+
   uploading.value = true
   try {
     const url = await settings.uploadLogo(file)
@@ -303,7 +312,19 @@ async function onLogoUpload(e) {
     original.value.logo_url = url
     toast.success('Logo berhasil diupload!')
   } catch (err) {
-    toast.error(err.response?.data?.message ?? 'Gagal upload logo.')
+    // Tampilkan detail error supaya gampang diagnose
+    const status = err.response?.status
+    const msg = err.response?.data?.message
+    const errors = err.response?.data?.errors
+    let detail = msg ?? err.message
+    if (errors && typeof errors === 'object') {
+      const firstField = Object.entries(errors)[0]
+      if (firstField && Array.isArray(firstField[1])) {
+        detail = firstField[1][0]
+      }
+    }
+    toast.error(`Gagal upload logo${status ? ` (${status})` : ''}: ${detail}`, { timeout: 6000 })
+    console.error('Logo upload error:', err.response?.data || err)
   } finally {
     uploading.value = false
     e.target.value = ''

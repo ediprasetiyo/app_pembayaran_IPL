@@ -92,14 +92,14 @@ export const useSettingsStore = defineStore('settings', () => {
   }
 
   /**
-   * Upload logo file
+   * Upload logo file.
+   * NOTE: jangan set 'Content-Type' manual — axios/browser yang set
+   * dengan boundary multipart yang benar. Manual set bikin server gagal parse.
    */
   async function uploadLogo(file) {
     const fd = new FormData()
     fd.append('logo', file)
-    const res = await api.post('/admin/settings/logo', fd, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    const res = await api.post('/admin/settings/logo', fd)
     settings.value.logo_url = res.data.url
     localStorage.setItem('app_settings', JSON.stringify(settings.value))
     return res.data.url
