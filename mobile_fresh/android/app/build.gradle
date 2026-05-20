@@ -42,10 +42,26 @@ android {
 
 }
 
-// Custom APK output filename (AGP 8+) — rename via task copy after assemble
-android.applicationVariants.configureEach { variant ->
-    variant.outputs.configureEach { output ->
-        output.outputFileName = "IPL_Griya_Pesona_Madani.apk"
+// Rename APK setelah build selesai (AGP 8 compatible).
+// Pakai doLast pada assembleRelease/assembleDebug → guaranteed rename.
+afterEvaluate {
+    ['assembleRelease', 'assembleDebug'].each { taskName ->
+        tasks.findByName(taskName)?.doLast {
+            def apkDir = file("${project.buildDir}/outputs/flutter-apk")
+            if (!apkDir.exists()) return
+            apkDir.listFiles()?.each { f ->
+                if (f.name == 'app-release.apk' || f.name == 'app-debug.apk') {
+                    def newName = (f.name == 'app-release.apk')
+                        ? 'IPL_Griya_Pesona_Madani.apk'
+                        : 'IPL_Griya_Pesona_Madani-debug.apk'
+                    def dest = new File(apkDir, newName)
+                    if (dest.exists()) dest.delete()
+                    if (f.renameTo(dest)) {
+                        println "✓ APK renamed → ${newName}"
+                    }
+                }
+            }
+        }
     }
 }
 

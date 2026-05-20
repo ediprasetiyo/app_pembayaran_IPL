@@ -81,6 +81,10 @@ $files = [
         => $basePath . '/config/firebase.php',
     'backend_fresh/routes/api.php'
         => $basePath . '/routes/api.php',
+
+    // Self-update: deploy.php update dirinya sendiri biar file list selalu sinkron
+    'backend_fresh/public/deploy.php'
+        => '/home/dszgofcr/public_html/deploy.php',
 ];
 
 $success = 0;
