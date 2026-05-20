@@ -254,6 +254,58 @@ class _TagihanItem extends StatelessWidget {
       }
     }
 
+    // Tampilkan breakdown sebelum buka WebView — transparan ke user
+    final breakdown = result['breakdown'];
+    if (breakdown is Map) {
+      final fmt = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+      final nominal = (breakdown['nominal'] ?? 0) is num ? breakdown['nominal'] as num : 0;
+      final denda = (breakdown['denda'] ?? 0) is num ? breakdown['denda'] as num : 0;
+      final biayaAdmin = (breakdown['biaya_admin'] ?? 0) is num ? breakdown['biaya_admin'] as num : 0;
+      final total = (breakdown['total'] ?? 0) is num ? breakdown['total'] as num : 0;
+
+      final lanjut = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.receipt_long, color: AppTheme.primaryColor),
+              SizedBox(width: 8),
+              Text('Rincian Pembayaran'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _breakdownRow('IPL ${tagihan.namaBulan} ${tagihan.tahun}', fmt.format(nominal)),
+              if (denda > 0) _breakdownRow('Denda Keterlambatan', fmt.format(denda), color: AppTheme.errorColor),
+              if (biayaAdmin > 0) _breakdownRow('Biaya Admin Transaksi', fmt.format(biayaAdmin), color: AppTheme.textSecondary),
+              const Divider(height: 20),
+              _breakdownRow('TOTAL', fmt.format(total), bold: true, big: true),
+              const SizedBox(height: 8),
+              const Text(
+                'Biaya admin sudah termasuk fee Midtrans (VA/QRIS/GoPay).',
+                style: TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Lanjut Bayar'),
+            ),
+          ],
+        ),
+      );
+      if (lanjut != true) return;
+    }
+
+    if (!context.mounted) return;
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -262,6 +314,35 @@ class _TagihanItem extends StatelessWidget {
           orderId: result['pembayaran']?['order_id'] ?? '',
           pembayaranId: pembayaranId,
         ),
+      ),
+    );
+  }
+
+  static Widget _breakdownRow(String label, String value, {bool bold = false, bool big = false, Color? color}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: big ? 14 : 13,
+                fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+                color: color,
+              ),
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: big ? 16 : 13,
+              fontWeight: bold ? FontWeight.bold : FontWeight.w600,
+              color: bold ? AppTheme.primaryColor : color,
+            ),
+          ),
+        ],
       ),
     );
   }

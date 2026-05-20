@@ -136,35 +136,74 @@ class IplController extends Controller
 
         $orderId = 'IPL-' . $warga->id . '-' . $tagihan->bulan . $tagihan->tahun . '-' . Str::random(6);
 
+        // Biaya admin (di-pass ke user, bukan admin yang tanggung).
+        // Default 4500 (kira-kira cover Midtrans fee untuk VA/QRIS/GoPay).
+        $biayaAdmin = (int) (\App\Models\Setting::get('biaya_admin') ?? 4500);
+
+        // Build item details. Total = nominal tagihan + denda + biaya admin
+        $items = [
+            [
+                'id' => 'IPL-' . $tagihan->bulan . '-' . $tagihan->tahun,
+                'price' => (int) $tagihan->nominal,
+                'quantity' => 1,
+                'name' => "IPL {$tagihan->nama_bulan} {$tagihan->tahun}",
+            ],
+        ];
+
+        if ((int) $tagihan->denda > 0) {
+            $items[] = [
+                'id' => 'DENDA-' . $tagihan->id,
+                'price' => (int) $tagihan->denda,
+                'quantity' => 1,
+                'name' => 'Denda Keterlambatan',
+            ];
+        }
+
+        if ($biayaAdmin > 0) {
+            $items[] = [
+                'id' => 'ADMIN-FEE',
+                'price' => $biayaAdmin,
+                'quantity' => 1,
+                'name' => 'Biaya Admin Transaksi',
+            ];
+        }
+
+        // Gross amount = jumlah semua item (Midtrans validate ini harus = sum item_details)
+        $grossAmount = (int) $tagihan->total_tagihan + $biayaAdmin;
+
         $snapData = $this->midtrans->createTransaction([
             'order_id' => $orderId,
-            'gross_amount' => $tagihan->total_tagihan,
+            'gross_amount' => $grossAmount,
             'customer_details' => [
                 'first_name' => $request->user()->name,
                 'phone' => $request->user()->phone,
             ],
-            'item_details' => [[
-                'id' => 'IPL-' . $tagihan->bulan . '-' . $tagihan->tahun,
-                'price' => $tagihan->nominal,
-                'quantity' => 1,
-                'name' => "IPL {$tagihan->nama_bulan} {$tagihan->tahun}",
-            ]],
+            'item_details' => $items,
         ]);
 
         $pembayaran = Pembayaran::create([
             'tagihan_id' => $tagihan->id,
             'warga_id' => $warga->id,
             'order_id' => $orderId,
-            'nominal' => $tagihan->total_tagihan,
+            'nominal' => $grossAmount, // simpan TOTAL yang user bayar (sudah include biaya admin)
             'midtrans_snap_token' => $snapData['token'],
             'midtrans_redirect_url' => $snapData['redirect_url'],
             'status' => 'pending',
+            'catatan' => $biayaAdmin > 0
+                ? "Termasuk biaya admin Rp " . number_format($biayaAdmin, 0, ',', '.')
+                : null,
         ]);
 
         return response()->json([
             'pembayaran' => $pembayaran,
             'snap_token' => $snapData['token'],
             'redirect_url' => $snapData['redirect_url'],
+            'breakdown' => [
+                'nominal' => (int) $tagihan->nominal,
+                'denda' => (int) $tagihan->denda,
+                'biaya_admin' => $biayaAdmin,
+                'total' => $grossAmount,
+            ],
         ]);
     }
 

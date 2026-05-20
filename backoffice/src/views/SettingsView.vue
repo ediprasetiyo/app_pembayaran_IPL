@@ -165,6 +165,14 @@
             <input v-model="form.kedukaan_amount" type="number" class="input" />
           </div>
           <div class="md:col-span-2">
+            <label class="label">Biaya Admin Transaksi (Rp)</label>
+            <input v-model="form.biaya_admin" type="number" class="input" placeholder="4500" />
+            <p class="text-xs text-gray-400 mt-1">
+              Fee Midtrans yang dibebankan ke warga (bukan admin). Rekomendasi: <strong>4500</strong> untuk cover
+              VA/QRIS/GoPay. Set <strong>0</strong> kalau mau admin yang tanggung.
+            </p>
+          </div>
+          <div class="md:col-span-2">
             <label class="label">Nomor WhatsApp Admin</label>
             <input v-model="form.admin_whatsapp" class="input" placeholder="6281234567890" />
             <p class="text-xs text-gray-400 mt-1">Format internasional tanpa "+". Cth: 6281234567890</p>
