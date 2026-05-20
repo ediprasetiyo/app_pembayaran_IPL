@@ -383,6 +383,7 @@ class _TagihanItem extends StatelessWidget {
                       final code = m['code'].toString();
                       final name = m['name'].toString();
                       final icon = m['icon']?.toString() ?? '💳';
+                      final logoUrl = m['logo_url']?.toString() ?? '';
                       final feeAmount = (m['fee_amount'] ?? 0) is num ? (m['fee_amount'] as num).toInt() : 0;
                       final totalAmount = (m['total_amount'] ?? 0) is num ? (m['total_amount'] as num).toInt() : 0;
                       final feeLabel = m['fee_label']?.toString() ?? '';
@@ -393,7 +394,28 @@ class _TagihanItem extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                           child: Row(
                             children: [
-                              Text(icon, style: const TextStyle(fontSize: 28)),
+                              // Brand logo (network) dengan emoji fallback kalau gagal load
+                              SizedBox(
+                                width: 44,
+                                height: 32,
+                                child: logoUrl.isNotEmpty
+                                    ? Image.network(
+                                        logoUrl,
+                                        fit: BoxFit.contain,
+                                        errorBuilder: (_, __, ___) => Center(
+                                          child: Text(icon, style: const TextStyle(fontSize: 24)),
+                                        ),
+                                        loadingBuilder: (_, child, progress) {
+                                          if (progress == null) return child;
+                                          return Center(
+                                            child: Text(icon, style: const TextStyle(fontSize: 24)),
+                                          );
+                                        },
+                                      )
+                                    : Center(
+                                        child: Text(icon, style: const TextStyle(fontSize: 24)),
+                                      ),
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(

@@ -70,7 +70,17 @@
         </div>
         <div class="divide-y">
           <div v-for="m in items" :key="m.code" class="flex items-center gap-4 px-5 py-4 hover:bg-gray-50">
-            <span class="text-3xl flex-shrink-0">{{ m.icon }}</span>
+            <!-- Brand logo dengan emoji fallback -->
+            <div class="flex-shrink-0 w-12 h-10 flex items-center justify-center bg-gray-50 rounded">
+              <img
+                v-if="m.logo_url"
+                :src="m.logo_url"
+                :alt="m.name"
+                class="max-w-full max-h-full object-contain"
+                @error="$event.target.style.display = 'none'; $event.target.nextElementSibling.style.display='block'"
+              />
+              <span :style="{ display: m.logo_url ? 'none' : 'block' }" class="text-2xl">{{ m.icon }}</span>
+            </div>
             <div class="flex-1 min-w-0">
               <p class="font-semibold text-gray-800">{{ m.name }}</p>
               <p class="text-xs font-mono text-gray-400">{{ m.code }}</p>
