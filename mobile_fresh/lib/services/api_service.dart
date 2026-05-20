@@ -7,10 +7,15 @@ class ApiService {
   factory ApiService() => _instance;
   ApiService._internal();
 
-  late final Dio _dio;
+  late Dio _dio;
+  bool _initialized = false;
   final _storage = const FlutterSecureStorage();
 
   void init() {
+    // Idempotent — panggil berulang aman (singleton)
+    if (_initialized) return;
+    _initialized = true;
+
     _dio = Dio(BaseOptions(
       baseUrl: AppConstants.baseUrl,
       connectTimeout: const Duration(seconds: 30),
