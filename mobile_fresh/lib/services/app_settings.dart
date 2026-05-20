@@ -47,6 +47,15 @@ class AppSettings {
   static String get appName => _data['app_name']?.toString() ?? _defaultAppName;
   static String get brandTitle => _data['brand_title']?.toString() ?? _defaultBrandTitle;
   static String get brandSubtitle => _data['brand_subtitle']?.toString() ?? _defaultBrandSubtitle;
+
+  /// Nama lengkap perumahan untuk dokumen legal / kontak resmi.
+  /// Contoh: "Griya Pesona Madani Tenjo"
+  static String get fullBrandName {
+    final title = brandTitle.trim();
+    final subtitle = brandSubtitle.trim();
+    if (subtitle.isEmpty || title.contains(subtitle)) return title;
+    return '$title $subtitle';
+  }
   static String get footerText => _data['footer_text']?.toString() ?? _defaultFooter;
   static String get logoUrl {
     final url = _data['logo_url']?.toString() ?? '';

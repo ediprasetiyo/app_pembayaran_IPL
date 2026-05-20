@@ -151,9 +151,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Logo dari backoffice settings (white-label), fallback ke asset
+                  // Ukuran besar untuk kesan profesional & bersih
                   SizedBox(
-                    width: 240,
-                    height: 100,
+                    width: 200,
+                    height: 200,
                     child: AppSettings.logoUrl.isNotEmpty
                         ? CachedNetworkImage(
                             imageUrl: AppSettings.logoUrl,
@@ -162,15 +163,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             errorWidget: (_, __, ___) => Image.asset('assets/images/logo.png', fit: BoxFit.contain),
                           )
                         : Image.asset('assets/images/logo.png', fit: BoxFit.contain),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    AppSettings.brandSubtitle,
-                    style: const TextStyle(
-                      color: Color(0xFF757575),
-                      fontSize: 12,
-                      letterSpacing: 1.2,
-                    ),
                   ),
                 ],
               ),

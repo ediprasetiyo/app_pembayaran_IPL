@@ -27,8 +27,9 @@ class TermsScreen extends StatelessWidget {
 
           _intro(
             'Selamat datang di aplikasi ${AppSettings.appName}. '
-            'Aplikasi ini dikelola untuk warga ${AppSettings.brandTitle} ${AppSettings.brandSubtitle} '
-            'untuk memudahkan pembayaran Iuran Pemeliharaan Lingkungan (IPL) dan kebutuhan administrasi RT/perumahan. '
+            'Aplikasi ini dikelola khusus untuk warga Perumahan ${AppSettings.fullBrandName} '
+            'untuk memudahkan pembayaran Iuran Pemeliharaan Lingkungan (IPL), uang kedukaan, '
+            'dan kebutuhan administrasi RT/perumahan lainnya. '
             'Dengan menggunakan aplikasi ini, Anda menyetujui syarat dan ketentuan berikut.',
           ),
 
@@ -39,7 +40,7 @@ class TermsScreen extends StatelessWidget {
                 'Aplikasi ${AppSettings.appName} disediakan kepada Anda, pengguna, dengan syarat Anda menerima '
                 'semua syarat, ketentuan, dan pemberitahuan yang tercantum di dalamnya. '
                 'Aplikasi ini hanya boleh digunakan oleh warga yang terdaftar resmi sebagai penghuni '
-                '${AppSettings.brandTitle}.',
+                'Perumahan ${AppSettings.fullBrandName}.',
           ),
 
           _section(
@@ -147,8 +148,8 @@ class TermsScreen extends StatelessWidget {
                 'Nama : $_businessContact\n'
                 'WhatsApp : $_businessPhone\n'
                 'Aplikasi : ${AppSettings.appName}\n'
-                'Perumahan : ${AppSettings.brandTitle} ${AppSettings.brandSubtitle}\n\n'
-                'Kami akan merespons dalam jam operasional 08:00–21:00 WIB.',
+                'Perumahan : ${AppSettings.fullBrandName}\n\n'
+                'Kami akan merespons dalam jam operasional 10:00–17:00 WIB.',
           ),
 
           const SizedBox(height: 24),
@@ -168,7 +169,7 @@ class TermsScreen extends StatelessWidget {
           const SizedBox(height: 12),
           Center(
             child: Text(
-              '© 2026 ${AppSettings.brandTitle} ${AppSettings.brandSubtitle}\nVersi dokumen: 1.0',
+              '© 2026 Perumahan ${AppSettings.fullBrandName}\nVersi dokumen: 1.0',
               textAlign: TextAlign.center,
               style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
             ),

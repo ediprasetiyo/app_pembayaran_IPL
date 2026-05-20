@@ -76,9 +76,9 @@ class RefundPolicyScreen extends StatelessWidget {
             iconColor: AppSettings.primaryColor,
             title: 'Biaya Refund',
             items: [
-              'Refund nominal pokok: 100% (full refund).',
-              'Biaya admin transaksi Midtrans (jika ada): tidak dapat di-refund (sudah dipotong gateway).',
-              'Biaya transfer bank untuk refund: ditanggung pengelola.',
+              'Refund nominal pokok: 100% (full refund) — dikembalikan oleh Midtrans selaku payment gateway.',
+              'Biaya admin transaksi Midtrans (jika ada): tidak dapat di-refund (sudah dipotong gateway saat transaksi).',
+              'Biaya transfer bank untuk proses refund: ditanggung oleh Midtrans selaku penyedia jasa payment gateway, bukan oleh pengelola RT/perumahan.',
             ],
           ),
 
@@ -109,7 +109,7 @@ class RefundPolicyScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 const Text(
                   'Hubungi admin dengan sertakan Order ID transaksi.\n'
-                  'Jam operasional: 08:00 - 21:00 WIB.',
+                  'Jam operasional: 10:00 - 17:00 WIB.',
                   style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.5),
                 ),
                 const SizedBox(height: 12),
@@ -131,7 +131,7 @@ class RefundPolicyScreen extends StatelessWidget {
           const SizedBox(height: 16),
           Center(
             child: Text(
-              'Berlaku efektif 20 Mei 2026\n© 2026 ${AppSettings.brandTitle} ${AppSettings.brandSubtitle}',
+              'Berlaku efektif 20 Mei 2026\n© 2026 Perumahan ${AppSettings.fullBrandName}',
               textAlign: TextAlign.center,
               style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
             ),

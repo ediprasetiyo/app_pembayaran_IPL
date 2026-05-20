@@ -38,7 +38,15 @@
               :disabled="uploading"
               class="block w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
             />
-            <p class="text-xs text-gray-400 mt-2">Format: JPG, PNG, WebP, SVG. Max 2MB. Recommend ukuran square (1:1).</p>
+            <p class="text-xs text-gray-400 mt-2">Format: PNG (transparent recommended), JPG, WebP, SVG. Max 2MB.</p>
+            <div class="text-xs text-gray-500 mt-2 space-y-0.5 bg-blue-50 border border-blue-200 rounded-md p-2">
+              <p class="font-semibold text-blue-800">📐 Rekomendasi ukuran logo:</p>
+              <p>• <strong>512 × 512 px</strong> (square, paling fleksibel) — direkomendasikan</p>
+              <p>• <strong>1024 × 1024 px</strong> (high-res untuk display besar)</p>
+              <p>• Aspect ratio 1:1 (persegi) — supaya tampil rapi di splash, header, sidebar, dan launcher icon</p>
+              <p>• Background transparan (PNG) supaya menyatu dengan tema warna apapun</p>
+              <p class="text-blue-700 italic">Catatan: logo dengan teks panjang (banner-style) akan terpotong di Android 12+ splash screen circular mask.</p>
+            </div>
             <p v-if="uploading" class="text-xs text-primary-600 mt-1">Mengupload...</p>
           </div>
         </div>
