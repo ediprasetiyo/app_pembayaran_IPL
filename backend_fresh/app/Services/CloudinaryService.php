@@ -27,7 +27,12 @@ class CloudinaryService
         $this->cloudName = (string) config('services.cloudinary.cloud_name', env('CLOUDINARY_CLOUD_NAME', ''));
         $this->apiKey = (string) config('services.cloudinary.api_key', env('CLOUDINARY_API_KEY', ''));
         $this->apiSecret = (string) config('services.cloudinary.api_secret', env('CLOUDINARY_API_SECRET', ''));
-        $this->http = new Client(['timeout' => 30]);
+        // Timeout pendek supaya kalau Cloudinary slow/down → fail-fast,
+        // fallback ke local storage yang dipanggil di controller.
+        $this->http = new Client([
+            'timeout' => 10,
+            'connect_timeout' => 5,
+        ]);
     }
 
     public function isConfigured(): bool

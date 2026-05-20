@@ -21,7 +21,10 @@ return [
 
             'http_client_options' => [
                 'proxy' => null,
-                'timeout' => 30.0,
+                // Timeout pendek supaya request tidak hang lama kalau Firebase lambat
+                // (penting karena FCM dipanggil dari API request yang user tunggu).
+                'timeout' => 5.0,
+                'connect_timeout' => 3.0,
                 'guzzle_middlewares' => [],
             ],
         ],

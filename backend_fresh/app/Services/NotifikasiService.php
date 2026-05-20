@@ -118,13 +118,20 @@ class NotifikasiService
             return;
         }
 
+        // Skip FCM kalau Firebase credentials belum di-setup (env kosong)
+        // — supaya request tidak hang nunggu HTTP error.
+        if (!env('FIREBASE_CREDENTIALS')) {
+            return;
+        }
+
         try {
             $message = CloudMessage::withTarget('token', $user->fcm_token)
                 ->withNotification(Notification::create($judul, $pesan));
 
             Firebase::messaging()->send($message);
-        } catch (\Exception $e) {
-            logger()->error('FCM Error: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            // Log saja, jangan crash request user
+            logger()->warning('FCM kirim gagal untuk user ' . $user->id . ': ' . $e->getMessage());
         }
     }
 }

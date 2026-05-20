@@ -14,7 +14,10 @@ class ApiService {
     _dio = Dio(BaseOptions(
       baseUrl: AppConstants.baseUrl,
       connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 30),
+      // Receive timeout longer karena upload pengaduan/avatar
+      // bisa makan waktu (multipart + Cloudinary fallback).
+      receiveTimeout: const Duration(seconds: 60),
+      sendTimeout: const Duration(seconds: 60),
       headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
     ));
 
