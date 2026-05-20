@@ -73,6 +73,20 @@ $files = [
         => $basePath . '/app/Console/Kernel.php',
     'backend_fresh/app/Http/Controllers/Api/NotifikasiController.php'
         => $basePath . '/app/Http/Controllers/Api/NotifikasiController.php',
+    'backend_fresh/app/Http/Controllers/Api/BlokController.php'
+        => $basePath . '/app/Http/Controllers/Api/BlokController.php',
+    'backend_fresh/app/Http/Controllers/Api/AuditLogController.php'
+        => $basePath . '/app/Http/Controllers/Api/AuditLogController.php',
+    'backend_fresh/app/Models/Blok.php'
+        => $basePath . '/app/Models/Blok.php',
+    'backend_fresh/app/Models/AuditLog.php'
+        => $basePath . '/app/Models/AuditLog.php',
+    'backend_fresh/app/Services/AuditLogger.php'
+        => $basePath . '/app/Services/AuditLogger.php',
+    'backend_fresh/database/migrations/2026_05_20_000001_create_bloks_table.php'
+        => $basePath . '/database/migrations/2026_05_20_000001_create_bloks_table.php',
+    'backend_fresh/database/migrations/2026_05_20_000002_create_audit_logs_table.php'
+        => $basePath . '/database/migrations/2026_05_20_000002_create_audit_logs_table.php',
     'backend_fresh/app/Services/CloudinaryService.php'
         => $basePath . '/app/Services/CloudinaryService.php',
     'backend_fresh/config/services.php'
@@ -85,6 +99,8 @@ $files = [
     // Self-update: deploy.php update dirinya sendiri biar file list selalu sinkron
     'backend_fresh/public/deploy.php'
         => '/home/dszgofcr/public_html/deploy.php',
+    'backend_fresh/public/run-migration.php'
+        => '/home/dszgofcr/public_html/run-migration.php',
 ];
 
 $success = 0;

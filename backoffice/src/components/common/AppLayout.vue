@@ -95,6 +95,8 @@ import {
   ShieldCheckIcon,
   MegaphoneIcon,
   Cog6ToothIcon,
+  Squares2X2Icon,
+  ClipboardDocumentListIcon,
 } from '@heroicons/vue/24/outline'
 import dayjs from 'dayjs'
 import 'dayjs/locale/id'
@@ -126,6 +128,10 @@ const navItems = [
   { to: '/laporan', label: 'Laporan', icon: ChartBarIcon,
     roles: ['super_admin', 'admin', 'bendahara'] },
   { to: '/users', label: 'Manajemen User', icon: ShieldCheckIcon,
+    roles: ['super_admin'] },
+  { to: '/bloks', label: 'Manajemen Blok', icon: Squares2X2Icon,
+    roles: ['super_admin'] },
+  { to: '/audit-log', label: 'Audit Log', icon: ClipboardDocumentListIcon,
     roles: ['super_admin'] },
   { to: '/settings', label: 'Pengaturan', icon: Cog6ToothIcon,
     roles: ['super_admin'] },

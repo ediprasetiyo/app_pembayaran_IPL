@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Services\AuditLogger;
 use App\Services\CloudinaryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -83,6 +84,13 @@ class SettingsController extends Controller
         foreach ($request->settings as $key => $value) {
             Setting::set($key, $value);
         }
+
+        AuditLogger::log(
+            action: 'settings_updated',
+            description: "Settings updated: " . implode(', ', array_keys($request->settings)),
+            newValues: $request->settings,
+            severity: 'info',
+        );
 
         return response()->json([
             'message' => count($request->settings) . ' setting berhasil diperbarui.',

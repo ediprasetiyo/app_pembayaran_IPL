@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pengaduan;
+use App\Services\AuditLogger;
 use App\Services\CloudinaryService;
 use App\Services\NotifikasiService;
 use Illuminate\Http\JsonResponse;
@@ -171,7 +172,15 @@ class PengaduanController extends Controller
             }
         }
 
+        $oldData = $pengaduan->toArray();
         $pengaduan->delete();
+
+        AuditLogger::log(
+            action: 'pengaduan_deleted',
+            description: "Pengaduan dihapus: '{$oldData['judul']}' oleh {$user->name}",
+            oldValues: $oldData,
+            severity: 'warning',
+        );
 
         return response()->json([
             'message' => 'Pengaduan berhasil dihapus.',

@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\AiAssistantController;
+use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BlokController;
 use App\Http\Controllers\Api\IplController;
 use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\NotifikasiController;
@@ -112,6 +114,14 @@ Route::prefix('v1')->group(function () {
             Route::post('/settings/bulk', [SettingsController::class, 'updateBulk']);
             Route::post('/settings/logo', [SettingsController::class, 'uploadLogo']);
             Route::post('/settings/update-tagihan-nominal', [SettingsController::class, 'updateTagihanNominal']);
+
+            // Multi-blok management
+            Route::apiResource('/bloks', BlokController::class);
+
+            // Audit log viewer
+            Route::get('/audit-logs', [AuditLogController::class, 'index']);
+            Route::get('/audit-logs/stats', [AuditLogController::class, 'stats']);
+            Route::delete('/audit-logs/cleanup', [AuditLogController::class, 'cleanup']);
         });
     });
 });

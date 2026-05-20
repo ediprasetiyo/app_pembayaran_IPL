@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Notifikasi;
 use App\Models\User;
+use App\Services\AuditLogger;
 use App\Services\CloudinaryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,12 +24,24 @@ class AuthController extends Controller
         $user = User::where('phone', $request->phone)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
+            // Audit log login gagal — warning severity
+            AuditLogger::log(
+                action: 'login_failed',
+                description: "Login gagal untuk phone: {$request->phone}",
+                severity: 'warning',
+            );
             throw ValidationException::withMessages([
                 'phone' => ['Nomor telepon atau password salah.'],
             ]);
         }
 
         if (! $user->is_active) {
+            AuditLogger::log(
+                action: 'login_blocked',
+                description: "User {$user->name} ({$user->phone}) coba login tapi akun nonaktif",
+                severity: 'warning',
+                userId: $user->id,
+            );
             return response()->json([
                 'message' => 'Akun Anda tidak aktif. Hubungi admin.',
             ], 403);
@@ -42,6 +55,12 @@ class AuthController extends Controller
 
         // Load relasi lengkap agar mobile dapat data warga + anggota keluarga
         $user->load('warga.anggotaKeluarga');
+
+        AuditLogger::log(
+            action: 'login',
+            description: "User {$user->name} ({$user->role}) login berhasil",
+            userId: $user->id,
+        );
 
         return response()->json([
             'token' => $token,

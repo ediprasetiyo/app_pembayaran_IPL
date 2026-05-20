@@ -7,6 +7,7 @@ use App\Models\IplTagihan;
 use App\Models\Notifikasi;
 use App\Models\Pembayaran;
 use App\Models\TarifIpl;
+use App\Services\AuditLogger;
 use App\Services\MidtransService;
 use App\Services\NotifikasiService;
 use Illuminate\Http\JsonResponse;
@@ -249,6 +250,15 @@ class IplController extends Controller
                 'status' => 'sudah_bayar',
                 'tanggal_bayar' => now(),
             ]);
+
+            AuditLogger::log(
+                action: 'payment_success',
+                description: "Pembayaran sukses: order {$orderId}, nominal Rp " . number_format($pembayaran->nominal, 0, ',', '.') . " via " . ($payload['payment_type'] ?? 'midtrans'),
+                model: $pembayaran,
+                newValues: ['status' => 'success', 'payment_type' => $payload['payment_type'] ?? null],
+                severity: 'info',
+                userId: $pembayaran->warga?->user_id,
+            );
 
             // Kalau jenis kedukaan → tandai warga sudah bayar kedukaan
             if ($tagihan->jenis === 'kedukaan') {
