@@ -440,9 +440,9 @@ class _FormPengaduanScreenState extends State<_FormPengaduanScreen> {
   }
 
   Future<void> _pickImage() async {
-    if (_fotoPaths.length >= 3) {
+    if (_fotoPaths.length >= 1) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Maksimal 3 foto.')),
+        const SnackBar(content: Text('Hanya boleh upload 1 foto. Hapus dulu foto sebelumnya kalau mau ganti.')),
       );
       return;
     }
@@ -556,7 +556,7 @@ class _FormPengaduanScreenState extends State<_FormPengaduanScreen> {
                   style: TextStyle(fontWeight: FontWeight.w600)),
               const SizedBox(height: 4),
               const Text(
-                'Maksimal 3 foto, ukuran tiap foto max 2 MB',
+                'Maksimal 1 foto, ukuran maksimal 2 MB',
                 style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
               ),
               const SizedBox(height: 10),
@@ -600,7 +600,7 @@ class _FormPengaduanScreenState extends State<_FormPengaduanScreen> {
                           ),
                         ],
                       )),
-                  if (_fotoPaths.length < 3)
+                  if (_fotoPaths.length < 1)
                     GestureDetector(
                       onTap: _pickImage,
                       child: Container(

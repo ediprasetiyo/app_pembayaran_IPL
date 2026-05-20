@@ -40,7 +40,7 @@ class PengaduanController extends Controller
             'judul' => 'required|string|max:200',
             'deskripsi' => 'required|string',
             'kategori' => 'required|in:infrastruktur,kebersihan,keamanan,fasilitas,sosial,lainnya',
-            'foto' => 'nullable|array|max:3',
+            'foto' => 'nullable|array|max:1',
             'foto.*' => 'image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
