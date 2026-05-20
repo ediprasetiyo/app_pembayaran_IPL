@@ -153,11 +153,11 @@ class IplController extends Controller
         ]);
 
         // Kalau user pilih method spesifik dari mobile, batalkan pending lama
-        // (karena fee bisa beda per method)
+        // (karena fee bisa beda per method). Status 'cancel' valid di enum.
         if ($request->payment_method) {
             Pembayaran::where('tagihan_id', $tagihan->id)
                 ->where('status', 'pending')
-                ->update(['status' => 'cancelled']);
+                ->update(['status' => 'cancel']);
         }
 
         $existingPembayaran = Pembayaran::where('tagihan_id', $tagihan->id)

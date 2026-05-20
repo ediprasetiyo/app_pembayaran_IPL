@@ -93,6 +93,17 @@ class IplProvider extends ChangeNotifier {
           ? response.data as Map<String, dynamic>
           : null;
     } catch (e) {
+      // Extract error message dari response kalau ada
+      try {
+        final response = (e as dynamic).response;
+        if (response != null && response.data is Map) {
+          final msg = response.data['message'];
+          if (msg is String && msg.isNotEmpty) {
+            _error = msg;
+            return null;
+          }
+        }
+      } catch (_) {}
       _error = e.toString();
       return null;
     }
