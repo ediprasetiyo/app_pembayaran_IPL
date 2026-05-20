@@ -8,6 +8,8 @@ import '../../providers/auth_provider.dart';
 import '../../providers/ipl_provider.dart';
 import '../../providers/news_provider.dart';
 import '../../providers/notifikasi_provider.dart';
+import '../../services/api_service.dart';
+import '../../services/app_settings.dart';
 import '../../utils/app_theme.dart';
 import '../news/news_detail_screen.dart';
 import '../notification/notification_screen.dart';
@@ -37,10 +39,14 @@ class _DashboardTabState extends State<DashboardTab> {
 
   Future<void> _refresh() async {
     await Future.wait([
+      // Reload data utama
       context.read<IplProvider>().loadTagihanBulanIni(),
       context.read<IplProvider>().loadTunggakan(),
       context.read<NewsProvider>().fetchLatest(),
       context.read<NotifikasiProvider>().load(),
+      // Refresh white-label settings (logo, warna, nama) dari backoffice
+      // → kalau super admin update branding, mobile auto-update setelah pull-to-refresh
+      appSettingsNotifier.refresh(),
     ]);
   }
 
@@ -102,14 +108,28 @@ class _DashboardTabState extends State<DashboardTab> {
 
   // ============== HEADER ==============
   Widget _buildHeader(dynamic user, int unreadNotif) {
+    // Pakai warna dari AppSettings (dinamis dari backoffice)
+    final primary = AppSettings.primaryColor;
+    final primaryDark = AppSettings.primaryDarkColor;
+
+    // Avatar URL — kalau ada user.avatar, pakai network image
+    final hasAvatar = user?.avatar != null && (user.avatar as String).isNotEmpty;
+    String? avatarUrl;
+    if (hasAvatar) {
+      final raw = user.avatar as String;
+      avatarUrl = raw.startsWith('http')
+          ? raw
+          : 'https://ipl-griya-pesona-madani.my.id$raw';
+    }
+
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF388E3C)],
+          colors: [primaryDark, primary, primary.withOpacity(0.85)],
         ),
-        borderRadius: BorderRadius.only(
+        borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(32),
           bottomRight: Radius.circular(32),
         ),
@@ -123,19 +143,66 @@ class _DashboardTabState extends State<DashboardTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Brand bar — logo + nama perumahan (sinkron dengan backoffice)
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.all(3),
+                child: AppSettings.logoUrl.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: AppSettings.logoUrl,
+                        fit: BoxFit.contain,
+                        errorWidget: (_, __, ___) => Image.asset('assets/images/logo.png'),
+                      )
+                    : Image.asset('assets/images/logo.png'),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppSettings.brandTitle,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      AppSettings.brandSubtitle,
+                      style: const TextStyle(color: Colors.white70, fontSize: 11),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           Row(
             children: [
               CircleAvatar(
-                radius: 22,
+                radius: 24,
                 backgroundColor: Colors.white,
-                child: Text(
-                  (user?.name.isNotEmpty == true ? user!.name[0] : 'W').toUpperCase(),
-                  style: TextStyle(
-                    color: AppTheme.primaryColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
-                ),
+                backgroundImage: avatarUrl != null
+                    ? CachedNetworkImageProvider(avatarUrl)
+                    : null,
+                child: !hasAvatar
+                    ? Text(
+                        (user?.name.isNotEmpty == true ? user!.name[0] : 'W').toUpperCase(),
+                        style: TextStyle(
+                          color: primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      )
+                    : null,
               ),
               const SizedBox(width: 12),
               Expanded(

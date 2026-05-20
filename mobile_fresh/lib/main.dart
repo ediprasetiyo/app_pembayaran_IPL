@@ -70,9 +70,11 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => NewsProvider()),
         ChangeNotifierProvider(create: (_) => NotifikasiProvider()),
         ChangeNotifierProvider(create: (_) => PengaduanProvider()),
+        // White-label settings reactive notifier — UI rebuild kalau settings berubah
+        ChangeNotifierProvider.value(value: appSettingsNotifier),
       ],
-      child: Consumer2<LocaleProvider, AuthProvider>(
-        builder: (context, localeProvider, authProvider, _) {
+      child: Consumer3<LocaleProvider, AuthProvider, AppSettingsNotifier>(
+        builder: (context, localeProvider, authProvider, _, __) {
           return MaterialApp(
             title: AppSettings.appName,
             debugShowCheckedModeBanner: false,

@@ -1,7 +1,24 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
+
+/// Notifier untuk reactive update — UI yang Consumer<AppSettingsNotifier>
+/// otomatis rebuild ketika settings berubah (pull-to-refresh, dll).
+class AppSettingsNotifier extends ChangeNotifier {
+  /// Force rebuild semua widget yang Consumer.
+  void notify() => notifyListeners();
+
+  /// Refresh settings dari backend & notify.
+  Future<void> refresh() async {
+    await AppSettings.refreshFromNetwork();
+    notifyListeners();
+  }
+}
+
+/// Singleton instance untuk akses global.
+final appSettingsNotifier = AppSettingsNotifier();
 
 /// White-label settings yang loaded dari backend (/settings/public).
 /// Setelah load, value bisa diakses lewat static getter:
@@ -63,7 +80,7 @@ class AppSettings {
   }
 
   /// Refresh dari backend — TIDAK boleh di-await di main.dart supaya
-  /// tidak block startup. Hasilnya disimpan ke cache.
+  /// tidak block startup. Hasilnya disimpan ke cache + notify UI rebuild.
   static Future<void> refreshFromNetwork() async {
     try {
       final api = ApiService();
@@ -78,6 +95,8 @@ class AppSettings {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('app_settings_cache', jsonEncode(_data));
         } catch (_) {}
+        // Notify UI untuk rebuild dengan branding baru
+        appSettingsNotifier.notify();
       }
     } catch (e) {
       debugPrint('⚠️ AppSettings network refresh gagal: $e');
