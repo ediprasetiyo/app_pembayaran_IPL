@@ -45,26 +45,28 @@ class AppSettings {
   static Color get primaryLightColor => _parseColor(_data['theme_primary_light']) ?? _defaultPrimaryLight;
   static Color get accentColor => _parseColor(_data['theme_accent']) ?? _defaultAccent;
 
-  /// Load settings dari backend. Pakai cache SharedPreferences kalau offline.
-  /// Panggil ini sebelum runApp() di main.dart.
-  static Future<void> load() async {
-    // 1. Load dari cache dulu (instant, tanpa network)
+  /// Load settings dari cache LOKAL saja (instant, no network).
+  /// Panggil ini di main.dart sebelum runApp() — fast & guaranteed.
+  /// Network refresh dilakukan via refreshFromNetwork() (fire-and-forget).
+  static Future<void> loadFromCache() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await SharedPreferences.getInstance()
+          .timeout(const Duration(seconds: 2));
       final cached = prefs.getString('app_settings_cache');
       if (cached != null) {
         _data = jsonDecode(cached) as Map<String, dynamic>;
         _loaded = true;
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('⚠️ AppSettings cache load gagal: $e');
+    }
+  }
 
-    // 2. Coba refresh dari network (non-blocking kalau cache sudah ada)
+  /// Refresh dari backend — TIDAK boleh di-await di main.dart supaya
+  /// tidak block startup. Hasilnya disimpan ke cache.
+  static Future<void> refreshFromNetwork() async {
     try {
       final api = ApiService();
-      // init() butuh dipanggil. Tapi mungkin udah dipanggil di AuthProvider.
-      // Untuk safety:
-      try { api.init(); } catch (_) {}
-
       final response = await api.get('/settings/public').timeout(
         const Duration(seconds: 5),
       );
@@ -72,20 +74,25 @@ class AppSettings {
       if (incoming is Map) {
         _data = Map<String, dynamic>.from(incoming);
         _loaded = true;
-
-        // Update cache
         try {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('app_settings_cache', jsonEncode(_data));
         } catch (_) {}
       }
     } catch (e) {
-      debugPrint('⚠️ AppSettings load gagal (pakai cache/default): $e');
+      debugPrint('⚠️ AppSettings network refresh gagal: $e');
     }
   }
 
+  /// Legacy / backward compat — sama dengan loadFromCache + refreshFromNetwork.
+  /// Hanya cache di-await (instant), network refresh fire-and-forget.
+  static Future<void> load() async {
+    await loadFromCache();
+    refreshFromNetwork(); // intentionally not awaited
+  }
+
   /// Reload manual — bisa dipanggil setelah login atau pull-to-refresh.
-  static Future<void> refresh() => load();
+  static Future<void> refresh() => refreshFromNetwork();
 
   static Color? _parseColor(dynamic value) {
     if (value == null) return null;

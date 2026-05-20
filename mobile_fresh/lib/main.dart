@@ -26,22 +26,31 @@ void main() async {
   // Init API service dulu supaya AppSettings bisa pakai
   try { ApiService().init(); } catch (_) {}
 
-  // Load white-label settings dari backend (logo, warna, nama, dll)
-  // — supaya app langsung pakai branding sesuai perumahan ini.
-  await AppSettings.load();
+  // 1. Load settings dari CACHE saja (instant — no network). Awaited.
+  //    Network refresh dilakukan async di background.
+  await AppSettings.loadFromCache();
+  // Fire-and-forget network refresh (tidak block startup)
+  AppSettings.refreshFromNetwork();
 
-  // Init Firebase + FCM. Wrap try-catch supaya app tidak crash kalau
-  // google-services.json belum ada (dev environment).
+  // 2. Init Firebase + FCM — wrap dengan timeout supaya tidak hang
+  //    Kalau gagal/timeout, app tetap jalan (notifikasi cuma tidak aktif).
+  Future(() async {
+    try {
+      await Firebase.initializeApp().timeout(const Duration(seconds: 8));
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+      await NotificationService().initialize().timeout(const Duration(seconds: 8));
+    } catch (e) {
+      debugPrint('⚠️ Firebase init skipped/timeout: $e');
+    }
+  }); // fire-and-forget
+
+  // 3. Load language dari SharedPreferences
+  String language = 'id';
   try {
-    await Firebase.initializeApp();
-    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-    await NotificationService().initialize();
-  } catch (e) {
-    debugPrint('⚠️ Firebase init skipped: $e');
-  }
-
-  final prefs = await SharedPreferences.getInstance();
-  final language = prefs.getString('language') ?? 'id';
+    final prefs = await SharedPreferences.getInstance()
+        .timeout(const Duration(seconds: 2));
+    language = prefs.getString('language') ?? 'id';
+  } catch (_) {}
 
   runApp(MyApp(initialLanguage: language));
 }
