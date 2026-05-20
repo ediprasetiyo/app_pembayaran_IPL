@@ -88,6 +88,9 @@ class NotifikasiController extends Controller
         $judul = $request->input('judul') ?? '🔔 Test Notifikasi IPL';
         $pesan = $request->input('pesan') ?? 'Halo ' . $user->name . '! Ini test push notification dari backend. Kalau muncul + bunyi, FCM sudah jalan ✅';
 
+        // Kirim FCM dulu (yang penting). Simpan ke tabel notifikasi
+        // dilakukan terpisah di try-catch sendiri biar DB error tidak
+        // memask FCM yang sebenarnya sukses.
         try {
             $message = CloudMessage::withTarget('token', $user->fcm_token)
                 ->withNotification(Notification::create($judul, $pesan))
@@ -96,28 +99,33 @@ class NotifikasiController extends Controller
                     'sent_at' => now()->toIso8601String(),
                 ]);
 
-            $response = Firebase::messaging()->send($message);
-
-            // Simpan ke tabel notifikasi juga
-            Notifikasi::create([
-                'user_id' => $user->id,
-                'judul' => $judul,
-                'pesan' => $pesan,
-                'tipe' => 'test',
-                'data' => ['from' => $caller->name],
-            ]);
-
-            return response()->json([
-                'message' => 'Push notification terkirim! Cek HP user.',
-                'target_user' => ['id' => $user->id, 'name' => $user->name],
-                'fcm_response' => $response,
-            ]);
+            $fcmResponse = Firebase::messaging()->send($message);
         } catch (\Throwable $e) {
             \Log::error('Test FCM error: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Gagal kirim FCM: ' . $e->getMessage(),
-                'hint' => 'Cek apakah FIREBASE_CREDENTIALS di .env benar pathnya & file ada.',
+                'hint' => 'Cek FIREBASE_CREDENTIALS di .env benar path-nya & file ada.',
             ], 500);
         }
+
+        // Optional: simpan log notifikasi (best-effort, tidak fatal kalau gagal).
+        // Pakai tipe enum yang valid agar tidak kena truncated warning.
+        try {
+            Notifikasi::create([
+                'user_id' => $user->id,
+                'judul' => $judul,
+                'pesan' => $pesan,
+                'tipe' => 'peringatan', // valid enum: pembayaran, tagihan, peringatan, pengaduan
+                'data' => ['from' => $caller->name, 'test' => true],
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning('Test FCM: simpan log gagal (tidak fatal): ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'message' => '✅ Push terkirim! Cek HP ' . $user->name . ' — notif harus muncul + bunyi.',
+            'target_user' => ['id' => $user->id, 'name' => $user->name],
+            'fcm_response' => $fcmResponse,
+        ]);
     }
 }
