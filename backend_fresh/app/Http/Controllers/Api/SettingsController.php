@@ -98,6 +98,71 @@ class SettingsController extends Controller
     }
 
     /**
+     * Generate signature untuk Cloudinary direct upload dari browser.
+     * Browser upload langsung ke Cloudinary → bypass ModSecurity di shared hosting.
+     */
+    public function cloudinarySignature(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user || !$user->isSuperAdmin()) {
+            return response()->json(['message' => 'Akses ditolak. Super Admin only.'], 403);
+        }
+
+        $folder = $request->input('folder', 'ipl/logos');
+        $cloudName = config('services.cloudinary.cloud_name', env('CLOUDINARY_CLOUD_NAME'));
+        $apiKey = config('services.cloudinary.api_key', env('CLOUDINARY_API_KEY'));
+        $apiSecret = config('services.cloudinary.api_secret', env('CLOUDINARY_API_SECRET'));
+
+        if (!$cloudName || !$apiKey || !$apiSecret) {
+            return response()->json([
+                'message' => 'Cloudinary belum di-setup. Set CLOUDINARY_* di .env server.',
+            ], 422);
+        }
+
+        $timestamp = time();
+        // Params yang ikut signature, alphabetical order
+        $paramsToSign = "folder={$folder}&timestamp={$timestamp}";
+        $signature = sha1($paramsToSign . $apiSecret);
+
+        return response()->json([
+            'cloud_name' => $cloudName,
+            'api_key' => $apiKey,
+            'timestamp' => $timestamp,
+            'signature' => $signature,
+            'folder' => $folder,
+        ]);
+    }
+
+    /**
+     * Simpan URL logo yang sudah ke-upload via direct Cloudinary upload.
+     * Body: { url: string }
+     */
+    public function saveLogoUrl(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user || !$user->isSuperAdmin()) {
+            return response()->json(['message' => 'Akses ditolak. Super Admin only.'], 403);
+        }
+
+        $request->validate([
+            'url' => 'required|url|max:500',
+        ]);
+
+        Setting::set('logo_url', $request->url);
+
+        AuditLogger::log(
+            action: 'logo_updated',
+            description: "Logo aplikasi diubah ke: " . $request->url,
+            newValues: ['logo_url' => $request->url],
+        );
+
+        return response()->json([
+            'message' => 'Logo berhasil diupdate.',
+            'url' => $request->url,
+        ]);
+    }
+
+    /**
      * Update nominal di semua tagihan yang belum_bayar dengan tarif terbaru
      * dari Settings. Berguna setelah admin ubah ipl_amount / kedukaan_amount.
      */

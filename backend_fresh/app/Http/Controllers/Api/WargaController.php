@@ -16,8 +16,19 @@ class WargaController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Warga::with(['user', 'anggotaKeluarga'])
-            ->where('blok', 'E');
+        $query = Warga::with(['user', 'anggotaKeluarga']);
+
+        // Scope by blok berdasarkan role user yang login:
+        // - super_admin: lihat semua blok (atau filter by ?blok=A kalau dipilih)
+        // - admin/bendahara/humas: hanya lihat blok mereka sendiri (dari user.blok_id)
+        $authUser = $request->user();
+        $scopedKode = $authUser->getScopedBlokKode();
+        if ($scopedKode !== null) {
+            $query->where('blok', $scopedKode);
+        } elseif ($request->blok) {
+            // Super admin bisa filter manual via query param
+            $query->where('blok', $request->blok);
+        }
 
         if ($request->search) {
             $query->whereHas('user', function ($q) use ($request) {
@@ -30,7 +41,7 @@ class WargaController extends Controller
             $query->where('is_active', $request->status === 'aktif');
         }
 
-        return response()->json($query->orderBy('nomor_rumah')->paginate(15));
+        return response()->json($query->orderBy('blok')->orderBy('nomor_rumah')->paginate(15));
     }
 
     public function store(Request $request): JsonResponse

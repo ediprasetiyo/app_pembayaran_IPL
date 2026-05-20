@@ -87,6 +87,8 @@ $files = [
         => $basePath . '/database/migrations/2026_05_20_000001_create_bloks_table.php',
     'backend_fresh/database/migrations/2026_05_20_000002_create_audit_logs_table.php'
         => $basePath . '/database/migrations/2026_05_20_000002_create_audit_logs_table.php',
+    'backend_fresh/database/migrations/2026_05_20_000003_add_device_location_to_audit_logs.php'
+        => $basePath . '/database/migrations/2026_05_20_000003_add_device_location_to_audit_logs.php',
     'backend_fresh/app/Services/CloudinaryService.php'
         => $basePath . '/app/Services/CloudinaryService.php',
     'backend_fresh/config/services.php'

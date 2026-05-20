@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Blok;
 use App\Models\User;
+use App\Services\AuditLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -12,10 +14,14 @@ class UserController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = User::query()->orderByDesc('created_at');
+        $query = User::query()->with('blok')->orderByDesc('created_at');
 
         if ($request->role) {
             $query->where('role', $request->role);
+        }
+
+        if ($request->blok_id) {
+            $query->where('blok_id', $request->blok_id);
         }
 
         if ($request->search) {
@@ -41,7 +47,16 @@ class UserController extends Controller
             'email' => 'nullable|email|unique:users,email',
             'password' => 'required|string|min:6',
             'role' => 'required|in:super_admin,admin,bendahara,humas,warga',
+            'blok_id' => 'nullable|exists:bloks,id',
         ]);
+
+        // Super admin TIDAK perlu blok (lihat semua). Selain itu, blok_id wajib
+        // (kecuali warga yang nanti di-assign blok lewat Warga model)
+        if (!in_array($request->role, ['super_admin', 'warga']) && !$request->blok_id) {
+            return response()->json([
+                'message' => "Role {$request->role} wajib dipilihkan blok-nya.",
+            ], 422);
+        }
 
         $user = User::create([
             'name' => $request->name,
@@ -49,8 +64,16 @@ class UserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role,
+            'blok_id' => $request->blok_id,
             'is_active' => true,
         ]);
+
+        AuditLogger::log(
+            action: 'user_created',
+            description: "User baru: {$user->name} ({$user->phone}) role={$user->role}",
+            model: $user,
+            newValues: $user->only(['name', 'phone', 'email', 'role', 'blok_id']),
+        );
 
         return response()->json([
             'message' => 'User berhasil ditambahkan.',
@@ -70,6 +93,7 @@ class UserController extends Controller
             'phone' => 'sometimes|string|unique:users,phone,' . $user->id,
             'email' => 'nullable|email|unique:users,email,' . $user->id,
             'role' => 'sometimes|in:super_admin,admin,bendahara,humas,warga',
+            'blok_id' => 'nullable|exists:bloks,id',
             'is_active' => 'sometimes|boolean',
             'password' => 'nullable|string|min:6',
         ]);
@@ -84,7 +108,7 @@ class UserController extends Controller
             }
         }
 
-        $data = $request->only(['name', 'phone', 'email', 'role', 'is_active']);
+        $data = $request->only(['name', 'phone', 'email', 'role', 'blok_id', 'is_active']);
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);

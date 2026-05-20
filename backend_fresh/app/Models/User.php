@@ -19,6 +19,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'blok_id',
         'fcm_token',
         'language',
         'avatar',
@@ -40,6 +41,29 @@ class User extends Authenticatable
     public function warga()
     {
         return $this->hasOne(Warga::class);
+    }
+
+    public function blok()
+    {
+        return $this->belongsTo(Blok::class);
+    }
+
+    /**
+     * Cek apakah user ini bisa akses semua blok (super_admin) atau scope ke 1 blok.
+     */
+    public function canAccessAllBloks(): bool
+    {
+        return $this->role === 'super_admin';
+    }
+
+    /**
+     * Dapatkan kode blok untuk filter — kalau super_admin, return null (semua).
+     * Selain itu, return kode blok user dari relasi Blok.
+     */
+    public function getScopedBlokKode(): ?string
+    {
+        if ($this->canAccessAllBloks()) return null;
+        return $this->blok?->kode;
     }
 
     public function notifikasi()

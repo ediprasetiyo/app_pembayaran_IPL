@@ -93,16 +93,47 @@ export const useSettingsStore = defineStore('settings', () => {
 
   /**
    * Upload logo file.
-   * NOTE: jangan set 'Content-Type' manual — axios/browser yang set
-   * dengan boundary multipart yang benar. Manual set bikin server gagal parse.
+   *
+   * Strategi: DIRECT UPLOAD ke Cloudinary dari browser → bypass ModSecurity
+   * yang block multipart upload di shared LiteSpeed (IDcloudHost).
+   *
+   * Flow:
+   *  1. Minta signature dari backend (signed)
+   *  2. Upload file langsung ke api.cloudinary.com (TIDAK lewat backend kita)
+   *  3. Kirim URL hasilnya ke backend untuk disimpan
    */
   async function uploadLogo(file) {
+    // 1. Minta signature dari backend
+    const sigRes = await api.post('/admin/settings/cloudinary-signature', {
+      folder: 'ipl/logos',
+    })
+    const { cloud_name, api_key, timestamp, signature, folder } = sigRes.data
+
+    // 2. Upload langsung ke Cloudinary (bypass backend kita)
     const fd = new FormData()
-    fd.append('logo', file)
-    const res = await api.post('/admin/settings/logo', fd)
-    settings.value.logo_url = res.data.url
+    fd.append('file', file)
+    fd.append('api_key', api_key)
+    fd.append('timestamp', timestamp)
+    fd.append('signature', signature)
+    fd.append('folder', folder)
+
+    const cloudRes = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`,
+      { method: 'POST', body: fd },
+    )
+    if (!cloudRes.ok) {
+      const errBody = await cloudRes.text()
+      throw new Error('Cloudinary upload gagal: ' + errBody.substring(0, 200))
+    }
+    const cloudData = await cloudRes.json()
+    const url = cloudData.secure_url
+
+    // 3. Simpan URL ke backend kita
+    await api.post('/admin/settings/save-logo-url', { url })
+
+    settings.value.logo_url = url
     localStorage.setItem('app_settings', JSON.stringify(settings.value))
-    return res.data.url
+    return url
   }
 
   /**

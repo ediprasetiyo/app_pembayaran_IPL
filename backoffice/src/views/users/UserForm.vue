@@ -45,26 +45,43 @@
         </div>
       </div>
 
-      <div>
-        <label class="label">Role *</label>
-        <select v-model="form.role" class="input" required :disabled="isEdit && form.id === auth.user.id">
-          <option value="super_admin">👑 Super Admin</option>
-          <option value="admin">⚙️ Admin</option>
-          <option value="bendahara">💰 Bendahara</option>
-          <option value="humas">📣 Humas</option>
-          <option value="warga">👥 Warga</option>
-        </select>
-        <div class="text-xs text-gray-500 mt-1 space-y-0.5">
-          <div><strong>👑 Super Admin:</strong> semua menu + manajemen user</div>
-          <div><strong>⚙️ Admin:</strong> semua menu kecuali manajemen user</div>
-          <div><strong>💰 Bendahara:</strong> Dashboard, Tagihan IPL, Pembayaran, Laporan</div>
-          <div><strong>📣 Humas:</strong> Dashboard, Pengaduan, Berita</div>
-          <div><strong>👥 Warga:</strong> akses mobile app saja (tidak bisa login backoffice)</div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="label">Role *</label>
+          <select v-model="form.role" class="input" required :disabled="isEdit && form.id === auth.user.id">
+            <option value="super_admin">👑 Super Admin</option>
+            <option value="admin">⚙️ Admin</option>
+            <option value="bendahara">💰 Bendahara</option>
+            <option value="humas">📣 Humas</option>
+            <option value="warga">👥 Warga</option>
+          </select>
         </div>
-        <p v-if="isEdit && form.id === auth.user.id" class="text-xs text-gray-500 mt-1">
-          Tidak bisa mengubah role akun sendiri.
-        </p>
+        <div>
+          <label class="label">
+            Blok
+            <span v-if="needBlok" class="text-red-600">*</span>
+            <span v-else class="text-gray-400 text-xs">(opsional)</span>
+          </label>
+          <select v-model="form.blok_id" class="input" :disabled="form.role === 'super_admin'">
+            <option :value="null">{{ form.role === 'super_admin' ? 'Semua Blok (akses penuh)' : '— Pilih Blok —' }}</option>
+            <option v-for="b in bloks" :key="b.id" :value="b.id">{{ b.kode }} - {{ b.nama }}</option>
+          </select>
+          <p class="text-xs text-gray-400 mt-1">
+            <span v-if="form.role === 'super_admin'">Super Admin otomatis akses semua blok.</span>
+            <span v-else>User hanya bisa lihat warga di blok ini.</span>
+          </p>
+        </div>
       </div>
+      <div class="text-xs text-gray-500 space-y-0.5 -mt-2">
+        <div><strong>👑 Super Admin:</strong> semua menu + manajemen user + akses SEMUA blok</div>
+        <div><strong>⚙️ Admin:</strong> semua menu kecuali user mgmt, scope <strong>1 blok</strong></div>
+        <div><strong>💰 Bendahara:</strong> Tagihan, Pembayaran, Laporan, scope <strong>1 blok</strong></div>
+        <div><strong>📣 Humas:</strong> Pengaduan, Berita, scope <strong>1 blok</strong></div>
+        <div><strong>👥 Warga:</strong> mobile app saja (blok ikut data warga)</div>
+      </div>
+      <p v-if="isEdit && form.id === auth.user.id" class="text-xs text-gray-500 mt-1">
+        Tidak bisa mengubah role akun sendiri.
+      </p>
 
       <div>
         <label class="label">{{ isEdit ? 'Password Baru (kosongkan jika tidak diubah)' : 'Password *' }}</label>
@@ -119,9 +136,20 @@ const form = ref({
   phone: '',
   email: '',
   role: 'admin',
+  blok_id: null,
   password: '',
   is_active: true,
 })
+
+const bloks = ref([])
+const needBlok = computed(() => !['super_admin', 'warga'].includes(form.value.role))
+
+async function loadBloks() {
+  try {
+    const res = await api.get('/admin/bloks')
+    bloks.value = (res.data.data ?? []).filter((b) => b.is_active)
+  } catch (_) {}
+}
 
 async function loadUser() {
   if (!isEdit.value) return
@@ -134,6 +162,7 @@ async function loadUser() {
       phone: u.phone,
       email: u.email ?? '',
       role: u.role,
+      blok_id: u.blok_id ?? null,
       password: '',
       is_active: u.is_active,
     }
@@ -144,11 +173,14 @@ async function loadUser() {
 }
 
 async function submit() {
+  if (!(await submitValidate())) return
   saving.value = true
   try {
     const payload = { ...form.value }
     if (!payload.password) delete payload.password
     if (!payload.email) delete payload.email
+    // Super admin override blok_id = null
+    if (payload.role === 'super_admin') payload.blok_id = null
 
     if (isEdit.value) {
       await api.put(`/admin/users/${form.value.id}`, payload)
@@ -167,5 +199,16 @@ async function submit() {
   }
 }
 
-onMounted(loadUser)
+async function submitValidate() {
+  if (needBlok.value && !form.value.blok_id) {
+    toast.error(`Role ${form.value.role} wajib pilih Blok.`)
+    return false
+  }
+  return true
+}
+
+onMounted(() => {
+  loadBloks()
+  loadUser()
+})
 </script>

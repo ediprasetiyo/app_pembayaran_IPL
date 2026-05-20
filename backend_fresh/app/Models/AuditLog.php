@@ -25,6 +25,11 @@ class AuditLog extends Model
         'new_values',
         'ip_address',
         'user_agent',
+        'device_type',
+        'browser',
+        'os',
+        'country',
+        'city',
         'severity',
         'created_at',
     ];

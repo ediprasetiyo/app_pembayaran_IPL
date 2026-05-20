@@ -90,13 +90,14 @@
               <th>User</th>
               <th>Action</th>
               <th>Deskripsi</th>
+              <th>Device / Browser</th>
+              <th>Lokasi</th>
               <th>Severity</th>
-              <th>IP</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="logs.length === 0">
-              <td colspan="6" class="text-center py-10 text-gray-400">Tidak ada log dengan filter ini.</td>
+              <td colspan="7" class="text-center py-10 text-gray-400">Tidak ada log dengan filter ini.</td>
             </tr>
             <tr v-for="log in logs" :key="log.id" :class="rowClass(log.severity)">
               <td class="text-xs text-gray-500 whitespace-nowrap">{{ formatDate(log.created_at) }}</td>
@@ -108,10 +109,19 @@
                 <span class="badge-gray font-mono text-xs">{{ log.action }}</span>
               </td>
               <td class="text-sm max-w-md">{{ log.description ?? '-' }}</td>
+              <td class="text-xs">
+                <p class="font-medium">{{ deviceIcon(log.device_type) }} {{ log.device_type ?? '-' }}</p>
+                <p class="text-gray-400">{{ log.browser ?? '-' }}</p>
+                <p class="text-gray-400">{{ log.os ?? '-' }}</p>
+              </td>
+              <td class="text-xs">
+                <p v-if="log.city || log.country" class="font-medium">📍 {{ log.city ? log.city + ', ' : '' }}{{ log.country ?? '' }}</p>
+                <p v-else class="text-gray-400">Lokal/Unknown</p>
+                <p class="text-gray-400 font-mono">{{ log.ip_address ?? '-' }}</p>
+              </td>
               <td>
                 <span :class="severityBadge(log.severity)">{{ severityLabel(log.severity) }}</span>
               </td>
-              <td class="text-xs text-gray-400 font-mono">{{ log.ip_address ?? '-' }}</td>
             </tr>
           </tbody>
         </table>
@@ -222,6 +232,13 @@ function rowClass(s) {
   if (s === 'critical' || s === 'error') return 'bg-red-50/50'
   if (s === 'warning') return 'bg-yellow-50/50'
   return ''
+}
+function deviceIcon(d) {
+  if (!d) return ''
+  if (d.includes('Mobile')) return '📱'
+  if (d.includes('Tablet')) return '📱'
+  if (d.includes('Desktop')) return '🖥️'
+  return '❔'
 }
 
 onMounted(load)
