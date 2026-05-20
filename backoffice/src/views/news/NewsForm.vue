@@ -209,10 +209,10 @@ async function submit() {
 
     if (isEdit.value) {
       fd.append('_method', 'PUT')
-      await api.post(`/news/${route.params.id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      await api.post(`/news/${route.params.id}`, fd)
       toast.success('Berita diperbarui.')
     } else {
-      await api.post('/news', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      await api.post('/news', fd)
       toast.success('Berita berhasil dibuat.')
     }
     router.push('/news')
