@@ -52,7 +52,7 @@ class SettingsScreen extends StatelessWidget {
                         child: user?.avatar == null || user!.avatar!.isEmpty
                             ? Text(
                                 (user?.name ?? 'U')[0].toUpperCase(),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppTheme.primaryColor,
                                   fontSize: 28,
                                   fontWeight: FontWeight.bold,
@@ -70,7 +70,7 @@ class SettingsScreen extends StatelessWidget {
                             shape: BoxShape.circle,
                             border: Border.all(color: AppTheme.primaryColor, width: 2),
                           ),
-                          child: const Icon(Icons.camera_alt, size: 12, color: AppTheme.primaryColor),
+                          child: Icon(Icons.camera_alt, size: 12, color: AppTheme.primaryColor),
                         ),
                       ),
                     ],
@@ -292,7 +292,7 @@ class SettingsScreen extends StatelessWidget {
                                 (user?.avatar == null || user!.avatar!.isEmpty))
                             ? Text(
                                 (user?.name ?? 'U')[0].toUpperCase(),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppTheme.primaryColor,
                                   fontSize: 32,
                                   fontWeight: FontWeight.bold,
@@ -483,11 +483,11 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              const Row(
+              Row(
                 children: [
                   Icon(Icons.family_restroom, color: AppTheme.primaryColor),
-                  SizedBox(width: 8),
-                  Text('Data Keluarga (KK)',
+                  const SizedBox(width: 8),
+                  const Text('Data Keluarga (KK)',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ],
               ),
@@ -535,7 +535,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.info_outline, size: 16, color: AppTheme.primaryColor),
+                    Icon(Icons.info_outline, size: 16, color: AppTheme.primaryColor),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -641,7 +641,7 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       child: Text(
                         _hubunganLabel(a.hubungan),
-                        style: const TextStyle(fontSize: 10, color: AppTheme.primaryColor, fontWeight: FontWeight.w600),
+                        style: TextStyle(fontSize: 10, color: AppTheme.primaryColor, fontWeight: FontWeight.w600),
                       ),
                     ),
                     if (a.pekerjaan != null && a.pekerjaan.toString().isNotEmpty) ...[
@@ -790,7 +790,7 @@ class _LanguageTile extends StatelessWidget {
       leading: Text(flag, style: const TextStyle(fontSize: 24)),
       title: Text(language),
       trailing: isSelected
-          ? const Icon(Icons.check_circle, color: AppTheme.primaryColor)
+          ? Icon(Icons.check_circle, color: AppTheme.primaryColor)
           : null,
       onTap: onTap,
     );

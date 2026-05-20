@@ -614,11 +614,11 @@ class _FormPengaduanScreenState extends State<_FormPengaduanScreen> {
                           border: Border.all(color: AppTheme.primaryColor.withOpacity(0.5), width: 1.5),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Column(
+                        child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.add_photo_alternate_outlined, color: AppTheme.primaryColor, size: 28),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text('Tambah', style: TextStyle(fontSize: 10, color: AppTheme.primaryColor)),
                           ],
                         ),

@@ -286,7 +286,7 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
                                 backgroundColor: const Color(0xFFF5F7FA),
                                 padding: HtmlPaddings.all(12),
                                 margin: Margins.symmetric(vertical: 8),
-                                border: const Border(
+                                border: Border(
                                   left: BorderSide(color: AppTheme.primaryColor, width: 3),
                                 ),
                                 fontStyle: FontStyle.italic,
@@ -567,7 +567,7 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
                 backgroundColor: AppTheme.primaryColor.withOpacity(0.15),
                 child: Text(
                   c.userName.isNotEmpty ? c.userName[0].toUpperCase() : 'U',
-                  style: const TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 12),
+                  style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 12),
                 ),
               ),
               const SizedBox(width: 10),
@@ -625,7 +625,7 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
                         backgroundColor: AppTheme.primaryColor.withOpacity(0.15),
                         child: Text(
                           r.userName.isNotEmpty ? r.userName[0].toUpperCase() : 'U',
-                          style: const TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 10),
+                          style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 10),
                         ),
                       ),
                       const SizedBox(width: 8),

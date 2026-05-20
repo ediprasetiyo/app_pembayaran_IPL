@@ -248,10 +248,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         onTap: _hubungiAdminBaru,
                         child: RichText(
                           textAlign: TextAlign.center,
-                          text: const TextSpan(
-                            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                          text: TextSpan(
+                            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
                             children: [
-                              TextSpan(text: 'Belum punya akun? '),
+                              const TextSpan(text: 'Belum punya akun? '),
                               TextSpan(
                                 text: 'Hubungi Admin',
                                 style: TextStyle(
@@ -279,7 +279,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               color: AppTheme.primaryColor.withOpacity(0.08),
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: const Text(
+                            child: Text(
                               'Versi 1.0.0',
                               style: TextStyle(
                                 color: AppTheme.primaryColor,
@@ -319,11 +319,11 @@ class _LoginScreenState extends State<LoginScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.lock_reset, color: AppTheme.primaryColor),
-            SizedBox(width: 8),
-            Text('Lupa Password'),
+            const SizedBox(width: 8),
+            const Text('Lupa Password'),
           ],
         ),
         content: Column(

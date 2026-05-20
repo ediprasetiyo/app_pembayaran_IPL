@@ -267,11 +267,11 @@ class _TagihanItem extends StatelessWidget {
         context: context,
         barrierDismissible: false,
         builder: (_) => AlertDialog(
-          title: const Row(
+          title: Row(
             children: [
               Icon(Icons.receipt_long, color: AppTheme.primaryColor),
-              SizedBox(width: 8),
-              Text('Rincian Pembayaran'),
+              const SizedBox(width: 8),
+              const Text('Rincian Pembayaran'),
             ],
           ),
           content: Column(
@@ -393,11 +393,11 @@ class _MidtransWebViewState extends State<_MidtransWebView> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.qr_code_2, color: AppTheme.primaryColor),
-            SizedBox(width: 8),
-            Text('Cara Bayar QRIS'),
+            const SizedBox(width: 8),
+            const Text('Cara Bayar QRIS'),
           ],
         ),
         content: SingleChildScrollView(
@@ -762,7 +762,7 @@ class _RiwayatCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     currency.format(pembayaran.nominal),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                       color: AppTheme.primaryColor,

@@ -130,7 +130,7 @@ class _DashboardTabState extends State<DashboardTab> {
                 backgroundColor: Colors.white,
                 child: Text(
                   (user?.name.isNotEmpty == true ? user!.name[0] : 'W').toUpperCase(),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppTheme.primaryColor,
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
@@ -306,7 +306,7 @@ class _DashboardTabState extends State<DashboardTab> {
                                 ),
                               ],
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.receipt_long_rounded,
                               color: AppTheme.primaryColor,
                               size: 20,
@@ -384,7 +384,7 @@ class _DashboardTabState extends State<DashboardTab> {
                           const SizedBox(height: 4),
                           Text(
                             _currency.format(totalBelumBayar > 0 ? totalBelumBayar : iplProvider.totalBulanIni),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
                               color: AppTheme.primaryColor,

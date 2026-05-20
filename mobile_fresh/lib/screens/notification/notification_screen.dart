@@ -106,7 +106,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                             ? Container(
                                 width: 8,
                                 height: 8,
-                                decoration: const BoxDecoration(
+                                decoration: BoxDecoration(
                                   color: AppTheme.primaryColor,
                                   shape: BoxShape.circle,
                                 ),
