@@ -42,25 +42,15 @@ android {
 
 }
 
-// Rename APK setelah build selesai (AGP 8 compatible).
-// Pakai doLast pada assembleRelease/assembleDebug → guaranteed rename.
-afterEvaluate {
-    ['assembleRelease', 'assembleDebug'].each { taskName ->
-        tasks.findByName(taskName)?.doLast {
-            def apkDir = file("${project.buildDir}/outputs/flutter-apk")
-            if (!apkDir.exists()) return
-            apkDir.listFiles()?.each { f ->
-                if (f.name == 'app-release.apk' || f.name == 'app-debug.apk') {
-                    def newName = (f.name == 'app-release.apk')
-                        ? 'IPL_Griya_Pesona_Madani.apk'
-                        : 'IPL_Griya_Pesona_Madani-debug.apk'
-                    def dest = new File(apkDir, newName)
-                    if (dest.exists()) dest.delete()
-                    if (f.renameTo(dest)) {
-                        println "✓ APK renamed → ${newName}"
-                    }
-                }
-            }
+// AGP 8+ Variant API — rename APK output yang dihasilkan Gradle.
+// Flutter akan copy file dengan nama yang sudah kita set di sini.
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        variant.outputs.each { output ->
+            def newName = (variant.buildType == "release")
+                ? "IPL_Griya_Pesona_Madani.apk"
+                : "IPL_Griya_Pesona_Madani-${variant.buildType}.apk"
+            output.outputFileName.set(newName)
         }
     }
 }
