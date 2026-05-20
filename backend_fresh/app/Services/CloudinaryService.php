@@ -65,13 +65,21 @@ class CloudinaryService
         $signature = $this->signRequest($paramsToSign);
 
         try {
+            // Pakai file_get_contents (string) bukan fopen (resource) supaya
+            // tidak hang kalau file system lambat di shared hosting.
+            $fileContent = @file_get_contents($file->getRealPath());
+            if ($fileContent === false || empty($fileContent)) {
+                Log::warning('Cloudinary: tidak bisa baca file content');
+                return null;
+            }
+
             $response = $this->http->post(
                 "https://api.cloudinary.com/v1_1/{$this->cloudName}/image/upload",
                 [
                     'multipart' => [
                         [
                             'name' => 'file',
-                            'contents' => fopen($file->getRealPath(), 'r'),
+                            'contents' => $fileContent,
                             'filename' => $file->getClientOriginalName(),
                         ],
                         ['name' => 'api_key', 'contents' => $this->apiKey],
