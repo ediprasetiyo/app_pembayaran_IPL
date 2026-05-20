@@ -8,6 +8,14 @@ if ($LASTEXITCODE -ne 0) { Write-Host "❌ flutter clean gagal" -ForegroundColor
 flutter pub get
 if ($LASTEXITCODE -ne 0) { Write-Host "❌ flutter pub get gagal" -ForegroundColor Red; exit 1 }
 
+# Regenerate launcher icon (kalau logo.png berubah)
+Write-Host "→ Generate launcher icon..." -ForegroundColor Cyan
+dart run flutter_launcher_icons
+
+# Regenerate native splash screen
+Write-Host "→ Generate native splash..." -ForegroundColor Cyan
+dart run flutter_native_splash:create
+
 flutter build apk --release
 if ($LASTEXITCODE -ne 0) { Write-Host "❌ flutter build gagal" -ForegroundColor Red; exit 1 }
 
