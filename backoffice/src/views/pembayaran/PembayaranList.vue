@@ -55,7 +55,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import api from '@/services/api'
 import dayjs from 'dayjs'
 
@@ -79,5 +79,13 @@ const formatDate = (d) => dayjs(d).format('DD/MM/YYYY HH:mm')
 const statusClass = (s) => ({ success: 'badge-green', pending: 'badge-yellow', failed: 'badge-red', expired: 'badge-gray', cancel: 'badge-gray' }[s] ?? 'badge-gray')
 const statusLabel = (s) => ({ success: 'Berhasil', pending: 'Pending', failed: 'Gagal', expired: 'Expired', cancel: 'Dibatalkan' }[s] ?? s)
 
-onMounted(() => fetchData())
+// Auto-polling: refresh tiap 20 detik supaya pembayaran baru otomatis muncul
+let pollInterval = null
+onMounted(() => {
+  fetchData()
+  pollInterval = setInterval(() => {
+    if (document.visibilityState === 'visible') fetchData()
+  }, 20000)
+})
+onUnmounted(() => { if (pollInterval) clearInterval(pollInterval) })
 </script>

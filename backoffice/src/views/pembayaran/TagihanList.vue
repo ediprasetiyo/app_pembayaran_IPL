@@ -207,7 +207,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { DocumentPlusIcon, BanknotesIcon, CheckIcon, ArrowDownTrayIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
 import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/stores/auth'
@@ -397,5 +397,13 @@ const formatCurrency = (v) =>
 const statusClass = (s) => ({ sudah_bayar: 'badge-green', belum_bayar: 'badge-yellow', terlambat: 'badge-red' }[s] ?? 'badge-gray')
 const statusLabel = (s) => ({ sudah_bayar: 'Lunas', belum_bayar: 'Belum Bayar', terlambat: 'Terlambat' }[s] ?? s)
 
-onMounted(() => fetchData())
+// Auto-polling tiap 25 detik supaya tagihan/status lunas update otomatis
+let pollInterval = null
+onMounted(() => {
+  fetchData()
+  pollInterval = setInterval(() => {
+    if (document.visibilityState === 'visible' && !bayarModal.value.show) fetchData()
+  }, 25000)
+})
+onUnmounted(() => { if (pollInterval) clearInterval(pollInterval) })
 </script>

@@ -187,7 +187,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { ExclamationTriangleIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import { useToast } from 'vue-toastification'
 import api from '@/services/api'
@@ -285,5 +285,27 @@ const kategoriEmoji = (k) => ({ infrastruktur: '🏗', kebersihan: '🧹', keama
 const kategoriColor = (k) => ({ infrastruktur: 'bg-orange-500', kebersihan: 'bg-green-500', keamanan: 'bg-red-500', fasilitas: 'bg-blue-500', sosial: 'bg-purple-500', lainnya: 'bg-gray-500' }[k] ?? 'bg-gray-500')
 const prioritasClass = (p) => ({ rendah: 'bg-gray-100 text-gray-600', sedang: 'bg-yellow-100 text-yellow-700', tinggi: 'bg-red-100 text-red-700' }[p] ?? '')
 
-onMounted(() => fetchData())
+// Auto-polling: refresh tiap 20 detik kalau modal detail TIDAK terbuka
+// (supaya tidak interrupt admin yang lagi update status)
+let pollInterval = null
+function startPolling() {
+  if (pollInterval) return
+  pollInterval = setInterval(() => {
+    if (!selectedPengaduan.value && document.visibilityState === 'visible') {
+      fetchData()
+    }
+  }, 20000) // 20 detik
+}
+function stopPolling() {
+  if (pollInterval) {
+    clearInterval(pollInterval)
+    pollInterval = null
+  }
+}
+
+onMounted(() => {
+  fetchData()
+  startPolling()
+})
+onUnmounted(stopPolling)
 </script>

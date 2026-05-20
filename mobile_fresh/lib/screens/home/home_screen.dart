@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
+import '../../providers/ipl_provider.dart';
 import '../../providers/notifikasi_provider.dart';
+import '../../providers/pengaduan_provider.dart';
 import '../../utils/app_theme.dart';
 import '../notification/notification_screen.dart';
 import '../payment/payment_screen.dart';
@@ -17,15 +19,40 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<NotifikasiProvider>().load();
+      _refreshAllData();
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Auto-refresh saat app kembali dari background ke foreground.
+  /// Ini bikin data realtime tanpa user perlu pull-to-refresh.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _refreshAllData();
+    }
+  }
+
+  void _refreshAllData() {
+    if (!mounted) return;
+    try {
+      context.read<NotifikasiProvider>().load();
+      context.read<IplProvider>().refreshAll();
+      context.read<PengaduanProvider>().load();
+    } catch (_) {}
   }
 
   void _changeTab(int index) {
