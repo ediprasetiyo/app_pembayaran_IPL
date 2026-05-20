@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/locale_provider.dart';
 import '../../screens/auth/login_screen.dart';
+import '../../services/app_settings.dart';
 import '../../utils/app_theme.dart';
 
 const String _adminWhatsApp = '6282115525327';
@@ -27,12 +28,12 @@ class SettingsScreen extends StatelessWidget {
       appBar: AppBar(title: Text(l10n.settings)),
       body: ListView(
         children: [
-          // Profile Header
+          // Profile Header — pakai gradient dari Settings (sync dengan beranda)
           Container(
             padding: const EdgeInsets.all(20),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF1B5E20), Color(0xFF388E3C)],
+                colors: [AppSettings.primaryDarkColor, AppSettings.primaryColor],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),

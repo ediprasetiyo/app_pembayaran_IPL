@@ -143,48 +143,6 @@ class _DashboardTabState extends State<DashboardTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Brand bar — logo + nama perumahan (sinkron dengan backoffice)
-          Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.all(3),
-                child: AppSettings.logoUrl.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: AppSettings.logoUrl,
-                        fit: BoxFit.contain,
-                        errorWidget: (_, __, ___) => Image.asset('assets/images/logo.png'),
-                      )
-                    : Image.asset('assets/images/logo.png'),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppSettings.brandTitle,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      AppSettings.brandSubtitle,
-                      style: const TextStyle(color: Colors.white70, fontSize: 11),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
           Row(
             children: [
               CircleAvatar(

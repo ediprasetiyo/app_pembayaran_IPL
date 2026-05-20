@@ -82,45 +82,47 @@
       <div v-if="loading" class="p-8 text-center">
         <div class="w-8 h-8 border-2 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto" />
       </div>
-      <div v-else class="table-wrapper">
-        <table>
-          <thead>
+      <div v-else class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 border-b">
             <tr>
-              <th>Waktu</th>
-              <th>User</th>
-              <th>Action</th>
-              <th>Deskripsi</th>
-              <th>Device / Browser</th>
-              <th>Lokasi</th>
-              <th>Severity</th>
+              <th class="text-left px-3 py-3 whitespace-nowrap" style="min-width: 130px">Waktu</th>
+              <th class="text-left px-3 py-3" style="min-width: 130px">User</th>
+              <th class="text-left px-3 py-3 whitespace-nowrap" style="min-width: 140px">Action</th>
+              <th class="text-left px-3 py-3" style="min-width: 280px; max-width: 350px">Deskripsi</th>
+              <th class="text-left px-3 py-3" style="min-width: 140px">Device</th>
+              <th class="text-left px-3 py-3" style="min-width: 160px">Lokasi</th>
+              <th class="text-left px-3 py-3 whitespace-nowrap" style="min-width: 100px">Severity</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody class="divide-y">
             <tr v-if="logs.length === 0">
               <td colspan="7" class="text-center py-10 text-gray-400">Tidak ada log dengan filter ini.</td>
             </tr>
-            <tr v-for="log in logs" :key="log.id" :class="rowClass(log.severity)">
-              <td class="text-xs text-gray-500 whitespace-nowrap">{{ formatDate(log.created_at) }}</td>
-              <td>
-                <p class="text-sm font-medium">{{ log.user_name ?? '-' }}</p>
+            <tr v-for="log in logs" :key="log.id" :class="['align-top', rowClass(log.severity)]">
+              <td class="px-3 py-3 text-xs text-gray-500 whitespace-nowrap">{{ formatDate(log.created_at) }}</td>
+              <td class="px-3 py-3">
+                <p class="text-sm font-medium truncate" :title="log.user_name">{{ log.user_name ?? '-' }}</p>
                 <p class="text-xs text-gray-400">{{ log.user_role ?? '' }}</p>
               </td>
-              <td>
-                <span class="badge-gray font-mono text-xs">{{ log.action }}</span>
+              <td class="px-3 py-3">
+                <span class="badge-gray font-mono text-xs whitespace-nowrap">{{ log.action }}</span>
               </td>
-              <td class="text-sm max-w-md">{{ log.description ?? '-' }}</td>
-              <td class="text-xs">
-                <p class="font-medium">{{ deviceIcon(log.device_type) }} {{ log.device_type ?? '-' }}</p>
-                <p class="text-gray-400">{{ log.browser ?? '-' }}</p>
-                <p class="text-gray-400">{{ log.os ?? '-' }}</p>
+              <td class="px-3 py-3">
+                <p class="text-sm break-words" style="max-width: 350px">{{ log.description ?? '-' }}</p>
               </td>
-              <td class="text-xs">
+              <td class="px-3 py-3 text-xs">
+                <p class="font-medium whitespace-nowrap">{{ deviceIcon(log.device_type) }} {{ log.device_type ?? '-' }}</p>
+                <p class="text-gray-400 truncate" :title="log.browser">{{ log.browser ?? '-' }}</p>
+                <p class="text-gray-400 truncate" :title="log.os">{{ log.os ?? '-' }}</p>
+              </td>
+              <td class="px-3 py-3 text-xs">
                 <p v-if="log.city || log.country" class="font-medium">📍 {{ log.city ? log.city + ', ' : '' }}{{ log.country ?? '' }}</p>
                 <p v-else class="text-gray-400">Lokal/Unknown</p>
                 <p class="text-gray-400 font-mono">{{ log.ip_address ?? '-' }}</p>
               </td>
-              <td>
-                <span :class="severityBadge(log.severity)">{{ severityLabel(log.severity) }}</span>
+              <td class="px-3 py-3">
+                <span :class="[severityBadge(log.severity), 'whitespace-nowrap']">{{ severityLabel(log.severity) }}</span>
               </td>
             </tr>
           </tbody>

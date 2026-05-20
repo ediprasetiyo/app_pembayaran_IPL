@@ -4,8 +4,11 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:cached_network_image/cached_network_image.dart';
+
 import '../../providers/auth_provider.dart';
 import '../../screens/home/home_screen.dart';
+import '../../services/app_settings.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/constants.dart';
 
@@ -140,15 +143,23 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Image.asset(
-                    'assets/images/logo.png',
+                  // Logo dari backoffice settings (white-label), fallback ke asset
+                  SizedBox(
                     width: 240,
-                    fit: BoxFit.contain,
+                    height: 100,
+                    child: AppSettings.logoUrl.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: AppSettings.logoUrl,
+                            fit: BoxFit.contain,
+                            placeholder: (_, __) => Image.asset('assets/images/logo.png', fit: BoxFit.contain),
+                            errorWidget: (_, __, ___) => Image.asset('assets/images/logo.png', fit: BoxFit.contain),
+                          )
+                        : Image.asset('assets/images/logo.png', fit: BoxFit.contain),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Tenjo - Blok E',
-                    style: TextStyle(
+                  Text(
+                    AppSettings.brandSubtitle,
+                    style: const TextStyle(
                       color: Color(0xFF757575),
                       fontSize: 12,
                       letterSpacing: 1.2,
