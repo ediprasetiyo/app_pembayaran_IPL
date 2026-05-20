@@ -308,6 +308,49 @@ class _MidtransWebViewState extends State<_MidtransWebView> {
       ..loadRequest(Uri.parse(widget.url));
   }
 
+  void _showQrisHelp() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.qr_code_2, color: AppTheme.primaryColor),
+            SizedBox(width: 8),
+            Text('Cara Bayar QRIS'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Text('1. Klik metode "QRIS" / "GoPay" / "ShopeePay"'),
+              SizedBox(height: 8),
+              Text('2. Setelah QR Code muncul, screenshot layar HP (Power + Volume Down).'),
+              SizedBox(height: 8),
+              Text('3. Buka e-wallet (DANA / GoPay / OVO / ShopeePay / m-Banking).'),
+              SizedBox(height: 8),
+              Text('4. Pilih menu Scan QR → pilih "Dari Galeri" → pilih screenshot tadi.'),
+              SizedBox(height: 8),
+              Text('5. Konfirmasi pembayaran di e-wallet.'),
+              SizedBox(height: 12),
+              Text(
+                'ℹ️ Tombol "Download QR" di halaman Midtrans memang tidak aktif di dalam aplikasi — gunakan screenshot.',
+                style: TextStyle(fontStyle: FontStyle.italic, fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Mengerti'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _onPaymentComplete(bool success) async {
     if (_closing) return;
     _closing = true;
@@ -392,13 +435,44 @@ class _MidtransWebViewState extends State<_MidtransWebView> {
           ),
           actions: [
             IconButton(
+              icon: const Icon(Icons.help_outline),
+              onPressed: _showQrisHelp,
+              tooltip: 'Bantuan QRIS',
+            ),
+            IconButton(
               icon: const Icon(Icons.refresh),
               onPressed: _handleManualClose,
               tooltip: 'Cek status pembayaran',
             ),
           ],
         ),
-        body: WebViewWidget(controller: _controller),
+        body: Column(
+          children: [
+            // Banner instruksi QRIS / e-wallet
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              color: const Color(0xFFFFF8E1),
+              child: Row(
+                children: [
+                  const Icon(Icons.lightbulb_outline, size: 18, color: Color(0xFFB8860B)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Pilih QRIS / GoPay → Screenshot QR (Power + Vol Down) → scan via e-wallet.',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: Colors.brown.shade800,
+                        height: 1.3,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(child: WebViewWidget(controller: _controller)),
+          ],
+        ),
       ),
     );
   }
