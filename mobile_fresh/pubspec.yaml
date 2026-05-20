@@ -32,10 +32,10 @@ dependencies:
   # Payment - Midtrans via WebView (Snap URL)
   webview_flutter: ^4.4.4
 
-  # Notifications (dinonaktifkan sementara — uncomment jika sudah punya google-services.json)
-  # firebase_core: ^2.24.2
-  # firebase_messaging: ^14.7.10
-  # flutter_local_notifications: ^17.2.3
+  # Notifications — FCM push + local foreground display
+  firebase_core: ^2.27.0
+  firebase_messaging: ^14.7.19
+  flutter_local_notifications: ^17.2.3
 
   # Image
   image_picker: ^1.0.7

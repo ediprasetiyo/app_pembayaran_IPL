@@ -61,12 +61,21 @@ class GenerateTagihanBulanan extends Command
 
             // ===== Tagihan Kedukaan (20.000) — hanya 1x untuk warga baru =====
             if (!$warga->uang_kedukaan_dibayar) {
-                $existsKedukaan = IplTagihan::where('warga_id', $warga->id)
+                // Cek by unique key (warga_id + jenis + bulan + tahun) supaya tidak duplicate
+                $existsKedukaanThisMonth = IplTagihan::where('warga_id', $warga->id)
+                    ->where('jenis', 'kedukaan')
+                    ->where('bulan', $bulan)
+                    ->where('tahun', $tahun)
+                    ->exists();
+
+                // Cek juga apakah kedukaan sudah ada di bulan lain dengan status belum_bayar
+                // (artinya warga ini sudah punya tagihan kedukaan pending)
+                $existsKedukaanPending = IplTagihan::where('warga_id', $warga->id)
                     ->where('jenis', 'kedukaan')
                     ->where('status', 'belum_bayar')
                     ->exists();
 
-                if (!$existsKedukaan) {
+                if (!$existsKedukaanThisMonth && !$existsKedukaanPending) {
                     IplTagihan::create([
                         'warga_id' => $warga->id,
                         'jenis' => 'kedukaan',

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../services/api_service.dart';
+import '../services/notification_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   UserModel? _user;
@@ -47,10 +48,17 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> login(String phone, String password) async {
     _error = null;
     try {
+      // Ambil FCM token (kalau Firebase aktif) — kirim bareng login
+      String? fcmToken;
+      try {
+        fcmToken = NotificationService().fcmToken;
+      } catch (_) {}
+
       // Hard timeout 20 detik biar spinner pasti berhenti
       final response = await _api.post('/auth/login', data: {
         'phone': phone,
         'password': password,
+        if (fcmToken != null && fcmToken.isNotEmpty) 'fcm_token': fcmToken,
       }).timeout(
         const Duration(seconds: 20),
         onTimeout: () {
@@ -82,12 +90,31 @@ class AuthProvider extends ChangeNotifier {
         await prefs.setString('language', _user!.language);
       } catch (_) {}
 
+      // Sync FCM token ke backend kalau saat login tidak sempat
+      // (misalnya token baru ready setelah login)
+      _syncFcmTokenIfMissing();
+
       notifyListeners();
       return true;
     } catch (e) {
       _error = _parseError(e);
       notifyListeners();
       return false;
+    }
+  }
+
+  /// Sync FCM token ke backend kalau saat login tidak sempat (token belum ready).
+  /// Dipanggil non-blocking; failure tidak mempengaruhi UX login.
+  Future<void> _syncFcmTokenIfMissing() async {
+    try {
+      // Tunggu sebentar supaya token Firebase sempat ter-generate
+      await Future.delayed(const Duration(seconds: 2));
+      final token = NotificationService().fcmToken;
+      if (token == null || token.isEmpty) return;
+      await _api.put('/auth/profile', data: {'fcm_token': token});
+      debugPrint('✓ FCM token synced ke backend');
+    } catch (e) {
+      debugPrint('FCM token sync gagal: $e');
     }
   }
 

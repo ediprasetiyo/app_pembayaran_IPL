@@ -77,6 +77,8 @@ $files = [
         => $basePath . '/app/Services/CloudinaryService.php',
     'backend_fresh/config/services.php'
         => $basePath . '/config/services.php',
+    'backend_fresh/config/firebase.php'
+        => $basePath . '/config/firebase.php',
     'backend_fresh/routes/api.php'
         => $basePath . '/routes/api.php',
 ];

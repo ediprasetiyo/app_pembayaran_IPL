@@ -1,3 +1,6 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -12,19 +15,21 @@ import 'providers/pengaduan_provider.dart';
 import 'providers/locale_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_screen.dart';
+import 'services/notification_service.dart';
 import 'utils/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // NOTE: Firebase & Push Notification dinonaktifkan sementara
-  // sampai google-services.json tersedia.
-  // try {
-  //   await Firebase.initializeApp();
-  //   await NotificationService.initialize();
-  // } catch (e) {
-  //   debugPrint('Firebase init skipped: $e');
-  // }
+  // Init Firebase + FCM. Wrap try-catch supaya app tidak crash kalau
+  // google-services.json belum ada (dev environment).
+  try {
+    await Firebase.initializeApp();
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    await NotificationService().initialize();
+  } catch (e) {
+    debugPrint('⚠️ Firebase init skipped: $e');
+  }
 
   final prefs = await SharedPreferences.getInstance();
   final language = prefs.getString('language') ?? 'id';
