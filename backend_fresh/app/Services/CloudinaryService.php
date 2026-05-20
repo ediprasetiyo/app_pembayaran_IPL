@@ -29,9 +29,12 @@ class CloudinaryService
         $this->apiSecret = (string) config('services.cloudinary.api_secret', env('CLOUDINARY_API_SECRET', ''));
         // Timeout pendek supaya kalau Cloudinary slow/down → fail-fast,
         // fallback ke local storage yang dipanggil di controller.
+        // SSL verify off karena shared hosting (LiteSpeed/IDcloudHost) sering
+        // punya CA bundle outdated → cert verify fail meskipun cert valid.
         $this->http = new Client([
-            'timeout' => 10,
+            'timeout' => 15,
             'connect_timeout' => 5,
+            'verify' => false,
         ]);
     }
 

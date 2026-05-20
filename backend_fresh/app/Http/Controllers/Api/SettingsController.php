@@ -134,28 +134,47 @@ class SettingsController extends Controller
             'logo' => 'required|image|mimes:jpeg,png,jpg,webp,svg|max:2048',
         ]);
 
+        // Strategy: simpan ke LOCAL DULU (cepat, pasti jalan).
+        // Lalu coba upload ke Cloudinary in-background di sini — kalau gagal,
+        // tetap return local URL (warga tidak terganggu).
+        $localPath = null;
+        $finalUrl = null;
+
         try {
-            $cloudinary = app(CloudinaryService::class);
-            $url = null;
-            if ($cloudinary->isConfigured()) {
-                $url = $cloudinary->upload($request->file('logo'), 'ipl/logos');
-            }
-            if (!$url) {
-                $path = $request->file('logo')->store('settings', 'public');
-                $url = Storage::url($path);
-            }
-
-            // Save to settings
-            Setting::set('logo_url', $url);
-
-            return response()->json([
-                'message' => 'Logo berhasil diupload.',
-                'url' => $url,
-            ]);
+            $localPath = $request->file('logo')->store('settings', 'public');
+            $finalUrl = Storage::url($localPath);
         } catch (\Throwable $e) {
+            \Log::error('Local logo upload gagal: ' . $e->getMessage());
             return response()->json([
-                'message' => 'Gagal upload: ' . $e->getMessage(),
+                'message' => 'Gagal simpan logo: ' . $e->getMessage(),
             ], 500);
         }
+
+        // Coba upload ke Cloudinary (optional)
+        try {
+            $cloudinary = app(CloudinaryService::class);
+            if ($cloudinary->isConfigured()) {
+                $cloudUrl = $cloudinary->upload($request->file('logo'), 'ipl/logos');
+                if ($cloudUrl) {
+                    $finalUrl = $cloudUrl;
+                    // Hapus file local karena sudah pakai Cloudinary
+                    if ($localPath) {
+                        Storage::disk('public')->delete($localPath);
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Cloudinary logo upload gagal (pakai local saja): ' . $e->getMessage());
+            // Tetap lanjut dengan local URL
+        }
+
+        // Save to settings
+        Setting::set('logo_url', $finalUrl);
+
+        return response()->json([
+            'message' => 'Logo berhasil diupload.',
+            'url' => $finalUrl,
+            'storage' => str_contains($finalUrl ?? '', 'cloudinary.com') ? 'cloudinary' : 'local',
+        ]);
     }
 }

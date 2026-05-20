@@ -15,11 +15,20 @@ import 'providers/pengaduan_provider.dart';
 import 'providers/locale_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_screen.dart';
+import 'services/app_settings.dart';
+import 'services/api_service.dart';
 import 'services/notification_service.dart';
 import 'utils/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Init API service dulu supaya AppSettings bisa pakai
+  try { ApiService().init(); } catch (_) {}
+
+  // Load white-label settings dari backend (logo, warna, nama, dll)
+  // — supaya app langsung pakai branding sesuai perumahan ini.
+  await AppSettings.load();
 
   // Init Firebase + FCM. Wrap try-catch supaya app tidak crash kalau
   // google-services.json belum ada (dev environment).
@@ -56,7 +65,7 @@ class MyApp extends StatelessWidget {
       child: Consumer2<LocaleProvider, AuthProvider>(
         builder: (context, localeProvider, authProvider, _) {
           return MaterialApp(
-            title: 'IPL Griya Pesona Madani',
+            title: AppSettings.appName,
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light,
             locale: Locale(localeProvider.language),
@@ -87,36 +96,46 @@ class _SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Pakai logo dari backend (network) kalau ada, fallback ke asset bundle
+    Widget logoWidget;
+    final url = AppSettings.logoUrl;
+    if (url.isNotEmpty && url.startsWith('http')) {
+      logoWidget = Image.network(
+        url,
+        width: 240,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) => Image.asset('assets/images/logo.png', width: 240),
+      );
+    } else {
+      logoWidget = Image.asset('assets/images/logo.png', width: 240, fit: BoxFit.contain);
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
+            Padding(
               padding: const EdgeInsets.all(24),
-              child: Image.asset(
-                'assets/images/logo.png',
-                width: 280,
-                fit: BoxFit.contain,
-              ),
+              child: logoWidget,
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'Tenjo - Blok E',
-              style: TextStyle(
+            const SizedBox(height: 12),
+            Text(
+              AppSettings.brandSubtitle,
+              style: const TextStyle(
                 color: Color(0xFF757575),
                 fontSize: 14,
                 letterSpacing: 1.2,
               ),
             ),
             const SizedBox(height: 56),
-            const SizedBox(
+            SizedBox(
               width: 32,
               height: 32,
               child: CircularProgressIndicator(
                 strokeWidth: 3,
-                valueColor: AlwaysStoppedAnimation(Color(0xFF388E3C)),
+                valueColor: AlwaysStoppedAnimation(AppTheme.primaryColor),
               ),
             ),
           ],
