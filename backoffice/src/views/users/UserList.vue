@@ -28,42 +28,50 @@
       </select>
     </div>
 
-    <!-- Tabel -->
+    <!-- Tabel — pakai overflow-x-auto supaya bisa scroll horizontal kalau kepanjangan -->
     <div class="card overflow-hidden">
-      <div class="table-wrapper">
-        <table>
-          <thead>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 border-b">
             <tr>
-              <th>Nama</th>
-              <th>Nomor HP</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Dibuat</th>
-              <th class="text-right">Aksi</th>
+              <th class="text-left px-3 py-3 whitespace-nowrap" style="min-width: 160px">Nama</th>
+              <th class="text-left px-3 py-3 whitespace-nowrap" style="min-width: 130px">Nomor HP</th>
+              <th class="text-left px-3 py-3 whitespace-nowrap" style="min-width: 160px">Email</th>
+              <th class="text-left px-3 py-3 whitespace-nowrap" style="min-width: 110px">Role</th>
+              <th class="text-left px-3 py-3 whitespace-nowrap" style="min-width: 110px">Blok</th>
+              <th class="text-left px-3 py-3 whitespace-nowrap" style="min-width: 90px">Status</th>
+              <th class="text-left px-3 py-3 whitespace-nowrap" style="min-width: 110px">Dibuat</th>
+              <th class="text-right px-3 py-3 whitespace-nowrap" style="min-width: 220px">Aksi</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody class="divide-y">
             <tr v-if="loading">
-              <td colspan="7" class="text-center py-6 text-gray-500">Memuat...</td>
+              <td colspan="8" class="text-center py-6 text-gray-500">Memuat...</td>
             </tr>
             <tr v-else-if="users.length === 0">
-              <td colspan="7" class="text-center py-6 text-gray-500">Belum ada user.</td>
+              <td colspan="8" class="text-center py-6 text-gray-500">Belum ada user.</td>
             </tr>
-            <tr v-for="u in users" :key="u.id">
-              <td class="font-medium">{{ u.name }}</td>
-              <td>{{ u.phone }}</td>
-              <td>{{ u.email ?? '-' }}</td>
-              <td>
+            <tr v-for="u in users" :key="u.id" class="hover:bg-gray-50">
+              <td class="font-medium px-3 py-3 whitespace-nowrap">{{ u.name }}</td>
+              <td class="px-3 py-3 whitespace-nowrap">{{ u.phone }}</td>
+              <td class="px-3 py-3 whitespace-nowrap text-gray-600">{{ u.email ?? '-' }}</td>
+              <td class="px-3 py-3 whitespace-nowrap">
                 <span :class="roleClass(u.role)">{{ roleLabel(u.role) }}</span>
               </td>
-              <td>
+              <td class="px-3 py-3 whitespace-nowrap">
+                <span v-if="u.role === 'super_admin'" class="badge-blue text-xs">Semua Blok</span>
+                <span v-else-if="u.blok" class="badge-gray text-xs font-mono">
+                  Blok {{ u.blok.kode }}
+                </span>
+                <span v-else class="text-xs text-gray-400">—</span>
+              </td>
+              <td class="px-3 py-3 whitespace-nowrap">
                 <span :class="u.is_active ? 'badge-green' : 'badge-gray'">
                   {{ u.is_active ? 'Aktif' : 'Non-aktif' }}
                 </span>
               </td>
-              <td class="text-gray-500 text-xs">{{ formatDate(u.created_at) }}</td>
-              <td class="text-right">
+              <td class="px-3 py-3 whitespace-nowrap text-gray-500 text-xs">{{ formatDate(u.created_at) }}</td>
+              <td class="px-3 py-3 text-right whitespace-nowrap">
                 <button @click="testPush(u)" class="text-blue-600 hover:underline text-sm mr-3" title="Kirim test push notification ke HP user ini">
                   🔔 Test Push
                 </button>

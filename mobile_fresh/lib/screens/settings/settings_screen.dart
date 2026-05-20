@@ -8,7 +8,12 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/locale_provider.dart';
+import '../../providers/ipl_provider.dart';
+import '../../providers/news_provider.dart';
+import '../../providers/notifikasi_provider.dart';
 import '../../screens/auth/login_screen.dart';
+import '../../screens/legal/refund_policy_screen.dart';
+import '../../screens/legal/terms_screen.dart';
 import '../../services/app_settings.dart';
 import '../../utils/app_theme.dart';
 
@@ -26,8 +31,20 @@ class SettingsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
-      body: ListView(
-        children: [
+      body: RefreshIndicator(
+        color: AppTheme.primaryColor,
+        onRefresh: () async {
+          // Refresh AppSettings (logo, warna, brand) + data lain
+          await Future.wait([
+            appSettingsNotifier.refresh(),
+            context.read<IplProvider>().refreshAll(),
+            context.read<NewsProvider>().fetchLatest(),
+            context.read<NotifikasiProvider>().load(),
+          ]);
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
           // Profile Header — pakai gradient dari Settings (sync dengan beranda)
           Container(
             padding: const EdgeInsets.all(20),
@@ -197,6 +214,39 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
 
+          const SizedBox(height: 8),
+
+          // Legal section
+          const _SectionHeader(title: 'LEGAL & KETENTUAN'),
+          Card(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Column(
+              children: [
+                _SettingsTile(
+                  icon: Icons.gavel_rounded,
+                  title: 'Syarat & Ketentuan',
+                  subtitle: 'Aturan penggunaan aplikasi',
+                  trailing: const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const TermsScreen()),
+                  ),
+                ),
+                const Divider(height: 1, indent: 56),
+                _SettingsTile(
+                  icon: Icons.assignment_return_outlined,
+                  title: 'Kebijakan Pengembalian Dana',
+                  subtitle: 'Refund policy & cara klaim',
+                  trailing: const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const RefundPolicyScreen()),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
           const SizedBox(height: 16),
 
           Padding(
@@ -221,6 +271,7 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 32),
         ],
+      ),
       ),
     );
   }
