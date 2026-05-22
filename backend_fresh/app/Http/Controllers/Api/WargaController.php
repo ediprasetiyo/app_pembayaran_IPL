@@ -383,12 +383,16 @@ class WargaController extends Controller
         $belumBayar = (clone $tagihanIplBulanIni)->belumBayar()->count();
 
         // Total pendapatan IPL bulan ini
+        // Total Pendapatan bulan ini (yang sebelumnya jadi "Pendapatan")
         $totalPendapatan = IplTagihan::bulanIni()
             ->where('ipl_tagihan.jenis', 'ipl_bulanan')
             ->where('ipl_tagihan.status', 'sudah_bayar')
             ->join('pembayaran', 'ipl_tagihan.id', '=', 'pembayaran.tagihan_id')
             ->where('pembayaran.status', 'success')
             ->sum('pembayaran.nominal');
+
+        // Saldo Total IPL aktif = sum pembayaran - sum pengeluaran + adjustment
+        $kasSummary = \App\Services\KasService::summary();
 
         // === SUMMARY UANG KEDUKAAN ===
         // Total warga yang sudah bayar kedukaan
@@ -418,12 +422,18 @@ class WargaController extends Controller
             'tagihan_bulan_ini' => $totalTagihanBulanIni,
             'sudah_bayar' => $sudahBayar,
             'belum_bayar' => $belumBayar,
+            // Yang lama untuk backward-compat (Pendapatan bulan ini)
             'total_pendapatan' => $totalPendapatan,
+            // BARU: Total saldo IPL aktif (pemasukan - pengeluaran + adjustment)
+            'total_ipl' => $kasSummary['ipl']['saldo'],
+            'ipl_breakdown' => $kasSummary['ipl'],
             'persentase_bayar' => $totalTagihanBulanIni > 0
                 ? round(($sudahBayar / $totalTagihanBulanIni) * 100, 1)
                 : 0,
             'kedukaan' => [
-                'total_dana' => max($kedukaanTerkumpul, (int) $kedukaanFromPembayaran),
+                // Saldo aktif = pemasukan - pengeluaran + adjustment
+                'total_dana' => $kasSummary['kedukaan']['saldo'],
+                'breakdown' => $kasSummary['kedukaan'],
                 'warga_sudah_bayar' => $kedukaanWargaSudahBayar,
                 'warga_belum_bayar' => $kedukaanWargaBelumBayar,
                 'tarif_per_warga' => $tarifKedukaan,

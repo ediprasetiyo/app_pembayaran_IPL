@@ -81,6 +81,14 @@ $files = [
         => $basePath . '/app/Http/Controllers/Api/MidtransPaymentMethodController.php',
     'backend_fresh/app/Services/MidtransPaymentMethodService.php'
         => $basePath . '/app/Services/MidtransPaymentMethodService.php',
+    'backend_fresh/app/Http/Controllers/Api/PengeluaranController.php'
+        => $basePath . '/app/Http/Controllers/Api/PengeluaranController.php',
+    'backend_fresh/app/Models/Pengeluaran.php'
+        => $basePath . '/app/Models/Pengeluaran.php',
+    'backend_fresh/app/Services/KasService.php'
+        => $basePath . '/app/Services/KasService.php',
+    'backend_fresh/database/migrations/2026_05_22_000001_create_pengeluaran_table.php'
+        => $basePath . '/database/migrations/2026_05_22_000001_create_pengeluaran_table.php',
     'backend_fresh/app/Models/Blok.php'
         => $basePath . '/app/Models/Blok.php',
     'backend_fresh/app/Models/AuditLog.php'

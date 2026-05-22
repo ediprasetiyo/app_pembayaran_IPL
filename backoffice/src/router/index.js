@@ -22,6 +22,7 @@ const routeAccess = {
   Bloks: ['super_admin'],
   AuditLog: ['super_admin'],
   MidtransPayment: ['super_admin'],
+  Pengeluaran: ['super_admin', 'admin', 'bendahara'],
 }
 
 // Mendapatkan default route berdasarkan role
@@ -62,6 +63,7 @@ const routes = [
       { path: 'bloks', name: 'Bloks', component: () => import('@/views/admin/BlokList.vue') },
       { path: 'audit-log', name: 'AuditLog', component: () => import('@/views/admin/AuditLogView.vue') },
       { path: 'midtrans-payment', name: 'MidtransPayment', component: () => import('@/views/admin/MidtransPaymentView.vue') },
+      { path: 'pengeluaran', name: 'Pengeluaran', component: () => import('@/views/admin/PengeluaranList.vue') },
     ],
   },
 ]

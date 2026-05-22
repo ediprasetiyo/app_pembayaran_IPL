@@ -97,6 +97,7 @@ import {
   Cog6ToothIcon,
   Squares2X2Icon,
   ClipboardDocumentListIcon,
+  BanknotesIcon,
 } from '@heroicons/vue/24/outline'
 import dayjs from 'dayjs'
 import 'dayjs/locale/id'
@@ -120,6 +121,8 @@ const navItems = [
   { to: '/tagihan', label: 'Tagihan IPL', icon: DocumentTextIcon,
     roles: ['super_admin', 'admin', 'bendahara'] },
   { to: '/pembayaran', label: 'Pembayaran', icon: CreditCardIcon,
+    roles: ['super_admin', 'admin', 'bendahara'] },
+  { to: '/pengeluaran', label: 'Pengeluaran / Kas', icon: BanknotesIcon,
     roles: ['super_admin', 'admin', 'bendahara'] },
   { to: '/pengaduan', label: 'Pengaduan', icon: ExclamationTriangleIcon,
     roles: ['super_admin', 'admin', 'humas'] },

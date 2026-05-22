@@ -31,10 +31,22 @@
           <SummaryRow label="Total Warga Aktif" :value="stats.total_warga" icon="👥" />
           <SummaryRow label="Sudah Bayar" :value="stats.sudah_bayar" icon="✅" color="text-green-600" />
           <SummaryRow label="Belum Bayar" :value="stats.belum_bayar" icon="⏳" color="text-yellow-600" />
-          <div class="border-t pt-3">
+          <div class="border-t pt-3 space-y-2">
             <div class="flex justify-between items-center">
-              <span class="text-sm text-gray-600">Total Pendapatan</span>
-              <span class="font-bold text-primary-700">{{ formatCurrency(stats.total_pendapatan) }}</span>
+              <span class="text-sm text-gray-600">Pendapatan bulan ini</span>
+              <span class="font-semibold text-primary-700">{{ formatCurrency(stats.total_pendapatan) }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <div class="text-sm">
+                <p class="text-gray-700 font-medium">Total IPL (Kas RT)</p>
+                <p class="text-xs text-gray-400">Pemasukan − Pengeluaran ± Adjustment</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-emerald-700">{{ formatCurrency(stats.total_ipl ?? stats.total_pendapatan) }}</span>
+                <button v-if="isSuperAdmin" @click="openAdjustModal('ipl')" class="text-xs text-primary-700 hover:underline" title="Edit saldo manual">
+                  ✏️
+                </button>
+              </div>
             </div>
           </div>
           <div class="bg-primary-50 rounded-lg p-3">
@@ -70,12 +82,24 @@
       <div class="p-6">
         <div v-if="stats?.kedukaan" class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div class="md:col-span-2 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-5 border border-purple-100">
-            <p class="text-xs text-gray-600 mb-1">Total Dana Terkumpul</p>
-            <p class="text-3xl font-bold text-purple-700">
-              {{ formatCurrency(stats.kedukaan.total_dana) }}
-            </p>
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-xs text-gray-600 mb-1">Total Dana Aktif</p>
+                <p class="text-3xl font-bold text-purple-700">
+                  {{ formatCurrency(stats.kedukaan.total_dana) }}
+                </p>
+              </div>
+              <button v-if="isSuperAdmin" @click="openAdjustModal('kedukaan')"
+                class="text-xs text-purple-700 hover:bg-purple-100 px-2 py-1 rounded"
+                title="Edit saldo manual">
+                ✏️ Edit
+              </button>
+            </div>
             <p class="text-xs text-gray-500 mt-2">
               Tarif: {{ formatCurrency(stats.kedukaan.tarif_per_warga) }} / warga (sekali bayar)
+            </p>
+            <p v-if="stats.kedukaan.breakdown" class="text-xs text-gray-500 mt-1">
+              Pemasukan {{ formatCurrency(stats.kedukaan.breakdown.pemasukan) }} − Pengeluaran {{ formatCurrency(stats.kedukaan.breakdown.pengeluaran) }}
             </p>
           </div>
           <div class="bg-green-50 rounded-xl p-5 border border-green-100">
@@ -91,6 +115,42 @@
         </div>
         <div v-else class="space-y-3">
           <div class="h-20 bg-gray-100 rounded-xl animate-pulse" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Adjust Saldo (super admin only) -->
+    <div v-if="adjustModal.show" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
+        <div class="px-5 py-4 border-b">
+          <h3 class="font-bold">✏️ Edit Saldo Manual</h3>
+          <p class="text-xs text-gray-500 mt-1">
+            Sumber dana: <strong>{{ adjustModal.sumberLabel }}</strong>
+          </p>
+        </div>
+        <div class="p-5 space-y-4">
+          <div class="bg-blue-50 border border-blue-200 rounded p-3 text-xs text-blue-800">
+            <p>💡 Nilai adjustment akan <strong>ditambahkan</strong> ke saldo otomatis (pemasukan − pengeluaran).</p>
+            <p class="mt-1">Pakai nilai <strong>positif</strong> untuk menambah saldo, <strong>negatif</strong> untuk mengurangi.</p>
+          </div>
+          <div>
+            <label class="label">Adjustment (Rp)</label>
+            <input v-model.number="adjustModal.value" type="number" class="input" placeholder="0" />
+            <p class="text-xs text-gray-400 mt-1">
+              Saldo sekarang: {{ formatCurrency(currentSaldo) }} → Saldo baru: {{ formatCurrency((currentSaldoRaw - currentAdjustment) + (adjustModal.value || 0)) }}
+            </p>
+          </div>
+          <div>
+            <label class="label">Catatan (opsional)</label>
+            <textarea v-model="adjustModal.catatan" class="input" rows="2" placeholder="Misal: penyesuaian saldo awal sebelum sistem ini ada" />
+          </div>
+        </div>
+        <div class="px-5 py-4 border-t flex gap-3 justify-end">
+          <button @click="closeAdjustModal" class="btn-secondary">Batal</button>
+          <button @click="submitAdjust" class="btn-primary" :disabled="adjustModal.saving">
+            <span v-if="adjustModal.saving" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            Simpan
+          </button>
         </div>
       </div>
     </div>
@@ -116,10 +176,13 @@
 </template>
 
 <script setup>
-import { computed, onMounted, defineComponent, h } from 'vue'
+import { computed, onMounted, defineComponent, h, ref } from 'vue'
 import { Doughnut } from 'vue-chartjs'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
 import { useDashboardStore } from '@/stores/dashboard'
+import { useAuthStore } from '@/stores/auth'
+import { useToast } from 'vue-toastification'
+import api from '@/services/api'
 import dayjs from 'dayjs'
 import 'dayjs/locale/id'
 dayjs.locale('id')
@@ -159,15 +222,67 @@ const SummaryRow = defineComponent({
 })
 
 const store = useDashboardStore()
+const auth = useAuthStore()
+const toast = useToast()
 const stats = computed(() => store.stats)
+const isSuperAdmin = computed(() => auth.user?.role === 'super_admin')
 
 const currentMonth = computed(() => dayjs().format('MMMM YYYY'))
+
+// === Adjust Saldo Modal ===
+const adjustModal = ref({ show: false, sumber: 'ipl', sumberLabel: '', value: 0, catatan: '', saving: false })
+
+function openAdjustModal(sumber) {
+  const isIpl = sumber === 'ipl'
+  const breakdown = isIpl ? stats.value?.ipl_breakdown : stats.value?.kedukaan?.breakdown
+  adjustModal.value = {
+    show: true,
+    sumber,
+    sumberLabel: isIpl ? '💰 Total IPL (Kas RT)' : '🕊️ Uang Kedukaan',
+    value: breakdown?.adjustment ?? 0,
+    catatan: '',
+    saving: false,
+  }
+}
+
+function closeAdjustModal() {
+  adjustModal.value.show = false
+}
+
+const currentSaldo = computed(() => {
+  const isIpl = adjustModal.value.sumber === 'ipl'
+  return isIpl ? (stats.value?.total_ipl ?? 0) : (stats.value?.kedukaan?.total_dana ?? 0)
+})
+
+const currentSaldoRaw = computed(() => currentSaldo.value)
+const currentAdjustment = computed(() => {
+  const isIpl = adjustModal.value.sumber === 'ipl'
+  return isIpl ? (stats.value?.ipl_breakdown?.adjustment ?? 0) : (stats.value?.kedukaan?.breakdown?.adjustment ?? 0)
+})
+
+async function submitAdjust() {
+  adjustModal.value.saving = true
+  try {
+    await api.post('/kas/adjust', {
+      sumber_dana: adjustModal.value.sumber,
+      adjustment: Math.round(Number(adjustModal.value.value) || 0),
+      catatan: adjustModal.value.catatan,
+    })
+    toast.success('Saldo berhasil di-update.')
+    closeAdjustModal()
+    await store.fetchStats()
+  } catch (e) {
+    toast.error(e.response?.data?.message ?? 'Gagal update saldo.')
+  } finally {
+    adjustModal.value.saving = false
+  }
+}
 
 const statCards = computed(() => [
   { label: 'Total Warga', value: stats.value?.total_warga, icon: '👥', color: 'bg-blue-500' },
   { label: 'Sudah Bayar', value: stats.value?.sudah_bayar, icon: '✅', color: 'bg-green-500', sub: 'bulan ini' },
   { label: 'Belum Bayar', value: stats.value?.belum_bayar, icon: '⏳', color: 'bg-yellow-500', sub: 'bulan ini' },
-  { label: 'Pendapatan', value: formatCurrency(stats.value?.total_pendapatan), icon: '💰', color: 'bg-emerald-500' },
+  { label: 'Total IPL', value: formatCurrency(stats.value?.total_ipl ?? stats.value?.total_pendapatan), icon: '💰', color: 'bg-emerald-500', sub: 'saldo aktif (kas RT)' },
 ])
 
 const chartData = computed(() => {

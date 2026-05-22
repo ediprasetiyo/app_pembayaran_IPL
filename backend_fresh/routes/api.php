@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\MidtransPaymentMethodController;
 use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\NotifikasiController;
 use App\Http\Controllers\Api\PengaduanController;
+use App\Http\Controllers\Api\PengeluaranController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\WargaController;
@@ -81,6 +82,14 @@ Route::prefix('v1')->group(function () {
 
         // AI Assistant (untuk staff backoffice)
         Route::middleware('admin')->post('/ai/ask', [AiAssistantController::class, 'ask']);
+
+        // Pengeluaran / Kas (bendahara, admin, super_admin)
+        Route::get('/pengeluaran', [PengeluaranController::class, 'index']);
+        Route::post('/pengeluaran', [PengeluaranController::class, 'store']);
+        Route::put('/pengeluaran/{pengeluaran}', [PengeluaranController::class, 'update']);
+        Route::delete('/pengeluaran/{pengeluaran}', [PengeluaranController::class, 'destroy']);
+        Route::get('/kas/summary', [PengeluaranController::class, 'summary']);
+        Route::post('/kas/adjust', [PengeluaranController::class, 'adjustSaldo']); // super_admin only (checked di controller)
 
         // Admin routes
         Route::middleware('admin')->group(function () {
