@@ -172,14 +172,32 @@ class SettingsController extends Controller
             \Kreait\Laravel\Firebase\Facades\Firebase::messaging()->send($message);
 
             return response()->json([
-                'message' => "Test '{$request->event}' terkirim ke {$user->name}! Cek HP & tab Notifikasi.",
+                'message' => "✅ Test '{$request->event}' terkirim ke {$user->name}! Cek HP & tab Notifikasi.",
                 'rendered' => $rendered,
                 'target' => ['id' => $user->id, 'name' => $user->name],
             ]);
         } catch (\Throwable $e) {
-            \Log::error('Test notif FCM error: ' . $e->getMessage());
+            $errMsg = $e->getMessage();
+            \Log::error('Test notif FCM error: ' . $errMsg);
+
+            // Detect stale token → auto-clear + kasih message helpful
+            $isStaleToken = stripos($errMsg, 'not found') !== false ||
+                stripos($errMsg, 'not a valid') !== false ||
+                stripos($errMsg, 'invalidregistration') !== false ||
+                stripos($errMsg, 'unregistered') !== false;
+
+            if ($isStaleToken) {
+                // Clear stale token
+                \App\Models\User::where('id', $user->id)->update(['fcm_token' => null]);
+                return response()->json([
+                    'message' => "⚠️ FCM token user '{$user->name}' sudah expired/invalid (mungkin user uninstall/reinstall app). Token sudah di-clear otomatis. Minta user login ulang di mobile app.",
+                    'stale_token' => true,
+                    'target' => ['id' => $user->id, 'name' => $user->name],
+                ], 422);
+            }
+
             return response()->json([
-                'message' => 'In-app notif tersimpan, tapi FCM push gagal: ' . $e->getMessage(),
+                'message' => 'In-app notif tersimpan, tapi FCM push gagal: ' . $errMsg,
                 'rendered' => $rendered,
             ], 500);
         }

@@ -259,8 +259,23 @@ class NotifikasiService
 
             Firebase::messaging()->send($message);
         } catch (\Throwable $e) {
-            // Log saja, jangan crash request user
-            logger()->warning('FCM kirim gagal untuk user ' . $user->id . ': ' . $e->getMessage());
+            $msg = $e->getMessage();
+            logger()->warning('FCM kirim gagal untuk user ' . $user->id . ': ' . $msg);
+
+            // Auto-clear stale/invalid token supaya tidak retry terus
+            // Common Firebase errors:
+            //  - "Requested entity was not found" → token tidak valid (uninstall/expired)
+            //  - "registration token is not a valid FCM registration token"
+            //  - "InvalidRegistration"
+            if (stripos($msg, 'not found') !== false ||
+                stripos($msg, 'not a valid') !== false ||
+                stripos($msg, 'invalidregistration') !== false ||
+                stripos($msg, 'unregistered') !== false) {
+                try {
+                    \App\Models\User::where('id', $user->id)->update(['fcm_token' => null]);
+                    logger()->info('FCM token user ' . $user->id . ' di-clear (stale token).');
+                } catch (\Throwable $_) {}
+            }
         }
     }
 }
