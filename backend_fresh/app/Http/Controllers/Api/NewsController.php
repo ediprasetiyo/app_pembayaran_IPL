@@ -69,7 +69,9 @@ class NewsController extends Controller
             'ringkasan' => 'nullable|string|max:500',
             'konten' => 'required|string',
             'kategori' => 'required|in:pengumuman,kegiatan,informasi,darurat',
-            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            // Terima gambar sebagai URL (string) — frontend upload langsung ke Cloudinary
+            // ATAU sebagai file multipart (backward compat untuk mobile/legacy)
+            'gambar' => 'nullable',
             'is_published' => 'sometimes|boolean',
             'is_pinned' => 'sometimes|boolean',
         ]);
@@ -79,7 +81,11 @@ class NewsController extends Controller
         $data['is_pinned'] = $request->boolean('is_pinned', false);
         $data['dibuat_oleh'] = $request->user()->id;
 
-        if ($request->hasFile('gambar') && $request->file('gambar')->isValid()) {
+        // Handle gambar: kalau string URL → langsung simpan; kalau file → upload via Cloudinary fallback local
+        $gambarInput = $request->input('gambar');
+        if (is_string($gambarInput) && str_starts_with($gambarInput, 'http')) {
+            $data['gambar'] = $gambarInput;
+        } elseif ($request->hasFile('gambar') && $request->file('gambar')->isValid()) {
             try {
                 $cloudinary = app(CloudinaryService::class);
                 $url = null;
@@ -123,7 +129,8 @@ class NewsController extends Controller
             'ringkasan' => 'nullable|string|max:500',
             'konten' => 'sometimes|string',
             'kategori' => 'sometimes|in:pengumuman,kegiatan,informasi,darurat',
-            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            // Terima URL (string) atau file
+            'gambar' => 'nullable',
             'is_published' => 'sometimes|boolean',
             'is_pinned' => 'sometimes|boolean',
         ]);
@@ -140,7 +147,23 @@ class NewsController extends Controller
             $data['is_pinned'] = $request->boolean('is_pinned');
         }
 
-        if ($request->hasFile('gambar') && $request->file('gambar')->isValid()) {
+        // Handle gambar: URL (dari direct Cloudinary upload) atau file multipart
+        $gambarInput = $request->input('gambar');
+        if (is_string($gambarInput) && str_starts_with($gambarInput, 'http')) {
+            // URL baru dari Cloudinary — hapus gambar lama kalau perlu
+            if ($news->gambar && $news->gambar !== $gambarInput) {
+                try {
+                    $cloudinary = app(CloudinaryService::class);
+                    if (str_contains($news->gambar, 'cloudinary.com') && $cloudinary->isConfigured()) {
+                        $cloudinary->deleteByUrl($news->gambar);
+                    } elseif (str_starts_with($news->gambar, '/storage/')) {
+                        $oldPath = str_replace('/storage/', '', parse_url($news->gambar, PHP_URL_PATH) ?? '');
+                        if (!empty($oldPath)) Storage::disk('public')->delete($oldPath);
+                    }
+                } catch (\Throwable $e) {}
+            }
+            $data['gambar'] = $gambarInput;
+        } elseif ($request->hasFile('gambar') && $request->file('gambar')->isValid()) {
             try {
                 $cloudinary = app(CloudinaryService::class);
                 // Hapus gambar lama

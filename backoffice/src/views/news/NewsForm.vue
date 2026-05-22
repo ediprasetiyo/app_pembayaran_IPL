@@ -198,27 +198,59 @@ async function submit() {
   error.value = ''
   saving.value = true
   try {
-    const fd = new FormData()
-    fd.append('judul', form.value.judul)
-    fd.append('ringkasan', form.value.ringkasan)
-    fd.append('konten', form.value.konten)
-    fd.append('kategori', form.value.kategori)
-    fd.append('is_published', form.value.is_published ? '1' : '0')
-    fd.append('is_pinned', form.value.is_pinned ? '1' : '0')
-    if (form.value.gambar) fd.append('gambar', form.value.gambar)
+    let gambarUrl = null
+
+    // Step 1: Kalau ada file gambar baru → upload langsung ke Cloudinary (bypass ModSecurity)
+    if (form.value.gambar instanceof File) {
+      const sigRes = await api.post('/admin/settings/cloudinary-signature', {
+        folder: 'ipl/news',
+      })
+      const { cloud_name, api_key, timestamp, signature, folder } = sigRes.data
+
+      const fd = new FormData()
+      fd.append('file', form.value.gambar)
+      fd.append('api_key', api_key)
+      fd.append('timestamp', timestamp)
+      fd.append('signature', signature)
+      fd.append('folder', folder)
+
+      const cloudRes = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`,
+        { method: 'POST', body: fd },
+      )
+      if (!cloudRes.ok) {
+        const errText = await cloudRes.text()
+        throw new Error('Cloudinary upload gagal: ' + errText.substring(0, 200))
+      }
+      const cloudData = await cloudRes.json()
+      gambarUrl = cloudData.secure_url
+    } else if (typeof form.value.gambar === 'string' && form.value.gambar.startsWith('http')) {
+      // Gambar sudah URL (existing news) → tidak perlu upload ulang
+      gambarUrl = form.value.gambar
+    }
+
+    // Step 2: POST JSON ke backend dengan gambar sebagai URL (tidak ada multipart!)
+    const payload = {
+      judul: form.value.judul,
+      ringkasan: form.value.ringkasan,
+      konten: form.value.konten,
+      kategori: form.value.kategori,
+      is_published: form.value.is_published,
+      is_pinned: form.value.is_pinned,
+    }
+    if (gambarUrl) payload.gambar = gambarUrl
 
     if (isEdit.value) {
-      fd.append('_method', 'PUT')
-      await api.post(`/news/${route.params.id}`, fd)
+      await api.put(`/news/${route.params.id}`, payload)
       toast.success('Berita diperbarui.')
     } else {
-      await api.post('/news', fd)
+      await api.post('/news', payload)
       toast.success('Berita berhasil dibuat.')
     }
     router.push('/news')
   } catch (e) {
     const errs = e.response?.data?.errors
-    error.value = errs ? Object.values(errs).flat().join(' ') : (e.response?.data?.message ?? 'Gagal menyimpan.')
+    error.value = errs ? Object.values(errs).flat().join(' ') : (e.response?.data?.message ?? e.message ?? 'Gagal menyimpan.')
   } finally {
     saving.value = false
   }
