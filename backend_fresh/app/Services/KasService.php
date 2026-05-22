@@ -21,8 +21,8 @@ class KasService
 {
     public static function totalPemasukanIpl(): int
     {
-        return (int) IplTagihan::where('jenis', 'ipl_bulanan')
-            ->where('status', 'sudah_bayar')
+        return (int) IplTagihan::where('ipl_tagihan.jenis', 'ipl_bulanan')
+            ->where('ipl_tagihan.status', 'sudah_bayar')
             ->join('pembayaran', 'ipl_tagihan.id', '=', 'pembayaran.tagihan_id')
             ->where('pembayaran.status', 'success')
             ->sum('pembayaran.nominal');
@@ -35,8 +35,8 @@ class KasService
 
     public static function totalPemasukanKedukaan(): int
     {
-        return (int) IplTagihan::where('jenis', 'kedukaan')
-            ->where('status', 'sudah_bayar')
+        return (int) IplTagihan::where('ipl_tagihan.jenis', 'kedukaan')
+            ->where('ipl_tagihan.status', 'sudah_bayar')
             ->join('pembayaran', 'ipl_tagihan.id', '=', 'pembayaran.tagihan_id')
             ->where('pembayaran.status', 'success')
             ->sum('pembayaran.nominal');
