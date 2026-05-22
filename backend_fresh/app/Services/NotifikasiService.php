@@ -45,6 +45,10 @@ class NotifikasiService
             'judul' => '📢 Pengumuman Baru',
             'pesan' => '{judul_berita}',
         ],
+        'berita_update' => [
+            'judul' => '✏️ Pengumuman Diperbarui',
+            'pesan' => '{judul_berita}',
+        ],
     ];
 
     /**
@@ -163,10 +167,11 @@ class NotifikasiService
     }
 
     /**
-     * Kirim notifikasi berita baru ke SEMUA user aktif (warga + admin).
-     * Dipanggil saat news baru dipublish.
+     * Kirim notifikasi berita ke SEMUA user aktif (warga + admin).
+     * @param mixed $news Model News
+     * @param string $event 'berita_baru' (default) atau 'berita_update'
      */
-    public function kirimNotifikasiBeritaBaru($news): void
+    public function kirimNotifikasiBeritaBaru($news, string $event = 'berita_baru'): void
     {
         // Ambil semua user aktif yang punya fcm_token
         $users = User::where('is_active', true)
@@ -177,7 +182,7 @@ class NotifikasiService
         if (strlen($ringkasan) > 100) $ringkasan = substr($ringkasan, 0, 97) . '...';
 
         foreach ($users as $user) {
-            $rendered = self::render('berita_baru', [
+            $rendered = self::render($event, [
                 'nama' => $user->name,
                 'judul_berita' => $news->judul,
                 'ringkasan' => $ringkasan,
@@ -188,6 +193,7 @@ class NotifikasiService
                 'news_id' => $news->id,
                 'slug' => $news->slug ?? null,
                 'type' => 'berita',
+                'event' => $event,
             ]);
 
             $this->kirimFCM($user, $rendered['judul'], $rendered['pesan']);

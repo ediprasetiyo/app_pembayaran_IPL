@@ -193,7 +193,22 @@ class NewsController extends Controller
             }
         }
 
+        $wasPublished = (bool) $news->is_published;
         $news->update($data);
+        $isPublishedNow = (bool) $news->is_published;
+
+        // Kirim notifikasi push kalau berita ter-publish:
+        // - First time publish (draft → published) → 'berita_baru'
+        // - Already published & di-update → 'berita_update'
+        if ($isPublishedNow) {
+            try {
+                $event = $wasPublished ? 'berita_update' : 'berita_baru';
+                app(\App\Services\NotifikasiService::class)
+                    ->kirimNotifikasiBeritaBaru($news->fresh(), $event);
+            } catch (\Throwable $e) {
+                \Log::warning('Gagal kirim notifikasi update berita: ' . $e->getMessage());
+            }
+        }
 
         return response()->json([
             'message' => 'Berita berhasil diperbarui.',
