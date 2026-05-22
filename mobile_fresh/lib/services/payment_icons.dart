@@ -12,11 +12,25 @@ class PaymentIcons {
 
   static bool get isLoaded => _loaded;
 
+  /// Mapping Midtrans-generic codes ke internal codes kita.
+  /// Karena Midtrans webhook return 'bank_transfer' untuk semua VA (BCA/BNI/BRI/Permata),
+  /// kita map ke salah satu untuk display logo.
+  static const _aliases = {
+    'bank_transfer': 'bca_va', // fallback generic VA → BCA icon
+    'cstore': 'indomaret',     // convenience store → Indomaret icon
+    'echannel': 'other_va',    // Mandiri bill → generic bank
+  };
+
   /// Get info untuk 1 payment method code.
   /// Return: { name, logo_url, icon, category } atau null.
   static Map<String, dynamic>? get(String? code) {
     if (code == null || code.isEmpty) return null;
-    return _map[code];
+    // Try direct lookup
+    if (_map.containsKey(code)) return _map[code];
+    // Try alias lookup
+    final alias = _aliases[code];
+    if (alias != null && _map.containsKey(alias)) return _map[alias];
+    return null;
   }
 
   /// Dapatkan logo URL untuk method tertentu (atau null).

@@ -242,11 +242,20 @@
 
         <div v-else class="space-y-5">
           <div v-for="(tpl, key) in notifTemplates" :key="key" class="border-l-4 border-primary-500 bg-gray-50 rounded-r-lg p-4">
-            <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center justify-between mb-2 gap-2 flex-wrap">
               <h4 class="font-semibold text-sm">{{ notifLabel(key) }}</h4>
-              <button v-if="tpl.custom" @click="resetNotifTemplate(key)" class="text-xs text-red-600 hover:underline">
-                🔄 Reset ke Default
-              </button>
+              <div class="flex gap-2">
+                <button @click="testNotif(key)"
+                  class="text-xs text-blue-600 hover:bg-blue-50 px-2 py-1 rounded border border-blue-200"
+                  :disabled="testingKey === key"
+                  title="Kirim test ke HP & in-app notif Anda">
+                  <span v-if="testingKey === key" class="inline-block w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin align-middle" />
+                  🧪 Test Kirim
+                </button>
+                <button v-if="tpl.custom" @click="resetNotifTemplate(key)" class="text-xs text-red-600 hover:underline">
+                  🔄 Reset
+                </button>
+              </div>
             </div>
             <div class="grid grid-cols-1 gap-3">
               <div>
@@ -346,6 +355,7 @@ const notifEdit = ref({})
 const placeholders = ref({})
 const loadingTpl = ref(false)
 const savingTpl = ref(false)
+const testingKey = ref(null)
 
 const NOTIF_LABELS = {
   pembayaran_sukses: '💰 Pembayaran Sukses (ke Warga)',
@@ -419,6 +429,18 @@ function resetNotifTemplate(key) {
   if (!def) return
   notifEdit.value[key] = { judul: def.judul, pesan: def.pesan }
   toast.info('Template di-reset ke default. Klik Simpan untuk konfirmasi.')
+}
+
+async function testNotif(event) {
+  testingKey.value = event
+  try {
+    const res = await api.post('/admin/settings/notif-test', { event })
+    toast.success(res.data?.message ?? 'Test notif terkirim! Cek HP & in-app.', { timeout: 5000 })
+  } catch (e) {
+    toast.error(e.response?.data?.message ?? 'Gagal kirim test.', { timeout: 6000 })
+  } finally {
+    testingKey.value = null
+  }
 }
 
 async function applyNominalKeTagihan() {

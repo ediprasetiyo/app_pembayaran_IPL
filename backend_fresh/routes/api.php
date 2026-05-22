@@ -132,6 +132,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/settings/update-tagihan-nominal', [SettingsController::class, 'updateTagihanNominal']);
             Route::get('/settings/notif-templates', [SettingsController::class, 'getNotifTemplates']);
             Route::post('/settings/notif-templates', [SettingsController::class, 'saveNotifTemplates']);
+            Route::post('/settings/notif-test', [SettingsController::class, 'testNotifTemplate']);
 
             // Multi-blok management
             Route::apiResource('/bloks', BlokController::class);

@@ -286,12 +286,19 @@ class IplController extends Controller
             default => $pembayaran->status,
         };
 
-        $pembayaran->update([
+        // PRESERVE midtrans_payment_type yang sudah kita set saat bayar
+        // (kode internal seperti 'bca_va', 'gopay', 'qris', dll).
+        // Midtrans webhook return 'bank_transfer' generic untuk semua VA — kurang spesifik.
+        // Kalau belum ada nilai (belum kepilih method), pakai value dari webhook.
+        $updateData = [
             'status' => $status,
             'midtrans_transaction_id' => $payload['transaction_id'] ?? null,
-            'midtrans_payment_type' => $payload['payment_type'] ?? null,
             'midtrans_response' => $payload,
-        ]);
+        ];
+        if (empty($pembayaran->midtrans_payment_type)) {
+            $updateData['midtrans_payment_type'] = $payload['payment_type'] ?? null;
+        }
+        $pembayaran->update($updateData);
 
         if ($status === 'success') {
             $tagihan = $pembayaran->tagihan;

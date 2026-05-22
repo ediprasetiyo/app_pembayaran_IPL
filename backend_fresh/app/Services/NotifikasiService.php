@@ -234,15 +234,22 @@ class NotifikasiService
             return;
         }
 
-        // Skip FCM kalau Firebase credentials belum di-setup (env kosong)
-        // — supaya request tidak hang nunggu HTTP error.
-        if (!env('FIREBASE_CREDENTIALS')) {
+        // PENTING: pakai config() bukan env() — env() return null setelah `config:cache`
+        // (Laravel cache compiles config sekali, env() di runtime tidak kebaca).
+        $creds = config('firebase.projects.app.credentials') ?: env('FIREBASE_CREDENTIALS');
+        if (!$creds) {
+            logger()->info('FCM skip: credentials belum di-setup untuk user ' . $user->id);
             return;
         }
 
         try {
             $message = CloudMessage::withTarget('token', $user->fcm_token)
-                ->withNotification(Notification::create($judul, $pesan));
+                ->withNotification(Notification::create($judul, $pesan))
+                ->withData([
+                    'title' => $judul,
+                    'body' => $pesan,
+                    'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
+                ]);
 
             Firebase::messaging()->send($message);
         } catch (\Throwable $e) {

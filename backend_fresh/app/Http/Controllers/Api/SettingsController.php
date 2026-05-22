@@ -98,6 +98,82 @@ class SettingsController extends Controller
     }
 
     /**
+     * Test kirim 1 notification berdasarkan event template — super_admin only.
+     * Body: { event: 'pembayaran_sukses' | 'reminder_tagihan' | ... }
+     * Akan kirim FCM push + simpan in-app notif ke akun super_admin yang login.
+     */
+    public function testNotifTemplate(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user || !$user->isSuperAdmin()) {
+            return response()->json(['message' => 'Akses ditolak.'], 403);
+        }
+
+        $request->validate([
+            'event' => 'required|string|in:pembayaran_sukses,reminder_tagihan,tagihan_terlambat,pengaduan_baru,pengaduan_update,berita_baru',
+        ]);
+
+        if (!$user->fcm_token) {
+            return response()->json([
+                'message' => 'Anda belum punya FCM token. Login mobile dulu, atau pastikan permission notifikasi aktif.',
+            ], 422);
+        }
+
+        // Sample placeholder values supaya preview realistic
+        $sampleVars = [
+            'nama' => $user->name,
+            'bulan' => now()->locale('id')->isoFormat('MMMM'),
+            'tahun' => now()->year,
+            'nominal' => '65.000',
+            'tanggal' => '10/' . now()->format('m/Y'),
+            'denda' => '3.250',
+            'judul' => 'Contoh Judul Pengaduan',
+            'status' => 'sedang diproses',
+            'kategori' => 'kebersihan',
+            'judul_berita' => '🎉 Selamat Datang di Aplikasi Baru',
+            'ringkasan' => 'Ini adalah test notifikasi berita untuk memastikan push notif sampai ke HP.',
+        ];
+
+        $rendered = \App\Services\NotifikasiService::render($request->event, $sampleVars);
+
+        // 1. Simpan in-app notification (best-effort, pakai tipe info)
+        try {
+            \App\Models\Notifikasi::create([
+                'user_id' => $user->id,
+                'judul' => '🧪 [TEST] ' . $rendered['judul'],
+                'pesan' => $rendered['pesan'],
+                'tipe' => 'info',
+                'data' => ['test' => true, 'event' => $request->event],
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning('Test notif: simpan in-app gagal: ' . $e->getMessage());
+        }
+
+        // 2. Kirim FCM push
+        try {
+            $message = \Kreait\Firebase\Messaging\CloudMessage::withTarget('token', $user->fcm_token)
+                ->withNotification(\Kreait\Firebase\Messaging\Notification::create(
+                    '🧪 [TEST] ' . $rendered['judul'],
+                    $rendered['pesan'],
+                ))
+                ->withData(['test' => 'true', 'event' => $request->event]);
+
+            \Kreait\Laravel\Firebase\Facades\Firebase::messaging()->send($message);
+
+            return response()->json([
+                'message' => "Test '{$request->event}' terkirim! Cek HP & tab Notifikasi.",
+                'rendered' => $rendered,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Test notif FCM error: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'In-app notif tersimpan, tapi FCM push gagal: ' . $e->getMessage(),
+                'rendered' => $rendered,
+            ], 500);
+        }
+    }
+
+    /**
      * Generate signature untuk Cloudinary direct upload dari browser.
      * Browser upload langsung ke Cloudinary → bypass ModSecurity di shared hosting.
      */
