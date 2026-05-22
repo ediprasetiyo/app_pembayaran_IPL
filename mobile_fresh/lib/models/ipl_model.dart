@@ -143,18 +143,36 @@ class PembayaranModel {
   String get methodLabel {
     final m = paymentType;
     if (m == null || m.isEmpty) return 'Pembayaran';
-    return {
+    // Manual labels untuk method non-Midtrans
+    final manual = {
       'tunai': '💵 Tunai',
-      'transfer': '🏦 Transfer',
+      'transfer': '🏦 Transfer Manual',
       'lainnya': '📋 Lainnya',
       'bank_transfer': '🏦 Bank Transfer',
-      'gopay': '🟢 GoPay',
-      'shopeepay': '🟧 ShopeePay',
-      'qris': '📱 QRIS',
-      'credit_card': '💳 Kartu Kredit',
-      'echannel': '🏦 Mandiri Bill',
-      'cstore': '🏪 Convenience Store',
-    }[m] ?? '💳 ${m.toUpperCase()}';
+    }[m];
+    if (manual != null) return manual;
+    // Method Midtrans: pakai nama brand dari PaymentIcons
+    // import circular dengan service di-import di payment_screen, jadi pakai const map fallback
+    return {
+      'gopay': 'GoPay',
+      'shopeepay': 'ShopeePay',
+      'dana': 'DANA',
+      'qris': 'QRIS',
+      'credit_card': 'Kartu Kredit',
+      'echannel': 'Mandiri Bill',
+      'cstore': 'Convenience Store',
+      'bca_va': 'BCA Virtual Account',
+      'bni_va': 'BNI Virtual Account',
+      'bri_va': 'BRI Virtual Account',
+      'permata_va': 'Permata Virtual Account',
+      'other_va': 'Bank Virtual Account',
+      'indomaret': 'Indomaret',
+      'alfamart': 'Alfamart',
+      'akulaku': 'Akulaku PayLater',
+      'kredivo': 'Kredivo',
+      'bca_klikpay': 'BCA KlikPay',
+      'cimb_clicks': 'CIMB Clicks',
+    }[m] ?? m.toUpperCase().replaceAll('_', ' ');
   }
 
   String get statusLabel {

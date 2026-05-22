@@ -18,6 +18,7 @@ import 'screens/home/home_screen.dart';
 import 'services/app_settings.dart';
 import 'services/api_service.dart';
 import 'services/notification_service.dart';
+import 'services/payment_icons.dart';
 import 'utils/app_theme.dart';
 
 void main() async {
@@ -26,11 +27,12 @@ void main() async {
   // Init API service dulu supaya AppSettings bisa pakai
   try { ApiService().init(); } catch (_) {}
 
-  // 1. Load settings dari CACHE saja (instant — no network). Awaited.
-  //    Network refresh dilakukan async di background.
+  // 1. Load settings + payment icons dari CACHE saja (instant — no network).
   await AppSettings.loadFromCache();
+  await PaymentIcons.loadFromCache();
   // Fire-and-forget network refresh (tidak block startup)
   AppSettings.refreshFromNetwork();
+  PaymentIcons.refreshFromNetwork();
 
   // 2. Init Firebase + FCM — wrap dengan timeout supaya tidak hang
   //    Kalau gagal/timeout, app tetap jalan (notifikasi cuma tidak aktif).

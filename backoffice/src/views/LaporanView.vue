@@ -18,9 +18,16 @@
     <!-- Filter -->
     <div class="card p-4 flex gap-3 flex-wrap items-end">
       <div>
-        <label class="label">Tahun Laporan</label>
+        <label class="label">Tahun</label>
         <select v-model="tahun" class="input w-auto" @change="fetchAll">
           <option v-for="y in tahunOptions" :key="y" :value="y">{{ y }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="label">Bulan</label>
+        <select v-model="bulan" class="input w-auto" @change="fetchAll">
+          <option :value="0">📅 Semua Bulan</option>
+          <option v-for="(name, idx) in namaBulan" :key="idx" :value="idx + 1">{{ name }}</option>
         </select>
       </div>
       <div class="ml-auto text-xs text-gray-400 self-end">
@@ -87,7 +94,7 @@
 
       <!-- ===== REKAPITULASI BULANAN ===== -->
       <div class="card p-6">
-        <h3 class="font-semibold text-gray-700 mb-4">📅 Rekapitulasi per Bulan {{ tahun }}</h3>
+        <h3 class="font-semibold text-gray-700 mb-4">📅 Rekapitulasi {{ bulan > 0 ? namaBulan[bulan - 1] + ' ' : 'per Bulan ' }}{{ tahun }}</h3>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead class="bg-gray-50 border-b">
@@ -143,7 +150,7 @@
 
       <!-- ===== DETAIL PENGELUARAN ===== -->
       <div class="card p-6">
-        <h3 class="font-semibold text-gray-700 mb-4">💸 Detail Pengeluaran {{ tahun }} ({{ pengeluaranList.length }} transaksi)</h3>
+        <h3 class="font-semibold text-gray-700 mb-4">💸 Detail Pengeluaran {{ bulan > 0 ? namaBulan[bulan - 1] + ' ' : '' }}{{ tahun }} ({{ pengeluaranList.length }} transaksi)</h3>
         <div v-if="pengeluaranList.length === 0" class="text-center py-8 text-gray-400">
           Belum ada pengeluaran tercatat di tahun {{ tahun }}.
         </div>
@@ -199,6 +206,7 @@ const toast = useToast()
 const settingsStore = useSettingsStore()
 
 const tahun = ref(new Date().getFullYear())
+const bulan = ref(0) // 0 = semua bulan
 const tahunOptions = [tahun.value - 2, tahun.value - 1, tahun.value, tahun.value + 1]
 const laporanBulanan = ref([])
 const pengeluaranList = ref([])
@@ -223,14 +231,19 @@ const rataRata = computed(() => {
 async function fetchAll() {
   loading.value = true
   try {
-    // Parallel: kas summary, pengeluaran tahun ini, tagihan per bulan
+    // Range tanggal: kalau bulan dipilih, scope ke bulan itu; kalau 0, full tahun
+    const fromDate = bulan.value > 0
+      ? dayjs(`${tahun.value}-${String(bulan.value).padStart(2, '0')}-01`).format('YYYY-MM-DD')
+      : `${tahun.value}-01-01`
+    const toDate = bulan.value > 0
+      ? dayjs(fromDate).endOf('month').format('YYYY-MM-DD')
+      : `${tahun.value}-12-31`
+
+    // Parallel: kas summary, pengeluaran range
     const [kasRes, pengRes] = await Promise.all([
       api.get('/kas/summary'),
       api.get('/pengeluaran', {
-        params: {
-          from_date: `${tahun.value}-01-01`,
-          to_date: `${tahun.value}-12-31`,
-        },
+        params: { from_date: fromDate, to_date: toDate, per_page: 500 },
       }),
     ])
 
@@ -245,10 +258,11 @@ async function fetchAll() {
       pengeluaranPerBulan[m] = (pengeluaranPerBulan[m] || 0) + Number(p.nominal)
     }
 
-    // Build laporan per bulan
+    // Build rows: kalau bulan dipilih, hanya 1 row; selain itu 12 bulan
+    const monthsToShow = bulan.value > 0 ? [bulan.value] : Array.from({ length: 12 }, (_, i) => i + 1)
     const rows = []
-    for (let bulan = 1; bulan <= 12; bulan++) {
-      const res = await api.get('/ipl/tagihan', { params: { bulan, tahun: tahun.value } })
+    for (const bln of monthsToShow) {
+      const res = await api.get('/ipl/tagihan', { params: { bulan: bln, tahun: tahun.value } })
       const data = res.data.data ?? res.data ?? []
       const lunas = data.filter((t) => t.status === 'sudah_bayar').length
       const belumBayar = data.filter((t) => t.status !== 'sudah_bayar').length
@@ -256,13 +270,13 @@ async function fetchAll() {
         .filter((t) => t.status === 'sudah_bayar')
         .reduce((s, t) => s + parseFloat(t.total_tagihan ?? t.nominal ?? 0), 0)
       rows.push({
-        bulan,
-        nama_bulan: namaBulan[bulan - 1],
+        bulan: bln,
+        nama_bulan: namaBulan[bln - 1],
         total: data.length,
         lunas,
         belum_bayar: belumBayar,
         pendapatan,
-        pengeluaran: pengeluaranPerBulan[bulan] || 0,
+        pengeluaran: pengeluaranPerBulan[bln] || 0,
         persen: data.length > 0 ? Math.round((lunas / data.length) * 100) : 0,
       })
     }

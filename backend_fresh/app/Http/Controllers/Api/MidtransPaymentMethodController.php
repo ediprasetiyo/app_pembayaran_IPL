@@ -67,6 +67,29 @@ class MidtransPaymentMethodController extends Controller
     }
 
     /**
+     * Public endpoint: kembalikan map code → {name, logo_url, icon}
+     * Untuk display logo brand di mobile (riwayat pembayaran, dll).
+     * Tidak butuh super_admin — semua user yang login bisa akses.
+     */
+    public function publicIcons(): JsonResponse
+    {
+        $methods = MidtransPaymentMethodService::listWithStatus();
+        $map = [];
+        foreach ($methods as $m) {
+            $map[$m['code']] = [
+                'name' => $m['name'],
+                'logo_url' => $m['logo_url'] ?? '',
+                'icon' => $m['icon'] ?? '💳',
+                'category' => $m['category'] ?? '',
+            ];
+        }
+        return response()->json([
+            'methods' => $map,
+            'updated_at' => now()->toIso8601String(),
+        ]);
+    }
+
+    /**
      * Set custom logo URL untuk 1 payment method.
      * Body: { code: 'gopay', url: 'https://res.cloudinary.com/...' }
      * Kirim url empty/null untuk reset ke default Wikimedia.

@@ -100,6 +100,16 @@ class NewsController extends Controller
 
         $news = News::create($data);
 
+        // Kirim notifikasi push ke semua warga yang sudah login mobile
+        // (hanya kalau berita di-publish, bukan draft)
+        if ($news->is_published) {
+            try {
+                app(\App\Services\NotifikasiService::class)->kirimNotifikasiBeritaBaru($news);
+            } catch (\Throwable $e) {
+                \Log::warning('Gagal kirim notifikasi berita baru: ' . $e->getMessage());
+            }
+        }
+
         return response()->json([
             'message' => 'Berita berhasil dibuat.',
             'news' => $news->load('pembuat:id,name'),

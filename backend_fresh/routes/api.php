@@ -37,6 +37,9 @@ Route::prefix('v1')->group(function () {
     // Midtrans callback (no auth needed)
     Route::post('/ipl/midtrans/callback', [IplController::class, 'midtransCallback']);
 
+    // Public payment method icons (no auth — readable by anyone)
+    Route::get('/payment-methods/icons', [MidtransPaymentMethodController::class, 'publicIcons']);
+
     // Protected routes
     Route::middleware('auth:sanctum')->group(function () {
         // Auth

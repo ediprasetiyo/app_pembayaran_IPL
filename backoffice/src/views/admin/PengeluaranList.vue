@@ -61,7 +61,20 @@
     </div>
 
     <!-- Filters -->
-    <div class="card p-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div class="card p-4 grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div>
+        <label class="label">Tahun</label>
+        <select v-model.number="filterTahun" @change="applyDateFilter" class="input">
+          <option v-for="y in tahunOptions" :key="y" :value="y">{{ y }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="label">Bulan</label>
+        <select v-model.number="filterBulan" @change="applyDateFilter" class="input">
+          <option :value="0">Semua Bulan</option>
+          <option v-for="(name, idx) in namaBulanList" :key="idx" :value="idx + 1">{{ name }}</option>
+        </select>
+      </div>
       <div>
         <label class="label">Sumber Dana</label>
         <select v-model="filters.sumber_dana" @change="load" class="input">
@@ -77,13 +90,8 @@
           <option v-for="(label, code) in kategoriList" :key="code" :value="code">{{ label }}</option>
         </select>
       </div>
-      <div>
-        <label class="label">Dari Tanggal</label>
-        <input v-model="filters.from_date" type="date" class="input" @change="load" />
-      </div>
-      <div>
-        <label class="label">Sampai Tanggal</label>
-        <input v-model="filters.to_date" type="date" class="input" @change="load" />
+      <div class="flex items-end">
+        <button @click="resetFilters" class="btn-secondary w-full">Reset</button>
       </div>
     </div>
 
@@ -238,6 +246,36 @@ const formError = ref('')
 
 const filters = ref({ sumber_dana: '', kategori: '', from_date: '', to_date: '' })
 
+// Tahun + Bulan filter (UI-friendly, internally convert ke from/to_date)
+const filterTahun = ref(new Date().getFullYear())
+const filterBulan = ref(0) // 0 = semua bulan
+const tahunOptions = computed(() => {
+  const y = new Date().getFullYear()
+  return [y - 2, y - 1, y, y + 1]
+})
+const namaBulanList = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
+
+function applyDateFilter() {
+  // Convert Tahun + Bulan → from_date & to_date untuk API
+  if (filterBulan.value > 0) {
+    const m = String(filterBulan.value).padStart(2, '0')
+    filters.value.from_date = `${filterTahun.value}-${m}-01`
+    filters.value.to_date = dayjs(filters.value.from_date).endOf('month').format('YYYY-MM-DD')
+  } else {
+    // Semua bulan = 1 tahun penuh
+    filters.value.from_date = `${filterTahun.value}-01-01`
+    filters.value.to_date = `${filterTahun.value}-12-31`
+  }
+  load()
+}
+
+function resetFilters() {
+  filters.value = { sumber_dana: '', kategori: '', from_date: '', to_date: '' }
+  filterTahun.value = new Date().getFullYear()
+  filterBulan.value = 0
+  load()
+}
+
 const form = ref({
   id: null,
   kategori: '',
@@ -344,7 +382,8 @@ const formatCurrency = (v) =>
 const formatDate = (d) => dayjs(d).format('DD/MM/YYYY')
 
 onMounted(() => {
-  load()
+  // Apply default filter: tahun ini (semua bulan)
+  applyDateFilter()
   loadWarga()
 })
 </script>

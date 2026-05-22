@@ -6,6 +6,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../models/ipl_model.dart';
 import '../../providers/ipl_provider.dart';
+import '../../services/payment_icons.dart';
 import '../../utils/app_theme.dart';
 
 class PaymentScreen extends StatefulWidget {
@@ -843,15 +844,44 @@ class _RiwayatCard extends StatelessWidget {
   String get methodLabel {
     final m = pembayaran.paymentType;
     if (m == null || m.isEmpty) return 'Pembayaran';
-    return {
+    // Manual labels untuk method yang bukan dari Midtrans (tunai/transfer bendahara)
+    final manual = {
       'tunai': '💵 Tunai',
-      'transfer': '🏦 Transfer',
+      'transfer': '🏦 Transfer Manual',
       'bank_transfer': '🏦 Bank Transfer',
-      'gopay': '🟢 GoPay',
-      'shopeepay': '🟧 ShopeePay',
-      'qris': '📱 QRIS',
-      'credit_card': '💳 Kartu Kredit',
-    }[m] ?? m.toUpperCase();
+    }[m];
+    if (manual != null) return manual;
+    // Untuk method Midtrans, pakai nama brand dari PaymentIcons (e.g., "GoPay", "DANA")
+    return PaymentIcons.name(m);
+  }
+
+  /// Widget untuk display logo brand (network image dengan fallback emoji)
+  Widget buildMethodIcon({double size = 28}) {
+    final code = pembayaran.paymentType;
+    final logoUrl = PaymentIcons.logoUrl(code);
+    if (logoUrl != null) {
+      return SizedBox(
+        width: size + 8,
+        height: size,
+        child: Image.network(
+          logoUrl,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => Center(
+            child: Text(PaymentIcons.emojiIcon(code), style: TextStyle(fontSize: size * 0.85)),
+          ),
+        ),
+      );
+    }
+    // Fallback emoji untuk method non-Midtrans atau gagal load
+    final manualIcon = {
+      'tunai': '💵',
+      'transfer': '🏦',
+      'bank_transfer': '🏦',
+    }[code];
+    return Text(
+      manualIcon ?? PaymentIcons.emojiIcon(code),
+      style: TextStyle(fontSize: size * 0.85),
+    );
   }
 
   @override
@@ -866,15 +896,37 @@ class _RiwayatCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              alignment: Alignment.center,
-              child: Icon(statusIcon, color: statusColor, size: 22),
+            // Logo brand payment method + status indicator overlay
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 48,
+                  height: 44,
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  alignment: Alignment.center,
+                  child: buildMethodIcon(size: 28),
+                ),
+                Positioned(
+                  bottom: -2,
+                  right: -2,
+                  child: Container(
+                    width: 18,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      color: statusColor,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: Icon(statusIcon, color: Colors.white, size: 10),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -1049,7 +1101,35 @@ class _DetailPembayaranSheet extends StatelessWidget {
                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                   const SizedBox(height: 10),
                   _row('Order ID', pembayaran.orderId, isMono: true),
-                  _row('Metode Pembayaran', pembayaran.methodLabel),
+                  // Metode Pembayaran: logo brand + nama (e.g., logo DANA + "DANA")
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(
+                          width: 130,
+                          child: Text('Metode Pembayaran',
+                              style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                        ),
+                        const Text(': ', style: TextStyle(color: AppTheme.textSecondary)),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              _buildMethodLogo(pembayaran.paymentType, size: 24),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  pembayaran.methodLabel,
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   if (pembayaran.midtransTransactionId != null)
                     _row('Transaction ID', pembayaran.midtransTransactionId!, isMono: true),
                   _row('Tanggal Transaksi',
@@ -1147,6 +1227,35 @@ class _DetailPembayaranSheet extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  /// Build logo brand untuk method (network image dengan emoji fallback)
+  static Widget _buildMethodLogo(String? code, {double size = 24}) {
+    final logoUrl = PaymentIcons.logoUrl(code);
+    if (logoUrl != null) {
+      return Container(
+        width: size + 6,
+        height: size,
+        padding: const EdgeInsets.all(1),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Image.network(
+          logoUrl,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => Center(
+            child: Text(PaymentIcons.emojiIcon(code), style: TextStyle(fontSize: size * 0.85)),
+          ),
+        ),
+      );
+    }
+    final manualIcon = {'tunai': '💵', 'transfer': '🏦', 'bank_transfer': '🏦', 'lainnya': '📋'}[code];
+    return Text(
+      manualIcon ?? PaymentIcons.emojiIcon(code),
+      style: TextStyle(fontSize: size * 0.85),
     );
   }
 }

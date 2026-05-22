@@ -41,6 +41,10 @@ class NotifikasiService
             'judul' => 'Update Pengaduan',
             'pesan' => 'Pengaduan "{judul}" {status}.',
         ],
+        'berita_baru' => [
+            'judul' => '📢 Pengumuman Baru',
+            'pesan' => '{judul_berita}',
+        ],
     ];
 
     /**
@@ -155,6 +159,38 @@ class NotifikasiService
             ]);
 
             $this->kirimFCM($admin, $rendered['judul'], $rendered['pesan']);
+        }
+    }
+
+    /**
+     * Kirim notifikasi berita baru ke SEMUA user aktif (warga + admin).
+     * Dipanggil saat news baru dipublish.
+     */
+    public function kirimNotifikasiBeritaBaru($news): void
+    {
+        // Ambil semua user aktif yang punya fcm_token
+        $users = User::where('is_active', true)
+            ->whereNotNull('fcm_token')
+            ->get();
+
+        $ringkasan = $news->ringkasan ?? strip_tags($news->konten ?? '');
+        if (strlen($ringkasan) > 100) $ringkasan = substr($ringkasan, 0, 97) . '...';
+
+        foreach ($users as $user) {
+            $rendered = self::render('berita_baru', [
+                'nama' => $user->name,
+                'judul_berita' => $news->judul,
+                'ringkasan' => $ringkasan,
+            ]);
+
+            // Pakai tipe 'info' karena enum tabel notifikasi tidak punya 'berita'
+            $this->simpanNotifikasi($user->id, $rendered['judul'], $rendered['pesan'], 'info', [
+                'news_id' => $news->id,
+                'slug' => $news->slug ?? null,
+                'type' => 'berita',
+            ]);
+
+            $this->kirimFCM($user, $rendered['judul'], $rendered['pesan']);
         }
     }
 
