@@ -732,6 +732,11 @@ class _RiwayatTabState extends State<_RiwayatTab> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<IplProvider>().loadRiwayat();
+      // Force refresh PaymentIcons supaya logo brand muncul (network call)
+      // Setelah complete, setState supaya widget rebuild dengan logo terbaru
+      PaymentIcons.refreshFromNetwork().then((_) {
+        if (mounted) setState(() {});
+      });
     });
   }
 
@@ -844,11 +849,11 @@ class _RiwayatCard extends StatelessWidget {
   String get methodLabel {
     final m = pembayaran.paymentType;
     if (m == null || m.isEmpty) return 'Pembayaran';
-    // Manual labels untuk method yang bukan dari Midtrans (tunai/transfer bendahara)
+    // Manual labels untuk method non-Midtrans (icon sudah tampil terpisah, jadi tanpa emoji)
     final manual = {
-      'tunai': '💵 Tunai',
-      'transfer': '🏦 Transfer Manual',
-      'bank_transfer': '🏦 Bank Transfer',
+      'tunai': 'Tunai',
+      'transfer': 'Transfer Manual',
+      'bank_transfer': 'Bank Transfer',
     }[m];
     if (manual != null) return manual;
     // Untuk method Midtrans, pakai nama brand dari PaymentIcons (e.g., "GoPay", "DANA")

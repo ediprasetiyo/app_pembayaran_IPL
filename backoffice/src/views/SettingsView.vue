@@ -225,6 +225,18 @@
           </p>
         </div>
 
+        <!-- Pilih target test recipient -->
+        <div class="bg-purple-50 border border-purple-200 rounded-lg p-3 flex items-center gap-3 flex-wrap">
+          <span class="text-xs font-semibold text-purple-900">🎯 Test kirim ke:</span>
+          <select v-model.number="testTargetUserId" class="input flex-1 min-w-[200px] text-sm">
+            <option :value="null">Akun saya (yang login skrg)</option>
+            <option v-for="u in usersWithFcm" :key="u.id" :value="u.id">
+              {{ u.name }} ({{ u.phone }}) — {{ u.role }}
+            </option>
+          </select>
+          <p class="text-xs text-purple-700">User harus sudah login mobile & izinkan notifikasi.</p>
+        </div>
+
         <!-- Placeholder helper -->
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs">
           <p class="font-semibold text-blue-900 mb-1">📌 Placeholder yang tersedia:</p>
@@ -356,6 +368,17 @@ const placeholders = ref({})
 const loadingTpl = ref(false)
 const savingTpl = ref(false)
 const testingKey = ref(null)
+const testTargetUserId = ref(null)
+const usersWithFcm = ref([])
+
+async function loadUsersWithFcm() {
+  try {
+    const res = await api.get('/admin/users', { params: { per_page: 100, status: 'aktif' } })
+    const all = res.data?.data ?? []
+    // Filter user yang punya fcm_token (perlu mobile login)
+    usersWithFcm.value = all.filter((u) => u.fcm_token && u.fcm_token.length > 10)
+  } catch (_) {}
+}
 
 const NOTIF_LABELS = {
   pembayaran_sukses: '💰 Pembayaran Sukses (ke Warga)',
@@ -434,7 +457,9 @@ function resetNotifTemplate(key) {
 async function testNotif(event) {
   testingKey.value = event
   try {
-    const res = await api.post('/admin/settings/notif-test', { event })
+    const payload = { event }
+    if (testTargetUserId.value) payload.target_user_id = testTargetUserId.value
+    const res = await api.post('/admin/settings/notif-test', payload)
     toast.success(res.data?.message ?? 'Test notif terkirim! Cek HP & in-app.', { timeout: 5000 })
   } catch (e) {
     toast.error(e.response?.data?.message ?? 'Gagal kirim test.', { timeout: 6000 })
@@ -577,7 +602,8 @@ onMounted(async () => {
   await settings.loadAllSettings()
   form.value = { ...settings.settings }
   original.value = { ...settings.settings }
-  // Load notif templates juga
+  // Load notif templates + daftar user yg bisa di-test (punya FCM token)
   loadNotifTemplates()
+  loadUsersWithFcm()
 })
 </script>

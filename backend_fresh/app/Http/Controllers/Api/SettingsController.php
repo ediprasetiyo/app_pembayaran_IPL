@@ -104,18 +104,29 @@ class SettingsController extends Controller
      */
     public function testNotifTemplate(Request $request): JsonResponse
     {
-        $user = $request->user();
-        if (!$user || !$user->isSuperAdmin()) {
+        $caller = $request->user();
+        if (!$caller || !$caller->isSuperAdmin()) {
             return response()->json(['message' => 'Akses ditolak.'], 403);
         }
 
         $request->validate([
             'event' => 'required|string|in:pembayaran_sukses,reminder_tagihan,tagihan_terlambat,pengaduan_baru,pengaduan_update,berita_baru',
+            'target_user_id' => 'nullable|exists:users,id',
         ]);
+
+        // Pilih target user: kalau dispesifik di request → pakai itu
+        // kalau tidak → super_admin yang login (default)
+        $user = $request->target_user_id
+            ? \App\Models\User::find($request->target_user_id)
+            : $caller;
+
+        if (!$user) {
+            return response()->json(['message' => 'Target user tidak ditemukan.'], 404);
+        }
 
         if (!$user->fcm_token) {
             return response()->json([
-                'message' => 'Anda belum punya FCM token. Login mobile dulu, atau pastikan permission notifikasi aktif.',
+                'message' => "User '{$user->name}' belum punya FCM token. Pastikan user sudah login di mobile app & aktifkan permission notifikasi.",
             ], 422);
         }
 
@@ -161,8 +172,9 @@ class SettingsController extends Controller
             \Kreait\Laravel\Firebase\Facades\Firebase::messaging()->send($message);
 
             return response()->json([
-                'message' => "Test '{$request->event}' terkirim! Cek HP & tab Notifikasi.",
+                'message' => "Test '{$request->event}' terkirim ke {$user->name}! Cek HP & tab Notifikasi.",
                 'rendered' => $rendered,
+                'target' => ['id' => $user->id, 'name' => $user->name],
             ]);
         } catch (\Throwable $e) {
             \Log::error('Test notif FCM error: ' . $e->getMessage());
