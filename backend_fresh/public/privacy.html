@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kebijakan Privasi - IPL Griya Pesona Madani Tenjo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #212121; line-height: 1.7; }
+  .nav { background: linear-gradient(135deg, #1B5E20, #388E3C); padding: 14px 20px; color: white; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .nav-brand { font-weight: 700; font-size: 16px; }
+  .nav-links a { color: white; text-decoration: none; margin-left: 16px; font-size: 13px; opacity: 0.9; }
+  .container { max-width: 800px; margin: 0 auto; padding: 40px 24px; }
+  h1 { color: #1B5E20; font-size: 26px; margin-bottom: 8px; }
+  .meta { color: #757575; font-size: 13px; margin-bottom: 30px; }
+  .section { background: white; border-radius: 12px; padding: 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .section h2 { color: #1B5E20; font-size: 17px; margin-bottom: 12px; }
+  .section p { color: #424242; font-size: 14px; margin-bottom: 10px; }
+  .section ul { margin-left: 24px; color: #424242; font-size: 14px; }
+  .section li { margin-bottom: 6px; }
+  .footer { text-align: center; padding: 30px 20px; color: #757575; font-size: 12px; }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-brand">🏘️ IPL Griya Pesona Madani Tenjo</div>
+  <div class="nav-links">
+    <a href="/about.html">Tentang</a>
+    <a href="/terms.html">Syarat & Ketentuan</a>
+    <a href="/refund-policy.html">Refund</a>
+    <a href="/privacy.html">Privasi</a>
+    <a href="/contact.html">Kontak</a>
+  </div>
+</nav>
+
+<div class="container">
+  <h1>Kebijakan Privasi</h1>
+  <p class="meta">Berlaku efektif 20 Mei 2026</p>
+
+  <div class="section">
+    <p>Kami menghargai privasi Anda. Kebijakan ini menjelaskan bagaimana aplikasi IPL Griya Pesona Madani Tenjo mengumpulkan, menggunakan, dan melindungi informasi pribadi pengguna.</p>
+  </div>
+
+  <div class="section">
+    <h2>1. Data yang Dikumpulkan</h2>
+    <p>Saat Anda menggunakan aplikasi ini, kami dapat mengumpulkan data berikut:</p>
+    <ul>
+      <li><strong>Data identitas:</strong> nama lengkap, nomor telepon, email (opsional), foto profil</li>
+      <li><strong>Data hunian:</strong> blok, nomor rumah, status hunian (milik/sewa/kontrak)</li>
+      <li><strong>Data keluarga:</strong> anggota keluarga yang tinggal di hunian (nama, hubungan, jenis kelamin)</li>
+      <li><strong>Data transaksi:</strong> riwayat pembayaran IPL & kedukaan, metode pembayaran, status</li>
+      <li><strong>Data teknis:</strong> FCM token (untuk notifikasi push), IP address, info perangkat</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>2. Tujuan Penggunaan Data</h2>
+    <ul>
+      <li>Mengelola data warga RT untuk administrasi perumahan</li>
+      <li>Memproses pembayaran IPL & uang kedukaan</li>
+      <li>Mengirim notifikasi reminder pembayaran & pengumuman</li>
+      <li>Memberikan bantuan teknis & customer support</li>
+      <li>Audit & pencegahan fraud / penyalahgunaan</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>3. Pihak Ketiga</h2>
+    <p>Data pembayaran (nominal, metode) ditangani oleh <strong>PT. Midtrans</strong> sebagai payment gateway resmi berlisensi Bank Indonesia. Midtrans memiliki standar keamanan <strong>PCI-DSS</strong>. Selain Midtrans, data tidak dibagikan ke pihak ketiga kecuali diwajibkan oleh hukum yang berlaku di Indonesia.</p>
+    <p>Foto/gambar (avatar, foto pengaduan, gambar berita) disimpan di <strong>Cloudinary</strong> sebagai content delivery network (CDN). Foto hanya bisa diakses oleh user yang berhak (warga & admin).</p>
+    <p>Notifikasi push dikirim via <strong>Firebase Cloud Messaging (Google)</strong>.</p>
+  </div>
+
+  <div class="section">
+    <h2>4. Keamanan Data</h2>
+    <ul>
+      <li>Password disimpan ter-enkripsi (bcrypt hash)</li>
+      <li>Komunikasi via HTTPS (SSL/TLS)</li>
+      <li>Token akses berbasis Laravel Sanctum dengan expire policy</li>
+      <li>Audit log untuk semua aksi penting (login, perubahan data, transaksi)</li>
+      <li>Data pembayaran tidak disimpan di server kami — semua diproses Midtrans</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>5. Hak Pengguna</h2>
+    <ul>
+      <li><strong>Hak akses:</strong> melihat data pribadi Anda di menu Profil aplikasi</li>
+      <li><strong>Hak koreksi:</strong> mengubah data pribadi (nama, foto, email)</li>
+      <li><strong>Hak penghapusan:</strong> meminta penghapusan akun via admin (kecuali data transaksi yang wajib disimpan untuk audit RT)</li>
+      <li><strong>Hak menolak notifikasi:</strong> mematikan notifikasi push di pengaturan HP</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>6. Cookie & Tracking</h2>
+    <p>Aplikasi mobile tidak menggunakan cookie. Backoffice (web admin) menggunakan localStorage untuk menyimpan token login & preferensi tema. Tidak ada tracking analytics dari pihak ketiga.</p>
+  </div>
+
+  <div class="section">
+    <h2>7. Penyimpanan Data</h2>
+    <p>Data disimpan di server <strong>IDcloudHost (Indonesia)</strong> selama akun aktif. Data riwayat transaksi tetap disimpan untuk keperluan audit RT meskipun akun nonaktif, sesuai musyawarah pengurus.</p>
+  </div>
+
+  <div class="section">
+    <h2>8. Perubahan Kebijakan</h2>
+    <p>Kebijakan privasi ini dapat diperbarui sewaktu-waktu. Perubahan akan diberitahukan via notifikasi aplikasi.</p>
+  </div>
+
+  <div class="section">
+    <h2>9. Kontak</h2>
+    <p>Untuk pertanyaan terkait privasi data Anda:</p>
+    <ul>
+      <li><strong>Nama:</strong> Edi Prasetiyo</li>
+      <li><strong>WhatsApp:</strong> <a href="https://wa.me/6282115525327">082115525327</a></li>
+      <li><strong>Jam operasional:</strong> 10:00 - 17:00 WIB</li>
+    </ul>
+  </div>
+</div>
+
+<footer class="footer">
+  © 2026 Perumahan Griya Pesona Madani Tenjo
+</footer>
+</body>
+</html>

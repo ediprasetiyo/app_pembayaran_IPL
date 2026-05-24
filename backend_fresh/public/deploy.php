@@ -115,6 +115,18 @@ $files = [
         => '/home/dszgofcr/public_html/deploy.php',
     'backend_fresh/public/run-migration.php'
         => '/home/dszgofcr/public_html/run-migration.php',
+
+    // Public legal pages (untuk Midtrans submission)
+    'backend_fresh/public/about.html'
+        => '/home/dszgofcr/public_html/about.html',
+    'backend_fresh/public/terms.html'
+        => '/home/dszgofcr/public_html/terms.html',
+    'backend_fresh/public/refund-policy.html'
+        => '/home/dszgofcr/public_html/refund-policy.html',
+    'backend_fresh/public/privacy.html'
+        => '/home/dszgofcr/public_html/privacy.html',
+    'backend_fresh/public/contact.html'
+        => '/home/dszgofcr/public_html/contact.html',
 ];
 
 $success = 0;
