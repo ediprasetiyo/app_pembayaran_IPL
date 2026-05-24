@@ -127,6 +127,8 @@ $files = [
         => '/home/dszgofcr/public_html/privacy.html',
     'backend_fresh/public/contact.html'
         => '/home/dszgofcr/public_html/contact.html',
+    'backend_fresh/public/surat-penunjukan.html'
+        => '/home/dszgofcr/public_html/surat-penunjukan.html',
 ];
 
 $success = 0;
