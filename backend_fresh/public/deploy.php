@@ -129,6 +129,14 @@ $files = [
         => '/home/dszgofcr/public_html/contact.html',
     'backend_fresh/public/surat-penunjukan.html'
         => '/home/dszgofcr/public_html/surat-penunjukan.html',
+    'backend_fresh/public/surat-penunjukan.doc'
+        => '/home/dszgofcr/public_html/surat-penunjukan.doc',
+    'backend_fresh/public/kredensial-test.html'
+        => '/home/dszgofcr/public_html/kredensial-test.html',
+    'backend_fresh/public/kredensial-test.doc'
+        => '/home/dszgofcr/public_html/kredensial-test.doc',
+    'backend_fresh/public/midtrans-docs.html'
+        => '/home/dszgofcr/public_html/midtrans-docs.html',
 ];
 
 $success = 0;

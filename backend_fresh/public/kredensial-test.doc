@@ -1,0 +1,140 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="UTF-8" />
+<title>Kredensial Test untuk Midtrans</title>
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
+<style>
+@page WordSection1 { size: 21cm 29.7cm; margin: 2cm; }
+div.WordSection1 { page: WordSection1; }
+body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #212121; }
+h1 { color: #1B5E20; font-size: 16pt; margin-bottom: 4px; }
+.subtitle { color: #757575; font-size: 10pt; margin-bottom: 20px; }
+h2 { color: #1B5E20; font-size: 12pt; margin: 18px 0 8px; padding: 6px 10px; background: #E8F5E9; border-left: 4px solid #388E3C; }
+h3 { color: #424242; font-size: 11pt; margin: 12px 0 6px; }
+p { margin: 0 0 10px 0; text-align: justify; }
+ul, ol { margin: 0 0 12px 24px; }
+li { margin-bottom: 3px; }
+table { width: 100%; border-collapse: collapse; margin: 8px 0 14px; font-size: 10pt; }
+table th { background: #1B5E20; color: white; padding: 6px 10px; text-align: left; }
+table td { padding: 6px 10px; border-bottom: 1px solid #E0E0E0; }
+.credentials { background: #FFF3E0; border: 2px dashed #E65100; padding: 12px 16px; margin: 10px 0; font-family: 'Courier New', monospace; font-size: 10pt; }
+.note { background: #FFEBEE; border-left: 4px solid #C62828; padding: 10px 14px; margin: 14px 0; font-size: 10pt; }
+.note-info { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 10px 14px; margin: 14px 0; font-size: 10pt; }
+code { background: #F5F5F5; padding: 1px 4px; border-radius: 2px; font-family: 'Courier New', monospace; font-size: 9.5pt; }
+</style>
+</head>
+<body>
+<div class="WordSection1">
+
+<h1>Kredensial Akun untuk Test Transaksi Midtrans</h1>
+<p class="subtitle">Untuk: Tim Verifikasi Midtrans | Dari: Edi Prasetiyo (WA: 082115525327) | Tanggal: 22 Mei 2026</p>
+
+<h2>1. RINGKASAN</h2>
+<p>Dokumen ini berisi kredensial dan panduan untuk Tim Midtrans melakukan tes transaksi end-to-end pada aplikasi <b>IPL Griya Pesona Madani Tenjo</b>. Aplikasi terdiri dari 2 antarmuka:</p>
+<ol>
+  <li><b>Back Office (Web Admin)</b> — untuk pengelola RT</li>
+  <li><b>Mobile App (Android)</b> — untuk warga melakukan pembayaran</li>
+</ol>
+
+<h2>2. AKUN BACK OFFICE (Web Admin)</h2>
+<p><b>URL:</b> <code>https://admin.ipl-griya-pesona-madani.my.id</code></p>
+
+<h3>Login Super Admin:</h3>
+<div class="credentials">
+Nomor HP : 081908226774<br/>
+Password : midtrans-review-2026<br/>
+Role     : Super Admin (akses penuh)
+</div>
+<p><i>Login backoffice menggunakan Nomor HP (bukan email).</i></p>
+
+<h2>3. AKUN MOBILE APP (Test Warga)</h2>
+<p><b>Download APK:</b> Hubungi WhatsApp <b>082115525327</b> untuk link APK.</p>
+
+<h3>Login Akun Warga Test:</h3>
+<div class="credentials">
+Nomor HP : 082115525327<br/>
+Password : midtrans-review-2026<br/>
+Role     : Warga<br/>
+Nama     : EDI PRASETIYO<br/>
+Blok     : E
+</div>
+
+<h2>4. SKENARIO TEST</h2>
+
+<h3>A. Pembayaran via Mobile App</h3>
+<ol>
+  <li>Install APK, login dengan akun warga</li>
+  <li>Tab Pembayaran → klik tombol "Bayar"</li>
+  <li>Pilih metode pembayaran (modal muncul dengan list method + biaya admin)</li>
+  <li>Snap UI Midtrans terbuka di dalam aplikasi (in-app WebView)</li>
+  <li>Selesaikan pembayaran (Sandbox: pakai Payment Simulator)</li>
+  <li>Push notification muncul di HP: "Pembayaran IPL Berhasil"</li>
+  <li>Cek tab Riwayat — transaksi muncul dengan logo brand &amp; status Lunas</li>
+</ol>
+
+<h3>B. Verifikasi di Back Office</h3>
+<ol>
+  <li>Login Back Office sebagai Super Admin</li>
+  <li>Dashboard — angka "Total IPL" bertambah</li>
+  <li>Pembayaran — transaksi baru muncul</li>
+  <li>Audit Log — entry "payment_success" tercatat</li>
+  <li>Laporan → Export Excel atau PDF</li>
+</ol>
+
+<h2>5. ENDPOINT API MIDTRANS</h2>
+<table>
+  <tr><th>Action</th><th>URL</th><th>Method</th></tr>
+  <tr><td>Create Transaction</td><td><code>/api/v1/ipl/tagihan/{id}/bayar</code></td><td>POST</td></tr>
+  <tr><td><b>Notification URL (Webhook)</b></td><td><code>/api/v1/ipl/midtrans/callback</code></td><td>POST</td></tr>
+  <tr><td>Status check</td><td><code>/api/v1/ipl/pembayaran/{id}</code></td><td>GET</td></tr>
+  <tr><td>Health check</td><td><code>/api/v1/health</code></td><td>GET</td></tr>
+</table>
+<p><b>Base URL:</b> <code>https://ipl-griya-pesona-madani.my.id</code></p>
+<div class="note-info">📌 Saat ini masih pakai <b>Midtrans Sandbox</b>. Akan switch ke Production setelah approval.</div>
+
+<h2>6. SAMPLE TRANSAKSI BERHASIL (Sandbox)</h2>
+<table>
+  <tr><th>Order ID</th><th>Tanggal</th><th>Nominal</th><th>Method</th><th>Status</th></tr>
+  <tr><td><code>IPL-1-52026-QmNdpT</code></td><td>20 Mei 2026</td><td>Rp 65.000</td><td>GoPay</td><td>settlement</td></tr>
+</table>
+
+<h2>7. STAKEHOLDER &amp; PENANGGUNG JAWAB</h2>
+<table>
+  <tr><td><b>Penanggung Jawab</b></td><td>Edi Prasetiyo</td></tr>
+  <tr><td><b>WhatsApp</b></td><td>082115525327</td></tr>
+  <tr><td><b>Lokasi</b></td><td>Perumahan Griya Pesona Madani Tenjo, Bogor</td></tr>
+  <tr><td><b>Mata Uang</b></td><td>Rupiah Indonesia (IDR)</td></tr>
+  <tr><td><b>Estimasi Volume</b></td><td>30-50 transaksi/bulan, Rp 2-3 juta/bulan</td></tr>
+</table>
+
+<h2>8. DOKUMEN LEGAL (Public Accessible)</h2>
+<table>
+  <tr><th>Dokumen</th><th>URL</th></tr>
+  <tr><td>Tentang Aplikasi</td><td><code>https://ipl-griya-pesona-madani.my.id/about.html</code></td></tr>
+  <tr><td>Syarat &amp; Ketentuan</td><td><code>https://ipl-griya-pesona-madani.my.id/terms.html</code></td></tr>
+  <tr><td>Kebijakan Refund</td><td><code>https://ipl-griya-pesona-madani.my.id/refund-policy.html</code></td></tr>
+  <tr><td>Kebijakan Privasi</td><td><code>https://ipl-griya-pesona-madani.my.id/privacy.html</code></td></tr>
+  <tr><td>Kontak</td><td><code>https://ipl-griya-pesona-madani.my.id/contact.html</code></td></tr>
+</table>
+
+<h2>9. KONTAK SUPPORT</h2>
+<table>
+  <tr><td><b>Nama</b></td><td>Edi Prasetiyo</td></tr>
+  <tr><td><b>WhatsApp</b></td><td>082115525327</td></tr>
+  <tr><td><b>Jam respons</b></td><td>10:00 - 17:00 WIB (Senin-Minggu)</td></tr>
+</table>
+
+<div class="note">
+  <b>⚠️ CATATAN KEAMANAN:</b> Password di dokumen ini adalah password sementara khusus untuk Midtrans review. Setelah review selesai dan akun di-approve, password akan diganti ke yang lebih aman.
+</div>
+
+<p>Terima kasih atas perhatian dan waktu Tim Midtrans untuk review aplikasi ini.</p>
+
+<p>Hormat saya,<br/>
+<b>Edi Prasetiyo</b><br/>
+Pengelola Aplikasi IPL Griya Pesona Madani Tenjo<br/>
+WhatsApp: 082115525327</p>
+
+</div>
+</body>
+</html>

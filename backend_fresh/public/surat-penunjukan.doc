@@ -1,0 +1,100 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="UTF-8" />
+<title>Surat Penunjukan Pengelola IPL</title>
+<!--[if gte mso 9]><xml>
+<w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument>
+</xml><![endif]-->
+<style>
+@page WordSection1 { size: 21cm 29.7cm; margin: 2cm 2.5cm; }
+div.WordSection1 { page: WordSection1; }
+body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.6; color: #000; }
+h1 { text-align: center; font-size: 14pt; font-weight: bold; text-transform: uppercase; text-decoration: underline; margin-bottom: 4px; }
+.nomor { text-align: center; font-size: 11pt; margin-bottom: 24px; }
+p { text-align: justify; margin: 0 0 12px 0; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+td { padding: 3px 6px; vertical-align: top; }
+.label-col { width: 175px; }
+.sep-col { width: 14px; text-align: center; }
+.value-bold { font-weight: bold; text-transform: uppercase; }
+ol { margin-left: 24px; }
+ol li { text-align: justify; margin-bottom: 8px; }
+.signature-table { width: 100%; margin-top: 40px; }
+.signature-table td { width: 50%; text-align: center; vertical-align: top; padding: 0 30px; }
+.role-line { font-weight: bold; margin-bottom: 70px; }
+.name-line { font-weight: bold; text-decoration: underline; text-transform: uppercase; }
+.nik-line { font-size: 10pt; margin-top: 4px; }
+.cap-line { font-size: 9pt; font-style: italic; color: #555; margin-top: 6px; }
+.rw-section { text-align: center; margin-top: 40px; }
+.place-date { text-align: right; font-style: italic; margin-top: 20px; }
+</style>
+</head>
+<body>
+<div class="WordSection1">
+
+<h1>Surat Penunjukan Pengelola Aplikasi<br/>Iuran Pemeliharaan Lingkungan (IPL)</h1>
+<p class="nomor">Nomor: ......./RT......-RW......./V/2026</p>
+
+<p>Yang bertanda tangan di bawah ini:</p>
+
+<table>
+<tr><td class="label-col">Nama Lengkap</td><td class="sep-col">:</td><td class="value-bold">.......................................................</td></tr>
+<tr><td class="label-col">Jabatan</td><td class="sep-col">:</td><td class="value-bold">Ketua RT ......... / RW .........</td></tr>
+<tr><td class="label-col">No. KTP / NIK</td><td class="sep-col">:</td><td class="value-bold">.......................................................</td></tr>
+<tr><td class="label-col">Alamat</td><td class="sep-col">:</td><td class="value-bold">Perumahan Griya Pesona Madani Tenjo, Blok E, Desa Tenjo, Kecamatan Tenjo, Kabupaten Bogor, Jawa Barat</td></tr>
+<tr><td class="label-col">No. HP / WhatsApp</td><td class="sep-col">:</td><td class="value-bold">.......................................................</td></tr>
+</table>
+
+<p>Dengan ini menyatakan dan <b>MENUNJUK</b> secara resmi:</p>
+
+<table>
+<tr><td class="label-col">Nama Lengkap</td><td class="sep-col">:</td><td class="value-bold">EDI PRASETIYO</td></tr>
+<tr><td class="label-col">No. KTP / NIK</td><td class="sep-col">:</td><td class="value-bold">.......................................................</td></tr>
+<tr><td class="label-col">Alamat</td><td class="sep-col">:</td><td class="value-bold">Perumahan Griya Pesona Madani Tenjo, Blok E No. ........., Desa Tenjo, Kecamatan Tenjo, Kabupaten Bogor, Jawa Barat</td></tr>
+<tr><td class="label-col">No. HP / WhatsApp</td><td class="sep-col">:</td><td class="value-bold">082115525327</td></tr>
+<tr><td class="label-col">Jabatan</td><td class="sep-col">:</td><td class="value-bold">Pengelola Aplikasi / Super Admin "IPL Griya Pesona Madani"</td></tr>
+</table>
+
+<p>Sebagai pihak yang <b>BERWENANG</b> dan <b>BERTANGGUNG JAWAB</b> untuk:</p>
+
+<ol>
+<li>Mengelola aplikasi pembayaran Iuran Pemeliharaan Lingkungan (IPL) dan uang kedukaan warga Perumahan Griya Pesona Madani Tenjo, Blok E.</li>
+<li>Mendaftarkan dan menggunakan layanan payment gateway PT. Midtrans (Veritrans Indonesia) untuk memproses pembayaran iuran warga.</li>
+<li>Membuka dan mengelola rekening bank atas nama EDI PRASETIYO sebagai rekening penampungan (settlement) dana iuran warga yang diterima melalui sistem pembayaran Midtrans.</li>
+<li>Mengelola dana iuran sesuai keputusan musyawarah RT, termasuk pengeluaran rutin untuk: iuran kebersihan &amp; sampah, keamanan / honor satpam, perawatan fasilitas umum, listrik fasum &amp; air, acara / kegiatan RT, santunan warga berduka, serta keperluan administrasi RT lainnya.</li>
+<li>Melaporkan secara berkala kepada pengurus RT dan warga mengenai pemasukan dan pengeluaran kas RT melalui fitur laporan di aplikasi.</li>
+<li>Menjaga kerahasiaan data pribadi warga sesuai Kebijakan Privasi aplikasi.</li>
+</ol>
+
+<p>Penunjukan ini diberikan secara sukarela dan tanpa paksaan, dan akan berlaku selama yang bersangkutan masih menjabat sebagai pengelola aplikasi atau hingga dicabut secara resmi oleh pengurus RT.</p>
+
+<p>Demikian Surat Penunjukan ini dibuat dengan sebenar-benarnya untuk dapat dipergunakan sebagaimana mestinya, khususnya untuk keperluan verifikasi merchant pada platform pembayaran PT. Midtrans (Veritrans Indonesia).</p>
+
+<p class="place-date">Tenjo, ........... Mei 2026</p>
+
+<table class="signature-table">
+<tr>
+  <td>
+    <div class="role-line">Yang Ditunjuk,<br/>Pengelola Aplikasi</div>
+    <div class="name-line">EDI PRASETIYO</div>
+    <div class="nik-line">NIK: ........................</div>
+  </td>
+  <td>
+    <div class="role-line">Yang Menunjuk,<br/>Ketua RT .........</div>
+    <div class="name-line">(.................................)</div>
+    <div class="nik-line">NIK: ........................</div>
+    <div class="cap-line">— CAP RT —</div>
+  </td>
+</tr>
+</table>
+
+<div class="rw-section">
+<div class="role-line">Mengetahui,<br/>Ketua RW .........</div>
+<div class="name-line">(.................................)</div>
+<div class="nik-line">NIK: ........................</div>
+<div class="cap-line">— CAP RW (opsional) —</div>
+</div>
+
+</div>
+</body>
+</html>
