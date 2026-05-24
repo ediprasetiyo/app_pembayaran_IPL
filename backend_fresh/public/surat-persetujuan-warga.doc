@@ -1,0 +1,90 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="UTF-8" />
+<title>Surat Persetujuan Warga Pengelolaan IPL</title>
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
+<style>
+@page WordSection1 { size: 21cm 29.7cm; margin: 2cm 2cm; }
+div.WordSection1 { page: WordSection1; }
+body { font-family: 'Times New Roman', serif; font-size: 11pt; line-height: 1.6; color: #000; }
+h1 { text-align: center; font-size: 13pt; font-weight: bold; text-transform: uppercase; text-decoration: underline; margin-bottom: 4px; }
+.nomor { text-align: center; font-size: 10pt; margin-bottom: 20px; }
+p { text-align: justify; margin: 0 0 10px 0; }
+table.info { width: 100%; border-collapse: collapse; margin: 10px 0; }
+table.info td { padding: 3px 6px; vertical-align: top; }
+.label-col { width: 160px; }
+.sep-col { width: 12px; text-align: center; }
+.value-bold { font-weight: bold; }
+ol { margin-left: 26px; }
+ol li { text-align: justify; margin-bottom: 6px; }
+table.warga { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 10pt; }
+table.warga th { background: #1B5E20; color: white; padding: 6px 8px; border: 1px solid #1B5E20; text-align: left; }
+table.warga td { padding: 16px 8px; border: 1px solid #BDBDBD; vertical-align: bottom; }
+.place-date { text-align: right; font-style: italic; margin-top: 24px; }
+.pembuat-block { text-align: center; margin-top: 30px; }
+.name-line { font-weight: bold; text-decoration: underline; text-transform: uppercase; margin-top: 70px; }
+.nik-line { font-size: 10pt; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="WordSection1">
+
+<h1>Surat Persetujuan Warga Blok E<br/>Pengelolaan Aplikasi Pembayaran IPL</h1>
+<p class="nomor">Perumahan Griya Pesona Madani Tenjo · Mei 2026</p>
+
+<p>Kami yang bertanda tangan di bawah ini adalah warga Perumahan Griya Pesona Madani Tenjo, Blok E, dengan ini <b>MENYETUJUI</b> dan <b>MENUNJUK</b>:</p>
+
+<table class="info">
+<tr><td class="label-col">Nama Lengkap</td><td class="sep-col">:</td><td class="value-bold">EDI PRASETIYO</td></tr>
+<tr><td class="label-col">Alamat</td><td class="sep-col">:</td><td class="value-bold">Perumahan Griya Pesona Madani Tenjo, Blok E No. .........., Tenjo, Bogor</td></tr>
+<tr><td class="label-col">No. HP / WhatsApp</td><td class="sep-col">:</td><td class="value-bold">082115525327</td></tr>
+</table>
+
+<p>Untuk menjadi <b>PENGELOLA APLIKASI</b> pembayaran Iuran Pemeliharaan Lingkungan (IPL) dan uang kedukaan warga Blok E, dengan ketentuan sebagai berikut:</p>
+
+<ol>
+<li>Aplikasi <b>"IPL Griya Pesona Madani"</b> akan digunakan oleh warga Blok E untuk memudahkan pembayaran iuran bulanan secara digital melalui payment gateway PT. Midtrans.</li>
+<li>Saudara Edi Prasetiyo BERWENANG mendaftarkan diri sebagai merchant di Midtrans atas nama pribadi untuk keperluan operasional aplikasi.</li>
+<li>Rekening penampungan dana (settlement) atas nama Edi Prasetiyo, dengan kewajiban transparansi laporan keuangan kepada seluruh warga Blok E secara berkala (minimal 1x sebulan).</li>
+<li>Aplikasi ini bersifat NON-KOMERSIAL — pengelola tidak mengambil profit pribadi.</li>
+<li>Dana iuran yang terkumpul digunakan untuk: kebersihan &amp; sampah, keamanan, perawatan fasilitas, listrik fasum, dan keperluan administrasi lingkungan lainnya sesuai musyawarah warga.</li>
+<li>Surat persetujuan ini diberikan sebagai bukti legalitas pengelolaan dana komunitas Blok E, mengingat saat ini Perumahan Griya Pesona Madani Tenjo belum memiliki struktur pengurus RT/RW formal.</li>
+</ol>
+
+<p>Demikian Surat Persetujuan ini kami buat dalam keadaan sadar dan tanpa paksaan dari pihak manapun, untuk dapat dipergunakan sebagaimana mestinya.</p>
+
+<p><b>Daftar warga Blok E yang menyetujui:</b></p>
+
+<table class="warga">
+<thead>
+<tr>
+  <th style="width: 30px;">No.</th>
+  <th style="width: 30%;">Nama Lengkap</th>
+  <th style="width: 25%;">Blok / No. Rumah</th>
+  <th style="width: 20%;">No. HP</th>
+  <th style="width: 22%;">Tanda Tangan</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>1.</td><td></td><td>Blok E No. ......</td><td></td><td></td></tr>
+<tr><td>2.</td><td></td><td>Blok E No. ......</td><td></td><td></td></tr>
+<tr><td>3.</td><td></td><td>Blok E No. ......</td><td></td><td></td></tr>
+<tr><td>4.</td><td></td><td>Blok E No. ......</td><td></td><td></td></tr>
+<tr><td>5.</td><td></td><td>Blok E No. ......</td><td></td><td></td></tr>
+<tr><td>6.</td><td></td><td>Blok E No. ......</td><td></td><td></td></tr>
+<tr><td>7.</td><td></td><td>Blok E No. ......</td><td></td><td></td></tr>
+<tr><td>8.</td><td></td><td>Blok E No. ......</td><td></td><td></td></tr>
+</tbody>
+</table>
+
+<div class="pembuat-block">
+<p class="place-date">Tenjo, ........... Mei 2026</p>
+<p style="font-weight: bold; margin-top: 14px;">Pengelola Aplikasi yang Ditunjuk,</p>
+
+<div class="name-line">EDI PRASETIYO</div>
+<div class="nik-line">NIK: ........................</div>
+</div>
+
+</div>
+</body>
+</html>

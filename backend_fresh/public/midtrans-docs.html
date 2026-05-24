@@ -10,23 +10,29 @@
   .container { max-width: 800px; margin: 0 auto; }
   h1 { text-align: center; color: #1B5E20; font-size: 24px; margin-bottom: 8px; }
   .subtitle { text-align: center; color: #757575; margin-bottom: 30px; font-size: 14px; }
-  .doc-card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 16px; }
-  .doc-icon { font-size: 40px; flex-shrink: 0; }
-  .doc-info { flex: 1; }
-  .doc-info h3 { color: #1B5E20; margin-bottom: 4px; font-size: 16px; }
+  h2 { color: #1B5E20; font-size: 18px; margin: 30px 0 14px; padding: 8px 14px; background: #E8F5E9; border-radius: 8px; border-left: 5px solid #388E3C; }
+  .doc-card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 16px; }
+  .doc-card.recommended { border-left: 6px solid #388E3C; }
+  .doc-card.alternative { border-left: 6px solid #1976D2; }
+  .doc-icon { font-size: 36px; flex-shrink: 0; }
+  .doc-info { flex: 1; min-width: 0; }
+  .doc-info h3 { color: #1B5E20; margin-bottom: 4px; font-size: 15px; }
+  .doc-info .badge { display: inline-block; background: #388E3C; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-left: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .doc-info .badge-alt { background: #1976D2; }
   .doc-info p { color: #555; font-size: 13px; margin-bottom: 8px; }
-  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
-  .btn { padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn { padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
   .btn-view { background: #1B5E20; color: white; }
   .btn-view:hover { background: #2E7D32; }
-  .btn-pdf { background: #C62828; color: white; }
-  .btn-pdf:hover { background: #B71C1C; }
   .btn-doc { background: #1565C0; color: white; }
   .btn-doc:hover { background: #0D47A1; }
   .instruksi { background: #FFF8E1; border-left: 5px solid #FBC02D; padding: 14px 18px; border-radius: 8px; margin-bottom: 24px; font-size: 13px; }
   .instruksi h4 { color: #5D4037; margin-bottom: 8px; }
   .instruksi ol { margin-left: 22px; color: #5D4037; }
   .instruksi li { margin-bottom: 4px; }
+  .info-box { background: #E3F2FD; border-left: 5px solid #1976D2; padding: 14px 18px; border-radius: 8px; margin-bottom: 24px; font-size: 13px; color: #0D47A1; }
+  .info-box strong { color: #01579B; }
+  kbd { background: #424242; color: white; padding: 1px 6px; border-radius: 3px; font-size: 11px; font-family: monospace; }
 </style>
 </head>
 <body>
@@ -38,17 +44,67 @@
   <div class="instruksi">
     <h4>📋 Cara Pakai:</h4>
     <ol>
-      <li><strong>View / Print PDF:</strong> Klik "Lihat" → muncul halaman → tekan <kbd>Ctrl+P</kbd> → pilih <strong>"Save as PDF"</strong> sebagai destination → Save</li>
-      <li><strong>Download DOC:</strong> Klik "Download DOC" → file akan ke-download → buka di Microsoft Word untuk edit</li>
-      <li>Kalau di mobile/HP, gunakan menu browser <strong>"Print" → "Save as PDF"</strong></li>
+      <li><strong>Lihat / Print PDF:</strong> Klik tombol <strong>"Lihat"</strong> → halaman muncul → tekan <kbd>Ctrl+P</kbd> → pilih <strong>"Save as PDF"</strong> → Save</li>
+      <li><strong>Download DOC:</strong> Klik <strong>"Download DOC"</strong> → buka di Microsoft Word → edit titik-titik</li>
+      <li>Di mobile/HP, gunakan menu browser <strong>"Print" → "Save as PDF"</strong></li>
     </ol>
   </div>
 
-  <div class="doc-card">
+  <div class="info-box">
+    <strong>⚠️ INFO PENTING:</strong> Karena Perumahan Griya Pesona Madani Tenjo Blok E
+    belum memiliki struktur pengurus RT/RW formal, kami menyediakan
+    <strong>3 versi alternatif</strong> surat penunjukan. Pilih yang paling cocok
+    dengan kondisi Anda. Versi paling <strong>realistic & mudah</strong> adalah
+    <em>Surat Pernyataan Mandiri (Bermaterai)</em> di section pertama.
+  </div>
+
+  <h2>📜 PILIHAN 1: Surat Pernyataan Pribadi (RECOMMENDED)</h2>
+
+  <div class="doc-card recommended">
     <span class="doc-icon">📜</span>
     <div class="doc-info">
-      <h3>Surat Penunjukan dari RT</h3>
-      <p>Surat resmi penunjukan Edi Prasetiyo sebagai pengelola aplikasi IPL. Wajib diisi titik-titik & ditandatangani oleh Ketua RT + cap RT.</p>
+      <h3>Surat Pernyataan Pengelola Mandiri <span class="badge">PALING MUDAH</span></h3>
+      <p>
+        <strong>Cocok kalau:</strong> belum ada RT/RW resmi di perumahan.<br/>
+        <strong>Yang perlu:</strong> Materai Rp 10.000 + tanda tangan Anda sendiri + fotocopy KTP.
+        Tidak perlu tanda tangan pihak lain. Paling cepat & mudah dipersiapkan.
+      </p>
+      <div class="btn-group">
+        <a href="/surat-pernyataan-mandiri.html" target="_blank" class="btn btn-view">👁️ Lihat / Print PDF</a>
+        <a href="/surat-pernyataan-mandiri.doc" class="btn btn-doc" download>📄 Download DOC</a>
+      </div>
+    </div>
+  </div>
+
+  <h2>👥 PILIHAN 2: Surat Persetujuan Warga (Kolektif)</h2>
+
+  <div class="doc-card alternative">
+    <span class="doc-icon">👥</span>
+    <div class="doc-info">
+      <h3>Surat Persetujuan Warga Blok E <span class="badge badge-alt">LEBIH KUAT</span></h3>
+      <p>
+        <strong>Cocok kalau:</strong> bisa kumpul tanda tangan minimal 5 warga Blok E.<br/>
+        <strong>Yang perlu:</strong> tanda tangan ≥5 warga + fotocopy KTP Anda.
+        Lebih kuat legalitasnya karena ada persetujuan kolektif komunitas.
+      </p>
+      <div class="btn-group">
+        <a href="/surat-persetujuan-warga.html" target="_blank" class="btn btn-view">👁️ Lihat / Print PDF</a>
+        <a href="/surat-persetujuan-warga.doc" class="btn btn-doc" download>📄 Download DOC</a>
+      </div>
+    </div>
+  </div>
+
+  <h2>🏛️ PILIHAN 3: Surat Penunjukan RT (kalau RT sudah ada)</h2>
+
+  <div class="doc-card alternative">
+    <span class="doc-icon">🏛️</span>
+    <div class="doc-info">
+      <h3>Surat Penunjukan dari Ketua RT/RW <span class="badge badge-alt">FORMAL</span></h3>
+      <p>
+        <strong>Cocok kalau:</strong> sudah ada Ketua RT/RW resmi di perumahan.<br/>
+        <strong>Yang perlu:</strong> tanda tangan + cap RT (+ RW kalau ada).
+        Paling formal & meyakinkan untuk Midtrans, tapi butuh struktur RT.
+      </p>
       <div class="btn-group">
         <a href="/surat-penunjukan.html" target="_blank" class="btn btn-view">👁️ Lihat / Print PDF</a>
         <a href="/surat-penunjukan.doc" class="btn btn-doc" download>📄 Download DOC</a>
@@ -56,11 +112,13 @@
     </div>
   </div>
 
-  <div class="doc-card">
+  <h2>🔑 Kredensial Test untuk Midtrans Review</h2>
+
+  <div class="doc-card recommended">
     <span class="doc-icon">🔑</span>
     <div class="doc-info">
-      <h3>Kredensial Test untuk Midtrans Review</h3>
-      <p>Akun login (Backoffice + Mobile) yang Midtrans bisa pakai untuk tes transaksi. Berisi langkah-langkah test end-to-end.</p>
+      <h3>Akun Test Backoffice + Mobile App</h3>
+      <p>Akun login (super_admin + warga) yang Midtrans bisa pakai untuk tes transaksi. Plus step-by-step skenario test.</p>
       <div class="btn-group">
         <a href="/kredensial-test.html" target="_blank" class="btn btn-view">👁️ Lihat / Print PDF</a>
         <a href="/kredensial-test.doc" class="btn btn-doc" download>📄 Download DOC</a>
@@ -68,14 +126,15 @@
     </div>
   </div>
 
+  <h2>📄 Dokumen Legal (Public URL — kirim link saja ke Midtrans)</h2>
+
   <div class="doc-card">
-    <span class="doc-icon">📋</span>
+    <span class="doc-icon">ℹ️</span>
     <div class="doc-info">
-      <h3>Dokumen Submission Utama</h3>
-      <p>Profil bisnis lengkap + deskripsi layanan + checklist compliance untuk form pendaftaran Midtrans Production.</p>
+      <h3>About Aplikasi</h3>
+      <p>Halaman tentang aplikasi & profil pengelola.</p>
       <div class="btn-group">
-        <a href="/submission.html" target="_blank" class="btn btn-view">👁️ Lihat / Print PDF</a>
-        <a href="/submission.doc" class="btn btn-doc" download>📄 Download DOC</a>
+        <a href="/about.html" target="_blank" class="btn btn-view">👁️ Lihat</a>
       </div>
     </div>
   </div>
@@ -84,7 +143,7 @@
     <span class="doc-icon">📜</span>
     <div class="doc-info">
       <h3>Syarat & Ketentuan</h3>
-      <p>T&C aplikasi (public URL) — kirimkan link ini ke Midtrans.</p>
+      <p>T&C aplikasi (Indonesian, Midtrans-compliant).</p>
       <div class="btn-group">
         <a href="/terms.html" target="_blank" class="btn btn-view">👁️ Lihat</a>
       </div>
@@ -95,7 +154,7 @@
     <span class="doc-icon">💸</span>
     <div class="doc-info">
       <h3>Kebijakan Refund</h3>
-      <p>Refund policy (public URL).</p>
+      <p>Refund policy lengkap.</p>
       <div class="btn-group">
         <a href="/refund-policy.html" target="_blank" class="btn btn-view">👁️ Lihat</a>
       </div>
@@ -106,9 +165,20 @@
     <span class="doc-icon">🔒</span>
     <div class="doc-info">
       <h3>Kebijakan Privasi</h3>
-      <p>Privacy policy (public URL).</p>
+      <p>Privacy policy.</p>
       <div class="btn-group">
         <a href="/privacy.html" target="_blank" class="btn btn-view">👁️ Lihat</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="doc-card">
+    <span class="doc-icon">📞</span>
+    <div class="doc-info">
+      <h3>Kontak Bisnis</h3>
+      <p>Info kontak Edi Prasetiyo, jam operasional, WhatsApp.</p>
+      <div class="btn-group">
+        <a href="/contact.html" target="_blank" class="btn btn-view">👁️ Lihat</a>
       </div>
     </div>
   </div>

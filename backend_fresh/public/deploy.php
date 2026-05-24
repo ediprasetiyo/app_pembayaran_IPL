@@ -137,6 +137,14 @@ $files = [
         => '/home/dszgofcr/public_html/kredensial-test.doc',
     'backend_fresh/public/midtrans-docs.html'
         => '/home/dszgofcr/public_html/midtrans-docs.html',
+    'backend_fresh/public/surat-pernyataan-mandiri.html'
+        => '/home/dszgofcr/public_html/surat-pernyataan-mandiri.html',
+    'backend_fresh/public/surat-pernyataan-mandiri.doc'
+        => '/home/dszgofcr/public_html/surat-pernyataan-mandiri.doc',
+    'backend_fresh/public/surat-persetujuan-warga.html'
+        => '/home/dszgofcr/public_html/surat-persetujuan-warga.html',
+    'backend_fresh/public/surat-persetujuan-warga.doc'
+        => '/home/dszgofcr/public_html/surat-persetujuan-warga.doc',
 ];
 
 $success = 0;

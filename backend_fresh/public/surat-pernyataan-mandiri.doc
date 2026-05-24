@@ -1,0 +1,86 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="UTF-8" />
+<title>Surat Pernyataan Pengelola IPL</title>
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
+<style>
+@page WordSection1 { size: 21cm 29.7cm; margin: 2cm 2.5cm; }
+div.WordSection1 { page: WordSection1; }
+body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.7; color: #000; }
+h1 { text-align: center; font-size: 14pt; font-weight: bold; text-transform: uppercase; text-decoration: underline; margin-bottom: 24px; }
+p { text-align: justify; margin: 0 0 14px 0; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+td { padding: 4px 6px; vertical-align: top; }
+.label-col { width: 175px; }
+.sep-col { width: 14px; text-align: center; }
+.value-bold { font-weight: bold; }
+ol { margin-left: 28px; }
+ol li { text-align: justify; margin-bottom: 8px; }
+ul { margin-left: 22px; margin-top: 4px; }
+.place-date { text-align: right; font-style: italic; margin-top: 30px; }
+.signature-block { text-align: center; margin-top: 50px; }
+.materai-box { display: inline-block; width: 250px; padding: 12px; border: 2px dashed #999; margin: 20px auto; font-size: 10pt; color: #777; font-style: italic; }
+.name-line { font-weight: bold; text-decoration: underline; text-transform: uppercase; margin-top: 70px; }
+.nik-line { font-size: 10pt; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="WordSection1">
+
+<h1>Surat Pernyataan<br/>Pengelola Aplikasi Pembayaran IPL</h1>
+
+<p>Yang bertanda tangan di bawah ini:</p>
+
+<table>
+<tr><td class="label-col">Nama Lengkap</td><td class="sep-col">:</td><td class="value-bold">EDI PRASETIYO</td></tr>
+<tr><td class="label-col">No. KTP / NIK</td><td class="sep-col">:</td><td class="value-bold">.......................................................</td></tr>
+<tr><td class="label-col">Tempat & Tanggal Lahir</td><td class="sep-col">:</td><td class="value-bold">.......................................................</td></tr>
+<tr><td class="label-col">Alamat</td><td class="sep-col">:</td><td class="value-bold">Perumahan Griya Pesona Madani Tenjo, Blok E No. .........., Desa Tenjo, Kecamatan Tenjo, Kabupaten Bogor, Jawa Barat</td></tr>
+<tr><td class="label-col">No. HP / WhatsApp</td><td class="sep-col">:</td><td class="value-bold">082115525327</td></tr>
+<tr><td class="label-col">Pekerjaan</td><td class="sep-col">:</td><td class="value-bold">.......................................................</td></tr>
+</table>
+
+<p>Dengan ini menyatakan dengan sebenar-benarnya bahwa:</p>
+
+<ol>
+<li>Saya adalah penghuni resmi Perumahan Griya Pesona Madani Tenjo, Blok E, dan saat ini tinggal di alamat tersebut.</li>
+
+<li>Perumahan Griya Pesona Madani Tenjo, Blok E, saat ini <b>belum memiliki struktur pengurus RT/RW formal</b>, sehingga pengelolaan iuran lingkungan dilakukan secara mandiri oleh warga per blok berdasarkan musyawarah penghuni.</li>
+
+<li>Saya, atas inisiatif sendiri dan dengan persetujuan warga Blok E, membuat dan mengelola aplikasi mobile <b>"IPL Griya Pesona Madani"</b> untuk memudahkan warga dalam melakukan pembayaran Iuran Pemeliharaan Lingkungan (IPL) bulanan dan uang kedukaan.</li>
+
+<li>Aplikasi ini bersifat <b>NON-KOMERSIAL</b>. Saya tidak mengambil profit pribadi dari operasional aplikasi. Seluruh dana iuran yang masuk digunakan kembali untuk kepentingan bersama warga Blok E, antara lain: iuran kebersihan &amp; sampah, keamanan, perawatan fasilitas umum, dan keperluan administrasi lingkungan lainnya.</li>
+
+<li>Saya bertanggung jawab penuh atas:
+<ul>
+<li>Pendaftaran dan penggunaan layanan payment gateway PT. Midtrans (Veritrans Indonesia)</li>
+<li>Pengelolaan rekening bank atas nama saya pribadi sebagai rekening penampungan (settlement) dana iuran warga</li>
+<li>Transparansi laporan keuangan kepada warga melalui fitur laporan di aplikasi</li>
+<li>Keamanan data pribadi warga yang terdaftar di aplikasi</li>
+</ul>
+</li>
+
+<li>Saya menyatakan bahwa segala informasi yang saya berikan kepada PT. Midtrans untuk keperluan verifikasi merchant adalah <b>BENAR ADANYA</b> dan dapat dipertanggungjawabkan.</li>
+
+<li>Apabila di kemudian hari terjadi penyalahgunaan atau pelanggaran terkait pengelolaan dana iuran ini, saya bersedia mempertanggungjawabkannya sesuai dengan hukum yang berlaku di Republik Indonesia.</li>
+</ol>
+
+<p>Demikian Surat Pernyataan ini saya buat dengan sebenar-benarnya, dalam keadaan sadar dan tanpa ada paksaan dari pihak manapun, untuk dapat dipergunakan sebagaimana mestinya, khususnya untuk keperluan verifikasi merchant pada platform pembayaran PT. Midtrans (Veritrans Indonesia).</p>
+
+<p class="place-date">Tenjo, ........... Mei 2026</p>
+
+<div class="signature-block">
+<p style="font-weight: bold; margin-bottom: 14px;">Yang Membuat Pernyataan,</p>
+
+<div class="materai-box">
+Tempel <b>Materai Rp 10.000</b> di sini,<br/>
+lalu tanda tangan di atas materai
+</div>
+
+<div class="name-line">EDI PRASETIYO</div>
+<div class="nik-line">NIK: ........................</div>
+</div>
+
+</div>
+</body>
+</html>
