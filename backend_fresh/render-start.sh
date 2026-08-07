@@ -22,6 +22,9 @@ php artisan route:cache || echo "route:cache skipped"
 # Run migrations
 php artisan migrate --force --no-interaction || echo "Migration skipped/failed (non-fatal)"
 
+# Seed akun super_admin awal (idempotent, skip kalau sudah ada)
+php artisan db:seed --force --no-interaction || echo "Seed skipped/failed (non-fatal)"
+
 # Storage symlink (untuk fallback local storage)
 php artisan storage:link 2>/dev/null || true
 

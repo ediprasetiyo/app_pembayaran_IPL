@@ -10,7 +10,14 @@ return [
              * Download dari Firebase Console → Project Settings → Service Accounts → Generate new private key.
              * Upload JSON ke server lalu set env: FIREBASE_CREDENTIALS=/home/dszgofcr/ipl-backend/storage/app/firebase-credentials.json
              */
-            'credentials' => env('FIREBASE_CREDENTIALS'),
+            /*
+             * Render/serverless: simpan isi JSON di env FIREBASE_CREDENTIALS_BASE64
+             * (base64 dari file service-account.json) supaya tidak perlu upload file
+             * ke disk container yang ephemeral.
+             */
+            'credentials' => env('FIREBASE_CREDENTIALS_BASE64')
+                ? json_decode(base64_decode(env('FIREBASE_CREDENTIALS_BASE64')), true)
+                : env('FIREBASE_CREDENTIALS'),
 
             'project_id' => env('FIREBASE_PROJECT_ID'),
 

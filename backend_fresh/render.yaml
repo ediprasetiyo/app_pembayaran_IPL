@@ -56,6 +56,11 @@ services:
         sync: false
       - key: MIDTRANS_IS_PRODUCTION
         value: "false"
+      # Firebase (set manual - base64 dari file service-account.json)
+      - key: FIREBASE_CREDENTIALS_BASE64
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
       # Business config
       - key: IPL_MONTHLY_AMOUNT
         value: "150000"
@@ -65,3 +70,69 @@ services:
         value: "6282115525327"
       - key: FRONTEND_URL
         sync: false  # Vercel URL backoffice
+
+  # Cron: generate tagihan IPL bulanan (tgl 1 jam 08:00 WIB = 01:00 UTC)
+  - type: cron
+    name: ipl-generate-tagihan
+    runtime: docker
+    plan: free
+    region: singapore
+    rootDir: backend_fresh
+    dockerfilePath: ./Dockerfile
+    schedule: "0 1 1 * *"
+    dockerCommand: php artisan ipl:generate-tagihan
+    envVars:
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DATABASE_URL
+        sync: false
+      - key: APP_KEY
+        sync: false
+      - key: FIREBASE_CREDENTIALS_BASE64
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: IPL_MONTHLY_AMOUNT
+        value: "150000"
+      - key: IPL_KEDUKAAN_AMOUNT
+        value: "85000"
+
+  # Cron: reminder tagihan ke warga (tiap hari jam 08:00 WIB = 01:00 UTC)
+  - type: cron
+    name: ipl-reminder-tagihan
+    runtime: docker
+    plan: free
+    region: singapore
+    rootDir: backend_fresh
+    dockerfilePath: ./Dockerfile
+    schedule: "0 1 * * *"
+    dockerCommand: php artisan ipl:reminder-tagihan
+    envVars:
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DATABASE_URL
+        sync: false
+      - key: APP_KEY
+        sync: false
+      - key: FIREBASE_CREDENTIALS_BASE64
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+
+  # Cron: cek tagihan terlambat (tiap hari jam 09:00 WIB = 02:00 UTC)
+  - type: cron
+    name: ipl-check-terlambat
+    runtime: docker
+    plan: free
+    region: singapore
+    rootDir: backend_fresh
+    dockerfilePath: ./Dockerfile
+    schedule: "0 2 * * *"
+    dockerCommand: php artisan ipl:check-terlambat
+    envVars:
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DATABASE_URL
+        sync: false
+      - key: APP_KEY
+        sync: false
