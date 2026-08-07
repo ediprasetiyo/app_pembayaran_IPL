@@ -29,6 +29,27 @@ Route::prefix('v1')->group(function () {
         }
     });
 
+    // Cron trigger (dipanggil cron-job.org, karena Render tidak punya cron job gratis)
+    Route::get('/cron/{job}', function (string $job) {
+        if (request('token') !== config('app.cron_secret')) {
+            abort(403);
+        }
+
+        $commands = [
+            'generate-tagihan' => 'ipl:generate-tagihan',
+            'reminder-tagihan' => 'ipl:reminder-tagihan',
+            'check-terlambat' => 'ipl:check-terlambat',
+        ];
+
+        if (! isset($commands[$job])) {
+            abort(404);
+        }
+
+        \Artisan::call($commands[$job]);
+
+        return response()->json(['status' => 'ok', 'job' => $job, 'output' => \Artisan::output()]);
+    });
+
     // Auth public
     Route::post('/auth/login', [AuthController::class, 'login']);
     Route::post('/auth/register', [AuthController::class, 'register']);
