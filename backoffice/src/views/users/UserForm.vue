@@ -85,17 +85,27 @@
 
       <div>
         <label class="label">{{ isEdit ? 'Password Baru (kosongkan jika tidak diubah)' : 'Password *' }}</label>
-        <input
-          v-model="form.password"
-          type="password"
-          class="input"
-          :required="!isEdit"
-          minlength="6"
-          :name="`pwd-${randomKey}`"
-          autocomplete="new-password"
-          readonly
-          @focus="$event.target.removeAttribute('readonly')"
-        />
+        <div class="relative">
+          <input
+            v-model="form.password"
+            :type="showPassword ? 'text' : 'password'"
+            class="input pr-10"
+            :required="!isEdit"
+            minlength="6"
+            :name="`pwd-${randomKey}`"
+            autocomplete="new-password"
+            readonly
+            @focus="$event.target.removeAttribute('readonly')"
+          />
+          <button
+            type="button"
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            tabindex="-1"
+            @click="showPassword = !showPassword"
+          >
+            {{ showPassword ? '🙈' : '👁️' }}
+          </button>
+        </div>
       </div>
 
       <div v-if="isEdit" class="flex items-center gap-2">
@@ -129,6 +139,7 @@ const saving = ref(false)
 const isEdit = computed(() => !!route.params.id)
 // Random key untuk bikin Chrome bingung & tidak autofill
 const randomKey = Math.random().toString(36).substring(2, 10)
+const showPassword = ref(false)
 
 const form = ref({
   id: null,
