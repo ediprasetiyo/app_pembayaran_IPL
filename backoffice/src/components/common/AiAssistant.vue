@@ -1,13 +1,13 @@
 <template>
-  <!-- Floating Button -->
+  <!-- Floating Button (maskot animasi) -->
   <button
     v-if="!isOpen"
     @click="isOpen = true"
-    class="fixed bottom-6 right-6 z-40 bg-gradient-to-br from-primary-600 to-primary-800 hover:from-primary-700 hover:to-primary-900 text-white rounded-full shadow-lg w-14 h-14 flex items-center justify-center transition-transform hover:scale-110"
+    class="fixed bottom-6 right-6 z-40 w-16 h-16 flex items-center justify-center transition-transform hover:scale-110"
     title="Buka AI Assistant"
   >
-    <SparklesIcon class="w-6 h-6" />
-    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+    <AiMascotIcon :size="60" />
+    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold z-10">
       AI
     </span>
   </button>
@@ -23,7 +23,7 @@
       <div class="bg-gradient-to-r from-primary-700 to-primary-900 text-white rounded-t-2xl px-4 py-3 flex items-center justify-between">
         <div class="flex items-center gap-2">
           <div class="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center">
-            <SparklesIcon class="w-5 h-5" />
+            <AiMascotIcon :size="28" :animated="false" />
           </div>
           <div>
             <p class="font-semibold text-sm">AI Assistant</p>
@@ -73,7 +73,7 @@
           <!-- AI Message -->
           <div v-else class="flex gap-2 max-w-full">
             <div class="w-7 h-7 bg-primary-100 rounded-full flex-shrink-0 flex items-center justify-center mt-1">
-              <SparklesIcon class="w-4 h-4 text-primary-700" />
+              <AiMascotIcon :size="22" :animated="false" />
             </div>
             <div class="bg-white rounded-2xl rounded-tl-sm shadow-sm overflow-hidden max-w-[85%]">
               <!-- Pesan teks utama -->
@@ -117,7 +117,7 @@
         <!-- Loading -->
         <div v-if="loading" class="flex gap-2">
           <div class="w-7 h-7 bg-primary-100 rounded-full flex-shrink-0 flex items-center justify-center">
-            <SparklesIcon class="w-4 h-4 text-primary-700" />
+            <AiMascotIcon :size="22" :animated="false" />
           </div>
           <div class="bg-white rounded-2xl rounded-tl-sm shadow-sm px-3 py-2.5 flex gap-1">
             <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0ms" />
@@ -155,8 +155,9 @@
 
 <script setup>
 import { ref, nextTick } from 'vue'
-import { SparklesIcon, XMarkIcon, PaperAirplaneIcon } from '@heroicons/vue/24/outline'
+import { XMarkIcon, PaperAirplaneIcon } from '@heroicons/vue/24/outline'
 import api from '@/services/api'
+import AiMascotIcon from './AiMascotIcon.vue'
 
 const isOpen = ref(false)
 const input = ref('')
